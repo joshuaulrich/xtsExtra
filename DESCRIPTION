@@ -1,0 +1,13 @@
+Package: xtsExtra
+Version: 0.0-1
+Date: 2012-05-21
+Title: Supplementary Functionality for xts
+Author: R. Michael Weylandt
+Maintainer: R. Michael Weylandt <michael.weylandt@gmail.com>
+Description: Supplementary functionality that can be used with the
+	xts package. The package also serves as a development platform
+        for the GSoC 2012 xts project, which may eventually end up in
+        the xts package.
+Depends: xts (>= 0.8-7)
+License: GPL-2
+URL: http://r-forge.r-project.org/projects/xts/
