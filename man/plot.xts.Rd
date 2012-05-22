@@ -11,9 +11,6 @@ Plotting methods for xts objects.
                     major.ticks='auto', minor.ticks=TRUE, 
                     major.format=TRUE,
                     bar.col='grey', candle.col='white',
-                    ann, axes, 
-                    xlab, ylab, main, 
-                    xlim, ylim,
                     xy.labels = FALSE, xy.lines = NULL, 
                        ...)
 }
@@ -22,16 +19,15 @@ Plotting methods for xts objects.
   \item{y}{ an \code{xts} object or NULL }
   \item{screens}{ factor (or coerced to factor) whose levels specify which graph each series is to 
   	be plotted in. If not specified, then defaults to a single series per screen for
-  	\code{plot.type} not \code{OHLC}. See examples.}
+  	\code{type} not \code{"candles"} or \code{"bars"} See examples.}
   \item{screens.layout}{ Matrix (in a form that could be passed to layout) which arranges screens.}
-  \item{type}{ type of plot to produce }
+  \item{type}{ type of plot to produce; can be \code{"candles"} or \code{"bars"} in addition to the regular options. }
   \item{auto.grid}{ should grid lines be drawn }
   \item{major.ticks}{ should major tickmarks be drawn and labeled }
   \item{minor.ticks}{ should minor tickmarks be drawn }
   \item{major.format}{ passed along to axTicksByTime. See also }
   \item{bar.col}{ the color of the bars when type is \sQuote{bars} or \sQuote{candles} }
   \item{candle.col}{ the color of the candles when type is \sQuote{candles} }
-  \item{ann, axes, xlab, ylab, main, xlim, ylim}{ passed \sQuote{par} graphical parameters }
   \item{xy.labels}{ label points in scatterplot?}
   \item{xy.lines}{ connect points in scatterplot?}
   \item{\dots}{ additional graphical arguments }
@@ -48,10 +44,10 @@ Plots an xts object to the current device.
 }
 \author{ Jeffrey A. Ryan }
 \examples{
-#data(sample_matrix)
-#plot(sample_matrix)
-#plot(as.xts(sample_matrix))
-#plot(as.xts(sample_matrix), type='candles')
+data(sample_matrix)
+plot(sample_matrix)
+plot(as.xts(sample_matrix))
+plot(as.xts(sample_matrix), type='candles')
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
