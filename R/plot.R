@@ -21,14 +21,24 @@
 
 # To do: 
 #    REMOVE par() ARGS FROM FORMALS AND INSTEAD TREAT ... BETTER
+#      par(mfrow = c(2,2), mar = c(0,5,0,5), oma = c(6, 0, 5, 0)) -- seems to work for one column?
 #    DO LAYOUT WITHOUT USING LAYOUT -- NEED TO BE ABLE TO MOVE BETWEEN PLOTS WHEN ADDING LINES?
 #    GET LAYOUT TO SUPPORT ADJACENT COLUMNS
 #    HANDLE xlim AS ISO8601 AS WELL
 #    legend.loc
 #    COLOR GRADIENT FOR SCATTERPLOT CASE
 #    Combine OHLC and multi-panel (i.e., if passed cbind(SPY, AGG)) 
-#    Get OHLC to support log = 
 #    candle.col is not supported? 
+#    ylab.loc = c("left", "right", "out","in","flip","above") -- above kills panel alignment automatically
+
+
+## How I really want to handle screens
+## Give user ultimate flexibility in setting up screens combining them as desired with layout-like interface
+## Go by rows on matrix and whenever number of panels changes, add new time axis
+## E.g. layout(matrix(c(1,1,1,1), ncol = 2) has one time axis 
+## E.g. layout(matrix(c(1,2,1,2), ncol = 2) has one time axis
+## E.g. layout(matrix(c(1,2,1,3), ncol = 2) has three time axes -- one underneath the first set of panels, two more for each of the second row
+## E.g. layout(matrix(c(1,2,3,1,4,5), ncol=2) has three time axes -- one underneath the first set of panels, two more for each of the third row [since shared with second]
 
 `plot.xts` <- function(x, y = NULL, 
                        screens, screens.layout,
@@ -36,39 +46,82 @@
                        major.ticks='auto', minor.ticks=TRUE, 
                        major.format=TRUE,
                        bar.col='grey', candle.col='white',
-                       xy.labels = FALSE, xy.lines = NULL, 
+                       xy.labels = FALSE, xy.lines = NULL,
                        ...) {
   
   dots <- list(...)
   
-  setPar <- function(x, default){
+  setParGlb <- function(arg, default){
     # See if par was passed through ... 
     # if so, use it, else use default
+    #
     # Also strip from dots once it's been handled directly
+    # This is for "global" parameters
+    # See setParCol for ones which are columnwise (series-wise)
     
-    # Other model would be to modify it in dots and pass that way
+    arg <- deparse(substitute(arg))
     
-    x <- deparse(substitute(x))
-    
-    r <- if(x %in% names(dots)){
-      dots[[x]]
+    r <- if(arg %in% names(dots)){
+      r <- dots[[arg]]
+      dots[[arg]] <- NULL
+      assign("dots", dots, parent.frame())
+      r
     } else {
       default
     }
-    dots[[x]] <- NULL
-    assign("dots", dots, parent.frame())
+  }
+  
+  setParCol <- function(arg, default, screens){
+    # See if par was passed through ...
+    # if so, use it, else use default
+    #
+    # Also strip from dots once it's been handled directly
+    # This is for column(series)-wise parameters
+    # Returns a list where each list gives the colwise parameters per panel
+    # Only used currently for time series columnwise
+    arg <- deparse(substitute(arg))
     
-    r
+    r <- if(arg %in% names(dots)){
+       r <- dots[[arg]]
+       dots[[arg]] <- NULL
+       assign("dots",dots, parent.frame())
+       r
+    } else {
+      return(default)
+    }     
+    split(rep(r, length.out = length(screens)), screens)    
   }  
+  
+  setParScr <- function(arg, default, screens){
+    # See if par was passed through ...
+    # if so, use it, else use default
+    #
+    # Also strip from dots once it's been handled directly
+    # This is for column(series)-wise parameters
+    # Returns a list where each list gives the colwise parameters per panel
+    # Only used currently for time series screenwise
+    arg <- deparse(substitute(arg))
+    
+    r <- if(arg %in% names(dots)){
+       r <- dots[[arg]]
+       dots[[arg]] <- NULL
+       assign("dots",dots, parent.frame())
+       r
+    } else {
+      default
+    }     
+    rep(r, length.out = length(screens))
+  }
   
   ## if y supplied: scatter plot y ~ x
   if(!is.null(y)) {
     if(NCOL(x) > 1 || NCOL(y) > 1) stop("Scatter plots only for univariate series")
     
     # Am I catching these early enough
-    xlab <- setPar(xlab, deparse(substitute(x)))
-    ylab <- setPar(ylab, deparse(substitute(y)))
-    main <- setPar(main, paste(xlab, "vs.", ylab))
+    xlab <- setParGlb(xlab, deparse(substitute(x)))
+    ylab <- setParGlb(ylab, deparse(substitute(y)))
+    main <- setParGlb(main, paste(xlab, "vs.", ylab))
+    log <- setParGlb(log, '')
     
     x <- try.xts(x); y <- try.xts(y)
     
@@ -78,47 +131,48 @@
     
     xy <- xy.coords(xy[,1], xy[,2])
 
-    xlim <- setPar(xlim, range(xy$x[is.finite(xy$x)]))
-    ylim <- setPar(xlim, range(xy$y[is.finite(xy$y)]))
+    xlim <- setParGlb(xlim, range(xy$x[is.finite(xy$x)]))
+    ylim <- setParGlb(xlim, range(xy$y[is.finite(xy$y)]))
     
     do.lab <- if(is.logical(xy.labels)) xy.labels else TRUE
     
     if(is.null(xy.lines)) xy.lines <- do.lab
     
-    ptype <- setPar(type, if(do.lab) "n" else "p")
+    ptype <- setParGlb(type, if(do.lab) "n" else "p")
 
     do.call("plot.default", c(xy[1:2], list(type = ptype, main = main, xlab = xlab, 
-      ylab = ylab, xlim = xlim, ylim = ylim), dots))
+      ylab = ylab, xlim = xlim, ylim = ylim, log = log), dots))
       
     if(do.lab) do.call("text", 
-      c(xy[1:2], list(labels = if(!is.logical(xy.labels)) xy.labels else index2char(index(xy.xts))), dots))
-    if(xy.lines) do.call("lines", c(xy[1:2], list( type = if(do.lab) "c" else "l"), dots))
+      c(xy[1:2], list(labels = if(!is.logical(xy.labels)) xy.labels else index2char(index(xy.xts)), log = log), dots))
+    if(xy.lines) do.call("lines", c(xy[1:2], list( type = if(do.lab) "c" else "l", log = log), dots))
 
     assign(".plot.xts", recordPlot(), .GlobalEnv)
     return(invisible(xy.xts))
   }
   
   ## Else : no y, only x
-  main <- setPar(main, deparse(substitute(x)))
-  xlab <- setPar(xlab, '')
-  log <- setPar(log, '')
-  axes <- setPar(axes, TRUE)
+  main <- setParGlb(main, deparse(substitute(x)))
+  xlab <- setParGlb(xlab, '')
+  axes <- setParGlb(axes, TRUE)
   
   x <- try.xts(x)
   
   # Catch OHLC case independently -- will violate DRY but that's ok for now
-  if(!missing(type) && type %in% c('candles','bars') && xts:::is.OHLC(x)){
+  if(!missing(type) && type %in% c('candles','bars')){
   
+    if(!is.OHLC(x)) stop(type, '-chart not supported for non-OHLC series')
     if(type == 'bars') stop('OHLC bars not yet supported.')
   
     # Handle OHLC candles 
     x <- x[,xts:::has.OHLC(x, TRUE)] 
-    ylab <- setPar(ylab, '')
+    ylab <- setParGlb(ylab, '')
+    log <- setParGlb(log, '')
     
     ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
     
     xy <- list(x = .index(x), y = seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE), length.out = NROW(x)))
-    do.call("plot", c(list(x = xy$x, y = xy$y, type = "n", axes=FALSE, xlab = xlab, ylab = ylab, main = main), dots))
+    do.call("plot", c(list(x = xy$x, y = xy$y, type = "n", axes=FALSE, xlab = xlab, ylab = ylab, main = main, log = log), dots))
     
     if(auto.grid) {
       abline(v=xy$x[ep], col='grey', lty=4)
@@ -138,62 +192,65 @@
     box()
     assign(".plot.xts",recordPlot(),.GlobalEnv) 
     return(invisible(reclass(x)))
-  }
+  } else {  
+    # Else need to do layout plots
   
-  # Else need to do layout plots
-  ylab <- setPar(ylab, if(NCOL(x) == 1) "" else 
-    if(!is.null(colnames(x))) colnames(x) else paste("Column", seq_len(NCOL(x))))
+    # By default one screen per panel
+    screens <- factor(if(missing(screens)) 1:NCOL(x) else rep(screens, length.out = NCOL(x)))
   
-  # By default one screen per panel
-  if(missing(screens)){
-    screens <- 1:NCOL(x)
-  } else {
-    screens <- factor(screens)
-  }
+    if(missing(screens.layout)){
+      screens.layout <- seq_along(levels(screens))
+    }
+  
+    #####
+    #
+    #  SOME CODE TO MAKE SURE screens.layout IS LEGAL
+    #
+    #####
+  
+    ep <- axTicksByTime(x,major.ticks, format.labels=major.format)
+  
+    type <- split(if(missing(type)) rep('l', NCOL(x)) else rep(type, length.out = NCOL(x)), screens)
+  
+    col <- setParCol(col, lapply(split(seq_len(NCOL(x)), screens), rank), screens)
+    lwd <- setParCol(lwd, split(rep(1, NCOL(x)), screens), screens)
+    ylab <- setParScr(ylab, if(NCOL(x) == 1 || length(levels(screens)) == 1) "" else
+      if(!is.null(colnames(x))) colnames(x) else paste("Column", seq_len(NCOL(x))), screens)
+    log <- setParScr(log, '', screens)
 
-  if(missing(screens.layout)){
-    screens.layout <- seq_along(unique(screens))
-  }
+    layout(screens.layout) # BETTER TO DO THIS MANUALLY WITH PAR()
   
-  #####
-  #
-  #  SOME CODE TO MAKE SURE screens.layout IS LEGAL
-  #
-  #####
-  
-  ep <- axTicksByTime(x,major.ticks, format.labels=major.format)
-  type <- if(missing(type)) rep('l', NCOL(x)) else rep(type, length.out = NCOL(x))
-
-  layout(screens.layout) 
-  
-  # For now, loop over screens and do plots automatically
-  for(scrn in unique(screens)){
-    x.temp <- x[, which(screens == scrn)]
+    # For now, loop over screens and do plots automatically
+    for(scrn in seq_along(levels(screens))){
+      x.temp <- x[, which(screens == scrn)]
      
-    xy <- list(x = .index(x.temp), y = seq(min(x.temp, na.rm = TRUE), max(x.temp, na.rm = TRUE), length.out = NROW(x)))
-    do.call("plot", c(xy[1:2], list(type = "n", axes=FALSE, xlab = "", ylab = ""), dots))
+      xy <- list(x = .index(x.temp), y = seq(min(x.temp, na.rm = TRUE), max(x.temp, na.rm = TRUE), length.out = NROW(x)))
+      do.call("plot", c(xy[1:2], list(type = "n", axes=FALSE, xlab = "", ylab = ylab[scrn], log = log[scrn]), dots))
      
-    if(auto.grid) {
-      abline(v=xy$x[ep], col='grey', lty=4)
-      grid(NA,NULL)
-    }
+      if(auto.grid) {
+        abline(v=xy$x[ep], col='grey', lty=4)
+        grid(NA,NULL)
+      }
     
-    if(axes) {
-      if(minor.ticks)
-        axis(1, at=xy$x, labels=FALSE, col='#BBBBBB')
-      axis(1, at=xy$x[ep], labels=names(ep), las=1, lwd=1, mgp=c(3,2,0)) 
-      axis(2)
-    }
+      if(axes) {
+        if(minor.ticks)
+          axis(1, at=xy$x, labels=FALSE, col='#BBBBBB')
+        axis(1, at=xy$x[ep], labels=names(ep), las=1, lwd=1, mgp=c(3,2,0)) 
+        axis(2)
+      }
     
-    for(col in seq_len(NCOL(x.temp))){
-       lines(x.temp[, col], type = "l")
-    }
+      for(column in seq_len(NCOL(x.temp))){
+         lines(x.temp[, column], type = type[[scrn]][column], col = col[[scrn]][column], lwd = lwd[[scrn]][column])     
+      }
     
-    box() 
+      box() 
+    }
   }
-  
+  title(main, outer = TRUE)
   assign(".plot.xts",recordPlot(),.GlobalEnv)
-  
   return(invisible(reclass(x)))
 }
 
+setup.grid <- function(x){
+  # Sets up the axis background for the plot
+}

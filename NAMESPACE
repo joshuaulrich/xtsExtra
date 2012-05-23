@@ -1,2 +1,4 @@
-exportPattern("^[[:alpha:]]+")
+# exportPattern("^[[:alpha:]]+")
 # Won't want to export everything eventually (obviously)
+
+S3method(plot, xts)
