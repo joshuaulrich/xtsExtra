@@ -7,7 +7,7 @@ Plotting methods for xts objects.
 \usage{
 \method{plot}{xts}(x, y = NULL, 
                 	screens, screens.layout,
-                	type, auto.grid=TRUE,
+                	auto.grid=TRUE,
                     major.ticks='auto', minor.ticks=TRUE, 
                     major.format=TRUE,
                     bar.col='grey', candle.col='white',
@@ -21,7 +21,6 @@ Plotting methods for xts objects.
   	be plotted in. If not specified, then defaults to a single series per screen for
   	\code{type} not \code{"candles"} or \code{"bars"} See examples.}
   \item{screens.layout}{ Matrix (in a form that could be passed to layout) which arranges screens.}
-  \item{type}{ type of plot to produce; can be \code{"candles"} or \code{"bars"} in addition to the regular options. }
   \item{auto.grid}{ should grid lines be drawn }
   \item{major.ticks}{ should major tickmarks be drawn and labeled }
   \item{minor.ticks}{ should minor tickmarks be drawn }
@@ -34,20 +33,71 @@ Plotting methods for xts objects.
 }
 \details{
 Mainly used to draw time-series plots with sensible x-axis labels, it
-can also plot basic OHLC series using \code{type='candles'} or \code{type='bars'}.
+can also plot basic OHLC series using \code{type='candles'} or \code{type='bars'} [\code{'bars'} does not seem to be currently supported].
+
+Care has been taken to make plotting arguments passed by \code{...} behave smartly by classifying them as 'global', 'screen-wise', or 'column-wise' arguments and treating them as such. A partial listing includes:
+\itemize{
+  \item Global parameters: \code{main}
+  \item Screen-wise parameters: \code{log}
+  \item Column-wise parameters: \code{col},\code{type},\code{lwd}
+}
 
 Better financial plots can be found in the \pkg{quantmod} package, though
 these are generally incompatible with standard R graphics tools.
 }
-\value{
-Plots an xts object to the current device.
-}
-\author{ Jeffrey A. Ryan }
+\value{Invisibly returns the plotted object (or the merged object in the scatterplot case). Also assigns \code{.plot.xts} to \code{.GlobalEnv} which can be used to "replay" the plot.}
+\author{ Jeffrey A. Ryan with extensions by Michael Weylandt }
 \examples{
-data(sample_matrix)
-plot(sample_matrix)
-plot(as.xts(sample_matrix))
-plot(as.xts(sample_matrix), type='candles')
+data(sample_matrix, package = "xts")
+sample_xts <- as.xts(sample_matrix)
+
+# A very basic time series plot
+plot(sample_xts[,1]) 
+
+# A candle chart. quantmod does this much better
+plot(sample_xts, type='candles') 
+
+# By default prefers panels
+plot(sample_xts[,1:2]) 
+
+# But this can be too much for many-columned data
+plot(sample_xts[,rep(1:4, each = 3)]) 
+
+# Can customize screen layout
+plot(sample_xts, screens.layout = matrix(1:4, ncol = 2)) 
+
+# Or even be fancy with it
+plot(sample_xts[,1:3], screens.layout = matrix(c(1,1,2,3),ncol = 2, byrow = TRUE))
+
+plot(sample_xts[,1:4], screens.layout = matrix(c(1,1,1,1,2,3,4,4),ncol = 2, byrow = TRUE))
+
+# Or assign multiple series per screen (screens gets recycled as necessary)
+# Note smart assignment of colors
+plot(sample_xts, screens = 1:2) 
+
+# Example of how columnwise args are treated 
+# Note here that col gets recycled alongside screens so it's not helpful here
+plot(sample_xts, screens = 1:2, col = 1:2)
+
+# Best practice is to be specific in setting arguments and not use recycling
+plot(sample_xts, screens = c(1,2,1,2), col = c(1,1,2,2))
+
+# Example of how panelwise args are treated
+plot(10^sample_xts, screens = 1:2, log= c("","y"))
+
+# Global arguments play nice as well
+plot(sample_xts[,1:3], main = "A Truly Remarkble Time Series Plot")
+
+# Makes a scatterplot if we pass two series
+plot(sample_xts[,1],sample_xts[,2])
+
+# With some options
+plot(sample_xts[1:100,1],sample_xts[1:100,2], xy.labels = TRUE)
+
+# This will make more sense when color-gradient is implemented
+plot(sample_xts[,1],sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE)
+
+plot(sample_xts[,1], sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE, type = "l")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

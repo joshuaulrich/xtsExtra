@@ -1,10 +1,9 @@
-#
 #   xtsExtra: Extensions to xts during GSOC-2012
 #
 #   Copyright (C) 2012  Michael Weylandt: michael.weylandt@gmail.com
 #
-#   Scatterplot code taken from plot.zoo in the CRAN zoo package
-#   
+#   Scatterplot code taken from plot.zoo in the CRAN zoo package 
+#   Thanks to  A. Zeilis & G.Grothendieck
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -20,8 +19,10 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # To do: 
-#    REMOVE par() ARGS FROM FORMALS AND INSTEAD TREAT ... BETTER
-#      par(mfrow = c(2,2), mar = c(0,5,0,5), oma = c(6, 0, 5, 0)) -- seems to work for one column?
+#    REMOVE par() ARGS FROM FORMALS AND INSTEAD TREAT ... BETTER [Still need to do "type"]
+#    I think layout is working, but need to turn off x/y labels smartly when things are adjacent
+#    Handle not adjacent cases
+#    
 #    DO LAYOUT WITHOUT USING LAYOUT -- NEED TO BE ABLE TO MOVE BETWEEN PLOTS WHEN ADDING LINES?
 #    GET LAYOUT TO SUPPORT ADJACENT COLUMNS
 #    HANDLE xlim AS ISO8601 AS WELL
@@ -30,7 +31,8 @@
 #    Combine OHLC and multi-panel (i.e., if passed cbind(SPY, AGG)) 
 #    candle.col is not supported? 
 #    ylab.loc = c("left", "right", "out","in","flip","above") -- above kills panel alignment automatically
-
+#    Refactor plotting functionality into some non-exported bits
+#    We've stopped handling ylab? 
 
 ## How I really want to handle screens
 ## Give user ultimate flexibility in setting up screens combining them as desired with layout-like interface
@@ -42,12 +44,16 @@
 
 `plot.xts` <- function(x, y = NULL, 
                        screens, screens.layout,
-                       type, auto.grid=TRUE,
+                       auto.grid=TRUE,
                        major.ticks='auto', minor.ticks=TRUE, 
                        major.format=TRUE,
                        bar.col='grey', candle.col='white',
                        xy.labels = FALSE, xy.lines = NULL,
                        ...) {
+  
+  # Restore old par() options from what I change in here
+  old.par <- par(no.readonly = TRUE)
+  on.exit(par(old.par))
   
   dots <- list(...)
   
@@ -55,7 +61,7 @@
     # See if par was passed through ... 
     # if so, use it, else use default
     #
-    # Also strip from dots once it's been handled directly
+    # Also strip from dots once it has been handled directly
     # This is for "global" parameters
     # See setParCol for ones which are columnwise (series-wise)
     
@@ -109,7 +115,7 @@
        r
     } else {
       default
-    }     
+    }
     rep(r, length.out = length(screens))
   }
   
@@ -122,6 +128,7 @@
     ylab <- setParGlb(ylab, deparse(substitute(y)))
     main <- setParGlb(main, paste(xlab, "vs.", ylab))
     log <- setParGlb(log, '')
+    cex <- setParGlb(cex, 0.7)
     
     x <- try.xts(x); y <- try.xts(y)
     
@@ -139,13 +146,14 @@
     if(is.null(xy.lines)) xy.lines <- do.lab
     
     ptype <- setParGlb(type, if(do.lab) "n" else "p")
+    type <- setParGlb(type, if(do.lab) "c" else "l")
 
     do.call("plot.default", c(xy[1:2], list(type = ptype, main = main, xlab = xlab, 
       ylab = ylab, xlim = xlim, ylim = ylim, log = log), dots))
       
     if(do.lab) do.call("text", 
-      c(xy[1:2], list(labels = if(!is.logical(xy.labels)) xy.labels else index2char(index(xy.xts)), log = log), dots))
-    if(xy.lines) do.call("lines", c(xy[1:2], list( type = if(do.lab) "c" else "l", log = log), dots))
+      c(xy[1:2], dots, list(cex = cex, labels = if(!is.logical(xy.labels)) xy.labels else index2char(index(xy.xts)))))
+    if(xy.lines) do.call("lines", c(xy[1:2], list(type = type), dots))
 
     assign(".plot.xts", recordPlot(), .GlobalEnv)
     return(invisible(xy.xts))
@@ -158,10 +166,12 @@
   
   x <- try.xts(x)
   
-  # Catch OHLC case independently -- will violate DRY but that's ok for now
-  if(!missing(type) && type %in% c('candles','bars')){
-  
-    if(!is.OHLC(x)) stop(type, '-chart not supported for non-OHLC series')
+  # Catch OHLC case independently -- will violate DRY but that seems ok for now
+  if("type" %in% names(dots) && dots[["type"]] %in% c('candles','bars')){
+    
+    type <- setParGlb(type, 'candles') # This default doesn't really matter since we can't get here without it existing already
+    
+    if(!xts:::is.OHLC(x)) stop(type, '-chart not supported for non-OHLC series')
     if(type == 'bars') stop('OHLC bars not yet supported.')
   
     # Handle OHLC candles 
@@ -210,14 +220,16 @@
   
     ep <- axTicksByTime(x,major.ticks, format.labels=major.format)
   
-    type <- split(if(missing(type)) rep('l', NCOL(x)) else rep(type, length.out = NCOL(x)), screens)
-  
     col <- setParCol(col, lapply(split(seq_len(NCOL(x)), screens), rank), screens)
     lwd <- setParCol(lwd, split(rep(1, NCOL(x)), screens), screens)
+    type <- setParCol(type, split(rep('l', length(screens)), screens))
+    
     ylab <- setParScr(ylab, if(NCOL(x) == 1 || length(levels(screens)) == 1) "" else
       if(!is.null(colnames(x))) colnames(x) else paste("Column", seq_len(NCOL(x))), screens)
     log <- setParScr(log, '', screens)
+    
 
+    par(mar = c(0,0,0,0), oma = c(4, 6, 4, 4))
     layout(screens.layout) # BETTER TO DO THIS MANUALLY WITH PAR()
   
     # For now, loop over screens and do plots automatically
@@ -251,6 +263,6 @@
   return(invisible(reclass(x)))
 }
 
-setup.grid <- function(x){
-  # Sets up the axis background for the plot
-}
+#setup.grid <- function(x){
+#  # Sets up the axis background for the plot
+#}
