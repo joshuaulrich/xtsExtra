@@ -32,7 +32,7 @@
 #    candle.col is not supported? 
 #    ylab.loc = c("left", "right", "out","in","flip","above") -- above kills panel alignment automatically
 #    Refactor plotting functionality into some non-exported bits
-#    We've stopped handling ylab? 
+#    It stopped handling ylab when I did the axis hardcoding -- should be smarter
 
 ## How I really want to handle screens
 ## Give user ultimate flexibility in setting up screens combining them as desired with layout-like interface
@@ -81,7 +81,7 @@
     # See if par was passed through ...
     # if so, use it, else use default
     #
-    # Also strip from dots once it's been handled directly
+    # Also strip from dots once it has been handled directly
     # This is for column(series)-wise parameters
     # Returns a list where each list gives the colwise parameters per panel
     # Only used currently for time series columnwise
@@ -102,7 +102,7 @@
     # See if par was passed through ...
     # if so, use it, else use default
     #
-    # Also strip from dots once it's been handled directly
+    # Also strip from dots once it has been handled directly
     # This is for column(series)-wise parameters
     # Returns a list where each list gives the colwise parameters per panel
     # Only used currently for time series screenwise
@@ -222,7 +222,7 @@
   
     col <- setParCol(col, lapply(split(seq_len(NCOL(x)), screens), rank), screens)
     lwd <- setParCol(lwd, split(rep(1, NCOL(x)), screens), screens)
-    type <- setParCol(type, split(rep('l', length(screens)), screens))
+    type <- setParCol(type, split(rep('l', length(screens)), screens), screens)
     
     ylab <- setParScr(ylab, if(NCOL(x) == 1 || length(levels(screens)) == 1) "" else
       if(!is.null(colnames(x))) colnames(x) else paste("Column", seq_len(NCOL(x))), screens)

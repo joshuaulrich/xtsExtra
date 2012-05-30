@@ -80,7 +80,7 @@ plot(sample_xts, screens = 1:2)
 plot(sample_xts, screens = 1:2, col = 1:2)
 
 # Best practice is to be specific in setting arguments and not use recycling
-plot(sample_xts, screens = c(1,2,1,2), col = c(1,1,2,2))
+plot(sample_xts, screens = c(1,2,1,2), col = c(1,3,2,2))
 
 # Example of how panelwise args are treated
 plot(10^sample_xts, screens = 1:2, log= c("","y"))
