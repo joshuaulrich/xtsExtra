@@ -195,10 +195,8 @@
       axis(1, at=xy$x[ep], labels=names(ep), las=1, lwd=1, mgp=c(3,2,0)) 
       axis(2)
     }
-    
-    print(candle.col)
-    
-    xts:::plot.ohlc.candles(x, bar.col = bar.col, candle.col = candle.col)
+	  
+	xts:::plot.ohlc.candles(x, bar.col = bar.col, candle.col = candle.col)
     box()
     assign(".plot.xts",recordPlot(),.GlobalEnv) 
     return(invisible(reclass(x)))
