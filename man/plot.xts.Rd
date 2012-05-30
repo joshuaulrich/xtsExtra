@@ -6,7 +6,7 @@ Plotting methods for xts objects.
 }
 \usage{
 \method{plot}{xts}(x, y = NULL, 
-                	screens, screens.layout,
+                	screens = 'auto', layout.screens = 'auto',
                 	auto.grid=TRUE,
                     major.ticks='auto', minor.ticks=TRUE, 
                     major.format=TRUE,
@@ -20,7 +20,7 @@ Plotting methods for xts objects.
   \item{screens}{ factor (or coerced to factor) whose levels specify which graph each series is to 
   	be plotted in. If not specified, then defaults to a single series per screen for
   	\code{type} not \code{"candles"} or \code{"bars"} See examples.}
-  \item{screens.layout}{ Matrix (in a form that could be passed to layout) which arranges screens.}
+  \item{layout.screens}{ Matrix (in a form that could be passed to layout) which arranges screens.}
   \item{auto.grid}{ should grid lines be drawn }
   \item{major.ticks}{ should major tickmarks be drawn and labeled }
   \item{minor.ticks}{ should minor tickmarks be drawn }
@@ -64,12 +64,12 @@ plot(sample_xts[,1:2])
 plot(sample_xts[,rep(1:4, each = 3)]) 
 
 # Can customize screen layout
-plot(sample_xts, screens.layout = matrix(1:4, ncol = 2)) 
+plot(sample_xts, layout.screens = matrix(1:4, ncol = 2)) 
 
 # Or even be fancy with it
-plot(sample_xts[,1:3], screens.layout = matrix(c(1,1,2,3),ncol = 2, byrow = TRUE))
+plot(sample_xts[,1:3], layout.screens = matrix(c(1,1,2,3),ncol = 2, byrow = TRUE))
 
-plot(sample_xts[,1:4], screens.layout = matrix(c(1,1,1,1,2,3,4,4),ncol = 2, byrow = TRUE))
+plot(sample_xts[,1:4], layout.screens = matrix(c(1,1,1,1,2,3,4,4),ncol = 2, byrow = TRUE))
 
 # Or assign multiple series per screen (screens gets recycled as necessary)
 # Note smart assignment of colors

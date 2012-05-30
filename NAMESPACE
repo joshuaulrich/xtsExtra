@@ -1,4 +1,5 @@
-exportPattern("^[[:alpha:]]+")
+# exportPattern("^[[:alpha:]]+")
 # Won't want to export everything eventually (obviously)
-
+export("plot.xts")
+export("barplot.xts")
 S3method(plot, xts)
