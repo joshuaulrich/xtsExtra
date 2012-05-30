@@ -88,6 +88,9 @@ plot(10^sample_xts, screens = 1:2, log= c("","y"))
 # Global arguments play nice as well
 plot(sample_xts[,1:3], main = "A Truly Remarkble Time Series Plot")
 
+# Type = "h" nicely illustrates independent points
+plot(sample_xts[1:75,1:2] - 50.5, type = c("l","h"), lwd = c(1,2))
+
 # Makes a scatterplot if we pass two series
 plot(sample_xts[,1],sample_xts[,2])
 
