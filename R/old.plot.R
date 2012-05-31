@@ -42,7 +42,8 @@
 ## E.g. layout(matrix(c(1,2,1,3), ncol = 2) has three time axes -- one underneath the first set of panels, two more for each of the second row
 ## E.g. layout(matrix(c(1,2,3,1,4,5), ncol=2) has three time axes -- one underneath the first set of panels, two more for each of the third row [since shared with second]
 
-`plot.xts` <- function(x, y = NULL, 
+# UNEXPORTED AND I THINK NOW SUPERCEDED
+`old.plot.xts` <- function(x, y = NULL, 
                        screens, screens.layout,
                        auto.grid=TRUE,
                        major.ticks='auto', minor.ticks=TRUE, 

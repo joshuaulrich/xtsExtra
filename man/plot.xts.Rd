@@ -91,6 +91,23 @@ plot(sample_xts[,1:3], main = "A Truly Remarkble Time Series Plot")
 # Type = "h" nicely illustrates independent points
 plot(sample_xts[1:75,1:2] - 50.5, type = c("l","h"), lwd = c(1,2))
 
+# Type = "p" allows for transparent handling of the pch= argument
+x <- xts(1:5, Sys.Date() + 1:5)
+plot(x, type = "p")
+plot(x, type = "p", pch = 1:5)
+
+# Multivariate recycles over columns
+plot(merge(x,x), type = "p", pch = 1:5)
+
+# Unless you use a list
+plot(merge(x,x), type = "p", pch = list(1:5))
+plot(merge(x,x,x), type = "p", pch = list(1:5, 1:3))
+
+# Same for col= and cex= arguments
+plot(x, type = "p", col = 1:5, pch = 1:5, cex = 1:5)
+plot(merge(x,x), type = "p", col = 1:5, pch = 1:5, cex = 1:5)
+plot(merge(x,x), type = "p", col = list(1:5, 1:3), pch = list(1:5, 1:3), cex = list(1:5, 1:3))
+
 # Makes a scatterplot if we pass two series
 plot(sample_xts[,1],sample_xts[,2])
 

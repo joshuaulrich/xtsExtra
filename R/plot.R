@@ -116,12 +116,13 @@
                 auto.grid = auto.grid, ylab = ylab.panel, log = log.panel)
       
       col.panel  <- get.elm.from.dots("col", dots, screens, i)
-      lwd.panel  <- get.elm.from.dots("lwd", dots, screens, i)
       pch.panel  <- get.elm.from.dots("pch", dots, screens, i)
+      cex.panel  <- get.elm.from.dots("cex", dots, screens, i)
+      lwd.panel  <- get.elm.from.dots("lwd", dots, screens, i)
       type.panel <- get.elm.from.dots("type", dots, screens, i)
       
       do_add.lines(x.plot, col = col.panel, lwd = lwd.panel, pch = pch.panel, 
-                   type = type.panel)
+                   type = type.panel, cex = cex.panel)
     }
     
   }  
@@ -218,20 +219,22 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   box()
 }
 
-do_add.lines <- function(x, col, pch, lwd, type, ...){
+do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
   
   if(is.null(col)) col <- 1:NCOL(x)
   if(is.null(pch)) pch <- 1
+  if(is.null(cex)) cex <- 1
   if(is.null(lwd)) lwd <- 1
   if(is.null(type)) type <- "l"
   
   for(j in 1:NCOL(x)){
     col.t  <- get.elm.recycle(col, j)
     pch.t  <- get.elm.recycle(pch, j)
+    cex.t  <- get.elm.recycle(cex, j)
     lwd.t  <- get.elm.recycle(lwd, j)
     type.t <- get.elm.recycle(type, j)
     
-    lines(x[,j], col = col.t, pch = pch.t, type = type.t, lwd = lwd.t)
+    lines(x[,j], col = col.t, pch = pch.t, type = type.t, lwd = lwd.t, cex = cex.t)
   }
 }
 
@@ -266,5 +269,6 @@ get.elm.recycle <- function(vec, n){
 
 get.elm.from.dots <- function(par, dots, screens, n){
   if(!(par %in% names(dots))) NULL else 
-    get.elm.recycle(split(rep(dots[[par]], length.out = length(screens)), screens), n)
+    get.elm.recycle(split(rep(if(length(levels(screens)) == 1L) list(dots[[par]]) else dots[[par]],
+     length.out = length(screens)), screens), n)
 }
