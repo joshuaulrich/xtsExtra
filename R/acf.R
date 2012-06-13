@@ -3,21 +3,29 @@ acf <- function(x, ...){
 }
 
 # Why do we need this? Shouldn't this dispatch to acf.default?
-acf.ts <- stats::acf 
+acf.ts <- function(x, ...){
+  stats::acf(x, ...)
+} 
 
-acf.default <- stats::acf
+acf.default <- function(x, ...){
+  stats::acf(x, ...)
+}
 
 acf.xts <- function(x, ...){
-  if(!is.regular(x)) warning("Input series is not regular -- treating as such but methods may not be reliable.")
-  if(NCOL(x) > 1L) warning("Using only the first column.")
+  check.xts.stats(x)
   
   acf(coredata(x[,1, drop = FALSE]), ...)
   
 }
 
 pacf.xts <- function(x, lag.max, plot, na.action, ...){
-  if(!is.regular(x)) warning("Input series is not regular -- treating as such but methods may not be reliable.")
-  if(NCOL(x) > 1L) warning("Using only the first column.")
+  check.xts.stats(x)
   
   stats::pacf.default(coredata(x[,1, drop = FALSE]), lag.max, plot, na.action, ...)
+}
+
+check.xts.stats <- function(x){
+  if(!is.regular(x)) warning("Input series is not regular -- treating as such, but results may be unreliable.")
+  
+  if(NCOL(x) > 1L) warning("Using only the first column.")
 }

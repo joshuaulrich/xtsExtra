@@ -18,4 +18,14 @@ S3method(acf, ts)
 
 S3method(pacf,xts)
 
+export("arima")
+
+S3method(arima, default)
+S3method(arima, xts)
+
+export("arima0")
+
+S3method(arima0, default)
+S3method(arima0, xts)
+
 ## Data frame capability
