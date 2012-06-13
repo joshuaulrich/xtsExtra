@@ -30,6 +30,7 @@
 #    COLOR GRADIENT FOR SCATTERPLOT CASE
 #    Combine OHLC and multi-panel (i.e., if passed cbind(SPY, AGG)) 
 #    candle.col is not supported? 
+#    ohlc bars
 #    ylab.loc = c("left", "right", "out","in","flip","above") -- above kills panel alignment automatically
 #    Refactor plotting functionality into some non-exported bits
 #    It stopped handling ylab when I did the axis hardcoding -- should be smarter
@@ -76,6 +77,17 @@
   main <- if(!("main" %in% names(dots))) deparse(substitute(x)) else dots[["main"]]
   
   x <- try.xts(x)
+						   
+  if("xlim" %in% names(dots)){
+	  xlim <- dots[["xlim"]]
+	
+	  if(is.numeric(x)){  
+	    warning("Numeric xlim not yet supported.")  
+	  }  
+	  if(is.character(xlim)){  
+	    x <- x[xlim, , drop = FALSE]
+	  }
+  }
   
   # Catch OHLC case independently
   if("type" %in% names(dots) && dots[["type"]] %in% c('candles','bars')){
@@ -96,7 +108,9 @@
     # For now, loop over screens one by one constructing relevant elements
     for(i in seq_along(levels((screens)))){
       x.plot <- x.split[[i]]
-      # Set Margins if we are plotting x-time here?
+    
+      
+      # Set Margins for each panel here!
       
       # Handle the screen-wise parameters here
       if("ylab" %in% names(dots)) {
@@ -172,6 +186,8 @@ do_layout <- function(x, screens, layout.screens){
   if(identical(layout.screens, "auto")){
     layout.screens <- seq_along(levels(screens))
   }
+  
+  layout.screens <- as.matrix(layout.screens)
   
   # Would like to use do.call and as.list so pro-users can pass widths and heights
   # to layout -- currently undocumented behavior
@@ -272,3 +288,4 @@ get.elm.from.dots <- function(par, dots, screens, n){
     get.elm.recycle(split(rep(if(length(levels(screens)) == 1L) list(dots[[par]]) else dots[[par]],
      length.out = length(screens)), screens), n)
 }
+  

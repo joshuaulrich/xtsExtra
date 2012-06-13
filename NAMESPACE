@@ -1,5 +1,21 @@
-# exportPattern("^[[:alpha:]]+")
-# Won't want to export everything eventually (obviously)
+## Graphics
+
 export("plot.xts")
-export("barplot.xts")
+# export("barplot.xts") -- Not yet ready
 S3method(plot, xts)
+
+## Analytics
+
+export("acf")
+# export("acf.xts")
+# export("pacf.xts")
+# export("acf.ts")
+# export("acf.default")
+
+S3method(acf, default)
+S3method(acf, xts)
+S3method(acf, ts)
+
+S3method(pacf,xts)
+
+## Data frame capability
