@@ -23,3 +23,9 @@
 }
 \value{An \code{Arima} or \code{arima0} object as appropriate with the residuals coerced back to xts objects.}
 \author{ Michael Weylandt }
+
+\examples{
+# Hopefully we don't break this
+example("arima","stats")
+example("arima0","stats")
+}

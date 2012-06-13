@@ -18,3 +18,9 @@
 }
 \value{An \code{acf} or \code{pacf} object as appropriate.}
 \author{ Michael Weylandt }
+
+\examples{
+# Hopefully we don't break this
+example("acf", "stats")
+example("pacf", "stats")
+}

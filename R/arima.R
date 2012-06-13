@@ -3,15 +3,23 @@ arima <- function(x, ...){
 }
 
 arima.default <- function(x, ...){
-  stats::arima(x, ...)
+  series <- deparse(substitute(x))
+  ans <- stats::arima(x, ...)
+  ans$series <- series
+  ans$call <- match.call()
+  
+  ans
 }
 
 arima.xts <- function(x, ...){
+  series <- deparse(substitute(x))
   check.xts.stats(x)
   
   ans <- arima(coredata(x[, 1, drop = FALSE]), ...)
   
   ans$residuals <- xts(ans$residuals, time(x))
+  ans$call <- match.call()
+  ans$series <- series
   
   class(ans) <- c("xtsArima","Arima")
   
@@ -23,16 +31,24 @@ arima0 <- function(x, ...){
 }
 
 arima0.default <- function(x, ...){
-  stats::arima(x, ...)
+  series <- deparse(substitute(x))
+  
+  ans <- stats::arima0(x, ...)
+  ans$call <- match.call()
+  ans$series <- series
+  
+  ans
 }
 
 arima0.xts <- function(x, ...){
+  series <- deparse(substitute(x))
   check.xts.stats(x)
   
   ans <- arima0(coredata(x[, 1, drop = FALSE]), ...)
   
   ans$residuals <- xts(ans$residuals, time(x))
-  
+  ans$call <- match.call()
+  ans$series <- series
   class(ans) <- c("xtsarima0","arima0")
   
   ans

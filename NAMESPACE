@@ -28,4 +28,13 @@ export("arima0")
 S3method(arima0, default)
 S3method(arima0, xts)
 
+export("StructTS")
+
+S3method(StructTS, default)
+S3method(StructTS, xts)
+
+export("HoltWinters")
+S3method(HoltWinters, default)
+S3method(HoltWinters, xts)
+
 ## Data frame capability
