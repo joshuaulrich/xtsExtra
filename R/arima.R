@@ -9,9 +9,9 @@ arima.default <- function(x, ...){
 arima.xts <- function(x, ...){
   check.xts.stats(x)
   
-  ans <- arima(x[, 1, drop = FALSE], ...)
+  ans <- arima(coredata(x[, 1, drop = FALSE]), ...)
   
-  ans$residuals <- as.xts(ans$residuals, time(x))
+  ans$residuals <- xts(ans$residuals, time(x))
   
   class(ans) <- c("xtsArima","Arima")
   
@@ -29,9 +29,9 @@ arima0.default <- function(x, ...){
 arima0.xts <- function(x, ...){
   check.xts.stats(x)
   
-  ans <- arima0(x[, 1, drop = FALSE], ...)
+  ans <- arima0(coredata(x[, 1, drop = FALSE]), ...)
   
-  ans$residuals <- as.xts(ans$residuals, time(x))
+  ans$residuals <- xts(ans$residuals, time(x))
   
   class(ans) <- c("xtsarima0","arima0")
   
