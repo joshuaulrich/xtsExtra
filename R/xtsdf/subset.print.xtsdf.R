@@ -15,7 +15,22 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-`[.xtsdf` <- function(x, i, k, drop = FALSE, which.i = FALSE, ...){}
+`[.xtsdf` <- function(x, i, j, drop = FALSE, which.i = FALSE, ...){
+  if(missing(i)) {
+    x <- unclass(x)[j]
+    class(x) <- "xtsdf"
+    return(x)
+  }
+     
+  x <- x[,j]
+     
+  # For now simply loop over x and use i as appropriate
+  ans <- lapply(x, function(x) x[i = i, drop = drop, which.i = which.i, ...])   
+  class(ans) <- "xtsdf"
+  
+  ans
+  
+}
 
 print.xtsdf <- function(x, ...){
   print(as.data.frame(x, row.names = index(x)), ...)
