@@ -53,7 +53,7 @@ as.xtsdf.data.frame <- function(x, order.by, ..., frequency = NULL, unique = TRU
     order.by <- as.POSIXct(order.by, ...)
   }
   
-  ans <- sapply(as.list(d), function(x) xts(x, order.by, frequency = frequency, unique = unique, tzone = tzone))
+  ans <- lapply(as.list(d), function(x) xts(x, order.by, frequency = frequency, unique = unique, tzone = tzone))
   class(ans) <- "xtsdf"
   
   ans
@@ -62,9 +62,14 @@ as.xtsdf.data.frame <- function(x, order.by, ..., frequency = NULL, unique = TRU
 as.data.frame.xtsdf <- function(x, row.names = NULL, optional = FALSE, ...){
   row.names <- if(is.null(row.names)) index(x) else row.names
   
-  do.call("data.frame", list(x, row.names = row.names, check.names = optional, ...))
+  do.call("data.frame", c(x, list(row.names = row.names, check.names = optional, ...)))
 }
 
 as.xts.xtsdf <- function(x, ...){
   xts(do.call("cbind", x), ...)
 }
+
+index.xtsdf <- function(x, ...) index(x[[1]], ...)
+
+as.list.xtsdf <- function(x, ...) unclass(x)
+
