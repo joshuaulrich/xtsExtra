@@ -21,4 +21,22 @@ print.xtsdf <- function(x, ...){
   print(as.data.frame(x, row.names = index(x)), ...)
 }
 
-str.xtsdf <- function(object, ...) {}
+str.xtsdf <- function(object, ...) {
+  cat(paste("An", sQuote("xtsdf"), "object from", index(first(object[[1]])), 
+            "to", index(last(object[[1]])),"containing",NROW(object),"observations of",NCOL(object),"variables:\n\n"))
+  
+  for(i in seq_len(NCOL(object))){
+    # Should align names more attractively? 
+    
+    cat(" ", names(object)[i],"$: ")
+    str(coredata(object[[i]]))
+  }
+  cat("\n")
+  cat(paste("  Indexed by objects of class: "))
+  cat(paste("[", paste(indexClass(object), collapse = ","), 
+            "] ", sep = ""))
+  cat(paste("TZ: ", indexTZ(object), "\n", sep = ""))
+  if (!is.null(CLASS(object))) 
+    cat(paste("  Original class: '", CLASS(object), "' ", 
+              sep = ""), "\n")
+}

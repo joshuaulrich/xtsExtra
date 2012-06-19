@@ -69,7 +69,3 @@ as.xts.xtsdf <- function(x, ...){
   xts(do.call("cbind", x), ...)
 }
 
-index.xtsdf <- function(x, ...) index(x[[1]], ...)
-
-as.list.xtsdf <- function(x, ...) unclass(x)
-
