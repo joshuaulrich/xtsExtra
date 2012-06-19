@@ -28,3 +28,13 @@ dimnames.xtsdf <- function(x) list(index(x), names(x))
 
 as.zoo.xtsdf <- function(x, ...) as.zoo(as.xts(x, ...), ...)
 
+indexTZ.xtsdf <- function(x, ...) indexTZ(x[[1]])
+
+
+#### NEED TO MAKE INDEX CLASS A S3 GENERIC FOR NOW
+
+indexClass <- function(x) UseMethod("indexClass")
+
+indexClass.xts <- xts::indexClass
+
+indexClass.xtsdf <- function(x) indexClass(x[[1]])
