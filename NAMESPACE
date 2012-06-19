@@ -38,18 +38,23 @@ S3method(HoltWinters, default)
 S3method(HoltWinters, xts)
 
 # WHY DON'T DEPENDENCIES COVER THESE IMPORTS? 
-
-importFrom("stats", pacf)
-importFrom("xts", as.xts, indexTZ) 
-importFrom("zoo", index, as.zoo)
+import(stats)
+import(utils)
+import(xts)
+import(zoo)
 
 ## Data frame capability
+S3method(Ops, xtsdf)
+S3method(Summary, xtsdf)
+S3method(Math, xtsdf)
 
 export("xtsdf")
 export("as.xtsdf")
 
 S3method(as.xtsdf, xts)
 S3method(as.xtsdf, data.frame)
+S3method(as.xtsdf, xtsdf)
+S3method(as.xtsdf, matrix)
 
 S3method(as.data.frame, xtsdf)
 S3method(as.xts, xtsdf)
@@ -65,11 +70,22 @@ S3method(merge, xtsdf)
 
 export(is.xtsdf)
 S3method(index, xtsdf)
+S3method(time, xtsdf)
+S3method(indexTZ, xtsdf)
+
+S3method(`index<-`, xtsdf)
+S3method(`time<-`, xtsdf)
+S3method(`indexTZ<-`, xtsdf)
+
 S3method(as.list, xtsdf)
 S3method(dim, xtsdf)
 S3method(dimnames, xtsdf)
 S3method(as.zoo, xtsdf)
-S3method(indexTZ, xtsdf)
+S3method(lag, xtsdf)
+S3method(summary, xtsdf)
+S3method(head, xtsdf)
+S3method(tail, xtsdf)
+S3method(coredata, xtsdf)
 
 #### NEED TO MAKE INDEX CLASS A S3 GENERIC FOR NOW
 export("indexClass")

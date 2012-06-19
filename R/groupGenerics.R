@@ -15,20 +15,19 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# When to do joins/merges xts style and df style?
+# Not at all committed to this -- 
+#   should we use inner joins/merges first? Date alignment like xts? Both? Neither?
 
-c.xtsdf <- function(...){
-  
-}
-  
-cbind.xtsdf <- function(..., deparse.level = 1){
-  
+Ops.xtsdf <- function(e1, e2 = NULL){
+  as.xtsdf(match.fun(.Generic)(as.data.frame(e1), e2), order.by = index(e1))
 }
 
-rbind.xtsdf <- function(..., deparse.level = 1){
-  
+# This one seems solid
+Math.xtsdf <- function(x, ...){
+  .Class <- "data.frame"
+  as.xtsdf(NextMethod(.Generic), order.by = index(x))
 }
 
-merge.xtsdf <- function(x, y, ...) {
-  
+Summary.xtsdf <- function(..., na.rm){
+  do.call(match.fun(.Generic), c(lapply(..., as.data.frame), na.rm = na.rm))
 }

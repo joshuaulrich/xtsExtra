@@ -60,6 +60,8 @@ as.xtsdf.data.frame <- function(x, order.by, ..., frequency = NULL, unique = TRU
   ans
 }
 
+as.xtsdf.matrix <- function(x, ...) as.xtsdf(as.data.frame(x), ...)
+
 as.data.frame.xtsdf <- function(x, row.names = NULL, optional = FALSE, ...){
   row.names <- if(is.null(row.names)) index(x) else row.names
   
@@ -70,3 +72,4 @@ as.xts.xtsdf <- function(x, ...){
   xts(do.call("cbind", x), ...)
 }
 
+as.xtsdf.xtsdf <- function(x, ...) x
