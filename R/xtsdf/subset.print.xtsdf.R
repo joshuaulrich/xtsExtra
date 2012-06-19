@@ -17,6 +17,8 @@
 
 `[.xtsdf` <- function(x, i, k, drop = FALSE, which.i = FALSE, ...){}
 
-print.xtsdf <- function(x, fmt, ...){}
+print.xtsdf <- function(x, ...){
+  print(as.data.frame(x, row.names = index(x)), ...)
+}
 
 str.xtsdf <- function(object, ...) {}
