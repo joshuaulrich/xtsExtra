@@ -37,4 +37,41 @@ export("HoltWinters")
 S3method(HoltWinters, default)
 S3method(HoltWinters, xts)
 
+# WHY DON'T DEPENDENCIES COVER THESE IMPORTS? 
+
+importFrom("stats", pacf)
+importFrom("xts", as.xts, indexTZ) 
+importFrom("zoo", index, as.zoo)
+
 ## Data frame capability
+
+export("xtsdf")
+export("as.xtsdf")
+
+S3method(as.xtsdf, xts)
+S3method(as.xtsdf, data.frame)
+
+S3method(as.data.frame, xtsdf)
+S3method(as.xts, xtsdf)
+
+S3method(`[`,xtsdf)
+S3method(print, xtsdf)
+S3method(str, xtsdf)
+
+S3method(c, xtsdf)
+S3method(cbind, xtsdf)
+S3method(rbind, xtsdf)
+S3method(merge, xtsdf)
+
+export(is.xtsdf)
+S3method(index, xtsdf)
+S3method(as.list, xtsdf)
+S3method(dim, xtsdf)
+S3method(dimnames, xtsdf)
+S3method(as.zoo, xtsdf)
+S3method(indexTZ, xtsdf)
+
+#### NEED TO MAKE INDEX CLASS A S3 GENERIC FOR NOW
+export("indexClass")
+S3method(indexClass, xts)
+S3method(indexClass, xtsdf)

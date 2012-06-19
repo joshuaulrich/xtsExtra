@@ -27,10 +27,11 @@ xtsdf <- function(..., order.by = index(x), frequency = NULL, unique = TRUE, tzo
                   stringsAsFactors = default.stringsAsFactors(), check.names = TRUE) {
   # xtsdf constructor function
   # uses xts() and data.frame() code instead of rewriting all the name handling
-  
-  as.xtsdf(data.frame(..., stringsAsFactors = stringsAsFactors, check.names = check.names), 
-           order.by = order.by, frequency = frequency, unique = unique, tzone = tzone)
+  x <- data.frame(..., stringsAsFactors = stringsAsFactors, check.names = check.names)
+  as.xtsdf(x, order.by = order.by, frequency = frequency, unique = unique, tzone = tzone)
 }
+
+is.xtsdf <- function(x) inherits(x, "xtsdf")
 
 as.xtsdf <- function(x, ...) UseMethod("as.xtsdf")
 
@@ -53,7 +54,7 @@ as.xtsdf.data.frame <- function(x, order.by, ..., frequency = NULL, unique = TRU
     order.by <- as.POSIXct(order.by, ...)
   }
   
-  ans <- lapply(as.list(d), function(x) xts(x, order.by, frequency = frequency, unique = unique, tzone = tzone))
+  ans <- lapply(as.list(x), function(x) xts(x, order.by = order.by, frequency = frequency, unique = unique, tzone = tzone))
   class(ans) <- "xtsdf"
   
   ans
@@ -62,7 +63,7 @@ as.xtsdf.data.frame <- function(x, order.by, ..., frequency = NULL, unique = TRU
 as.data.frame.xtsdf <- function(x, row.names = NULL, optional = FALSE, ...){
   row.names <- if(is.null(row.names)) index(x) else row.names
   
-  do.call("data.frame", c(x, list(row.names = row.names, check.names = optional, ...)))
+  do.call("data.frame", c(as.list(x), list(row.names = row.names, check.names = optional, ...)))
 }
 
 as.xts.xtsdf <- function(x, ...){

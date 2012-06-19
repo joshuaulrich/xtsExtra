@@ -15,21 +15,19 @@ Plotting methods for xts objects.
                        ...)
 }
 \arguments{
-  \item{x}{ an \code{xts} object }
-  \item{y}{ an \code{xts} object or NULL }
-  \item{screens}{ factor (or coerced to factor) whose levels specify which graph each series is to 
-  	be plotted in. If not specified, then defaults to a single series per screen for
-  	\code{type} not \code{"candles"} or \code{"bars"} See examples.}
+  \item{x}{an \code{xts} object}
+  \item{y}{an \code{xts} object or \code{NULL}}
+  \item{screens}{factor (or coerced to factor) whose levels specify which graph each series is to be plotted in. If not specified, then defaults to a single series per screen for \code{type} not \code{"candles"} or \code{"bars"} See examples.}
   \item{layout.screens}{ Matrix (in a form that could be passed to layout) which arranges screens.}
-  \item{auto.grid}{ should grid lines be drawn }
-  \item{major.ticks}{ should major tickmarks be drawn and labeled }
-  \item{minor.ticks}{ should minor tickmarks be drawn }
-  \item{major.format}{ passed along to axTicksByTime. See also }
-  \item{bar.col}{ the color of the bars when type is \sQuote{bars} or \sQuote{candles} }
-  \item{candle.col}{ the color of the candles when type is \sQuote{candles} }
-  \item{xy.labels}{ label points in scatterplot?}
-  \item{xy.lines}{ connect points in scatterplot?}
-  \item{\dots}{ additional graphical arguments }
+  \item{auto.grid}{should grid lines be drawn}
+  \item{major.ticks}{should major tickmarks be drawn and labeled}
+  \item{minor.ticks}{should minor tickmarks be drawn}
+  \item{major.format}{passed along to axTicksByTime.}
+  \item{bar.col}{the color of the bars when type is \sQuote{bars} or \sQuote{candles}}
+  \item{candle.col}{the color of the candles when type is \sQuote{candles}}
+  \item{xy.labels}{label points in scatterplot?}
+  \item{xy.lines}{connect points in scatterplot?}
+  \item{\dots}{additional graphical arguments}
 }
 \details{
 Mainly used to draw time-series plots with sensible x-axis labels, it
