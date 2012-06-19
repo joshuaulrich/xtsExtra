@@ -1,21 +1,14 @@
-acf <- function(x, ...){
-  UseMethod("acf")
-}
+acf <- function(x, ...) UseMethod("acf")
 
 # Why do we need this? Shouldn't this dispatch to acf.default?
-acf.ts <- function(x, ...){
-  stats::acf(x, ...)
-} 
+acf.ts <- function(x, ...) stats::acf(x, ...)
 
-acf.default <- function(x, ...){
-  stats::acf(x, ...)
-}
+acf.default <- function(x, ...) stats::acf(x, ...)
 
 acf.xts <- function(x, ...){
   check.xts.stats(x)
   
   acf(coredata(x[,1, drop = FALSE]), ...)
-  
 }
 
 pacf.xts <- function(x, lag.max, plot, na.action, ...){

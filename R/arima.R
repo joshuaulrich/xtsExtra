@@ -1,6 +1,4 @@
-arima <- function(x, ...){
-  UseMethod("arima")
-}
+arima <- function(x, ...) UseMethod("arima")
 
 arima.default <- function(x, ...){
   series <- deparse(substitute(x))
@@ -26,9 +24,7 @@ arima.xts <- function(x, ...){
   ans
 }
 
-arima0 <- function(x, ...){
-  UseMethod("arima0")
-}
+arima0 <- function(x, ...) UseMethod("arima0")
 
 arima0.default <- function(x, ...){
   series <- deparse(substitute(x))
