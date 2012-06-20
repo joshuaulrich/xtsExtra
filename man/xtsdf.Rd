@@ -21,10 +21,10 @@ is.xtsdf(x)
   \item{order.by}{ a corresponding vector of unique times/dates - must be
 of a known time-based class. See details of \code{xts}.}
   \item{frequency}{ numeric indicating frequency of \code{order.by}. See details of \code{xts}. }
-  \item{unique}{ should index be checked for unique time-stamps? }
+  \item{unique}{Logical. Should index be checked for unique time-stamps? }
   \item{tzone}{ time zone of series }
-  \item{stringsAsFactors}{ Should strings be converted to factors?}
-  \item{check.names}{Should column names be made syntactically correct?}
+  \item{stringsAsFactors}{Logical. Should strings be converted to factors? Note that \code{xts} does not currently support factors so this doesn't really do much..}
+  \item{check.names}{Logical. Should column names be made syntactically correct?}
   \item{x}{An object to be tested or coerced to class \code{xtsdf}.}
 }
 \details{

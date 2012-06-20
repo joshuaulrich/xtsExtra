@@ -19,11 +19,13 @@
 #   should we use inner joins/merges first? Date alignment like xts? Both? Neither?
 
 Ops.xtsdf <- function(e1, e2 = NULL){
+  # Would be much happier to do this without ever using as.df for speed
   as.xtsdf(match.fun(.Generic)(as.data.frame(e1), e2), order.by = index(e1))
 }
 
 # This one seems solid
 Math.xtsdf <- function(x, ...){
+  # Would be much happier to do this without ever using as.df for speed
   .Class <- "data.frame"
   as.xtsdf(NextMethod(.Generic), order.by = index(x))
 }

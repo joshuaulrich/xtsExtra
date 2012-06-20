@@ -60,6 +60,7 @@ S3method(as.data.frame, xtsdf)
 S3method(as.xts, xtsdf)
 
 S3method(`[`,xtsdf)
+S3method(`[<-`, xtsdf)
 S3method(print, xtsdf)
 S3method(str, xtsdf)
 

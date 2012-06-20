@@ -32,7 +32,15 @@
   
 }
 
+`[<-.xtsdf` <- function(x, i, j, value){
+  # Would be much happier to do this without ever using as.df for speed
+  x.df <- as.data.frame(x, stringsAsFactors = FALSE)
+  x.df[i,j] <- value
+  as.xtsdf(x.df, order.by = index(x))
+}
+
 print.xtsdf <- function(x, ...){
+  # Would be much happier to do this without ever using as.df for speed
   print(as.data.frame(x, row.names = index(x)), ...)
 }
 
