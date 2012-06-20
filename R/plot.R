@@ -102,14 +102,18 @@
           auto.grid = auto.grid, major.format = major.format, main = main, ...)
   } else {  
     # Else need to do layout plots
-    screens = do_layout(x, screens = screens, layout.screens = layout.screens)
+    screens <- do_layout(x, screens = screens, layout.screens = layout.screens)
+    
+    have_x_axis <- screens[["have_x_axis"]]
+    have_y_axis <- screens[["have_y_axis"]]
+    screens <- screens[["screens"]]
+    
     x.split <- split.xts.by.cols(x, screens)
     
     # For now, loop over screens one by one constructing relevant elements
     for(i in seq_along(levels((screens)))){
       x.plot <- x.split[[i]]
     
-      
       # Set Margins for each panel here!
       
       # Handle the screen-wise parameters here
@@ -127,7 +131,8 @@
       
       # Note that do_add.grid also sets up axes and what not
       do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
-                auto.grid = auto.grid, ylab = ylab.panel, log = log.panel)
+                auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
+                  have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i])
       
       col.panel  <- get.elm.from.dots("col", dots, screens, i)
       pch.panel  <- get.elm.from.dots("pch", dots, screens, i)
@@ -194,6 +199,28 @@ do_layout <- function(x, screens, layout.screens){
   # do.call("layout", as.list(layout.screens)) 
   layout(layout.screens)
   
+  have_x_axis <- logical(length(levels(screens)))
+  for(i in seq_len(NROW(layout.screens))){
+    if(i == NROW(layout.screens)){
+      have_x_axis[layout.screens[i,]] <- TRUE
+    } else {
+      if(!identical(as.logical(diff(layout.screens[i,])), as.logical(diff(layout.screens[i+1,])))){
+        have_x_axis[layout.screens[i,]] <- TRUE  
+      }
+    }
+  }
+  
+  have_y_axis <- logical(length(levels(screens)))
+  for(i in seq_len(NCOL(layout.screens))){
+    if(i == 1){
+      have_y_axis[layout.screens[,i]] <- TRUE
+    } else {
+      if(!identical(as.logical(diff(layout.screens[,i-1])), as.logical(diff(layout.screens[,i])))){
+        have_y_axis[layout.screens[,i]] <- TRUE  
+      }
+    }
+  }
+  
   if(length(levels(screens)) > 1L) par(mar = c(0,0,0,0), oma = c(4, 6, 4, 4))
   
   #####
@@ -203,11 +230,11 @@ do_layout <- function(x, screens, layout.screens){
   #####
   
   # TODO: return boolean of where x-axes labels should go
-  return(screens)
+  return(list(screens = screens, have_x_axis = have_x_axis, have_y_axis = have_y_axis))
 }
 
 do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes, 
-                        auto.grid, xlab, ylab, log,...){
+                        auto.grid, xlab, ylab, log, have_x_axis, have_y_axis, ...){
   
   # Plotting Defaults
   if(missing(axes)) axes <- TRUE
@@ -226,10 +253,14 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   }
   
   if(axes) {
-    if(minor.ticks)
-      axis(1, at=xy$x, labels=FALSE, col='#BBBBBB')
-    axis(1, at=xy$x[ep], labels=names(ep), las=1, lwd=1, mgp=c(3,2,0)) 
-    axis(2)
+    if(have_x_axis){
+      if(minor.ticks) axis(1, at=xy$x, labels=FALSE, col='#BBBBBB')
+      axis(1, at=xy$x[ep], labels=names(ep), las=1, lwd=1, mgp=c(3,2,0))  
+    }
+    
+    if(have_y_axis){
+      axis(2)  
+    }
   }
   
   box()
@@ -267,7 +298,8 @@ do_plot.ohlc.candles <- function(x, bar.col, candle.col, major.ticks,
   x <- x[,xts:::has.OHLC(x, TRUE)] 
   
   do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
-              minor.ticks = minor.ticks, auto.grid = auto.grid, ...)
+              minor.ticks = minor.ticks, auto.grid = auto.grid, 
+              have_x_axis = TRUE, have_y_axis = TRUE, ...)
   
   xts:::plot.ohlc.candles(x, bar.col = bar.col, candle.col = candle.col)
   return(invisible(reclass(x)))
