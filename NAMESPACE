@@ -7,11 +7,6 @@ S3method(plot, xts)
 ## Analytics
 
 export("acf")
-# export("acf.xts")
-# export("pacf.xts")
-# export("acf.ts")
-# export("acf.default")
-
 S3method(acf, default)
 S3method(acf, xts)
 S3method(acf, ts)
@@ -29,13 +24,16 @@ S3method(arima0, default)
 S3method(arima0, xts)
 
 export("StructTS")
-
 S3method(StructTS, default)
 S3method(StructTS, xts)
 
 export("HoltWinters")
 S3method(HoltWinters, default)
 S3method(HoltWinters, xts)
+
+export("stl")
+S3method(stl, default)
+S3method(stl, xts)
 
 # WHY DON'T DEPENDENCIES COVER THESE IMPORTS? 
 import(stats)

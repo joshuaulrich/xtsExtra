@@ -19,6 +19,31 @@ StructTS.xts <- function(x, ...){
   ans
 }
 
+stl<- function(x, ...){
+  UseMethod("stl")
+}
+
+stl.default <- function(x, ...){
+  ans <- stats::stl(x, ...)
+  ans[["call"]] <- match.call()
+  
+  ans
+}
+
+stl.xts <- function(x, ...){
+  check.xts.stats(x)
+  
+  ans <- stl(coredata(x[, 1, drop = FALSE]), ...)
+  
+  ans[["time.series"]] <- xts(ans[["time.series"]], time(x))
+  ans[["call"]] <- match.call()
+  
+  class(ans) <- c("xtsStl","stl")
+  
+  ans
+}
+
+
 HoltWinters <- function(x, ...){
   UseMethod("HoltWinters")
 }
