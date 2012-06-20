@@ -25,7 +25,6 @@
 #    
 #    DO LAYOUT WITHOUT USING LAYOUT -- NEED TO BE ABLE TO MOVE BETWEEN PLOTS WHEN ADDING LINES?
 #    GET LAYOUT TO SUPPORT ADJACENT COLUMNS
-#    HANDLE xlim AS ISO8601 AS WELL
 #    legend.loc
 #    COLOR GRADIENT FOR SCATTERPLOT CASE
 #    Combine OHLC and multi-panel (i.e., if passed cbind(SPY, AGG)) 
@@ -34,6 +33,9 @@
 #    ylab.loc = c("left", "right", "out","in","flip","above") -- above kills panel alignment automatically
 #    Refactor plotting functionality into some non-exported bits
 #    It stopped handling ylab when I did the axis hardcoding -- should be smarter
+#    x <- as.xts(sample_matrix); plot(cbind(x, x[,1]), layout = matrix(1:6, ncol = 2)) -- is this a bug?: JMU
+#    Option to have fixed y-scale throughout
+#    xlim smart subsetting should be panel-wise
 
 ## How I really want to handle screens
 ## Give user ultimate flexibility in setting up screens combining them as desired with layout-like interface
@@ -79,14 +81,20 @@
   x <- try.xts(x)
 						   
   if("xlim" %in% names(dots)){
-	  xlim <- dots[["xlim"]]
-	
-	  if(is.numeric(x)){  
-	    warning("Numeric xlim not yet supported.")  
-	  }  
-	  if(is.character(xlim)){  
-	    x <- x[xlim, , drop = FALSE]
-	  }
+    xlim <- dots[["xlim"]]
+	  
+    if(is.timeBased(xlim)){
+      if(length(xlim) != 2L) stop("Need endpoints only for xlim")
+      xlim <- do.call(paste0("as.",indexClass(x))[1], list(xlim))
+      x <- x[(index(x) > xlim[1]) & (index(x) < xlim[2]), , drop = FALSE]
+    }
+    if(is.numeric(xlim)){
+      warning("Using xlim as row indices -- provide timeBased xlim if you want to subset that way")
+      x <- x[xlim[1]:xlim[2], drop = FALSE]
+    }
+    if(is.character(xlim)){  
+      x <- x[xlim, , drop = FALSE]
+    }
   }
   
   # Catch OHLC case independently
