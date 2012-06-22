@@ -30,9 +30,10 @@
 #    Combine OHLC and multi-panel (i.e., if passed cbind(SPY, AGG)) 
 #    Smarter OHLC candle width? I like bar width
 #    Change default OHLC colors
+#    Support up/down OHLC bar colors or is it better to use quantmod at this point?
 #    ylab.loc = c("left", "right", "out","in","flip","above") -- above kills panel alignment automatically
 #    Refactor plotting functionality into some non-exported bits
-#    It stopped handling ylab when I did the axis hardcoding -- should be smarter
+#    It stopped showing ylab when I did the axis hardcoding -- should be fixed with margins
 #    x <- as.xts(sample_matrix); plot(cbind(x, x[,1]), layout = matrix(1:6, ncol = 2)) -- is this a bug?: JMU
 #    Option to have fixed y-scale throughout
 #    xlim smart subsetting should be panel-wise
@@ -303,7 +304,7 @@ do_plot.ohlc <- function(x, bar.col, candle.col, major.ticks,
   
   if(QUANTMOD_MESSAGE) {
     message("Note that CRAN Package quantmod provides much better OHLC charting.\n",
-            "This message will show once per sesion.")
+            "This message will show once per session.")
     assignInMyNamespace("QUANTMOD_MESSAGE",FALSE) 
     # Is there a better way to do this ? 
     # I'd think lexical scoping but I get a locked binding error
