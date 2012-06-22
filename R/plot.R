@@ -28,8 +28,8 @@
 #    legend.loc
 #    COLOR GRADIENT FOR SCATTERPLOT CASE
 #    Combine OHLC and multi-panel (i.e., if passed cbind(SPY, AGG)) 
-#    candle.col is not supported? 
-#    ohlc bars
+#    Smarter OHLC candle width? I like bar width
+#    Change default OHLC colors
 #    ylab.loc = c("left", "right", "out","in","flip","above") -- above kills panel alignment automatically
 #    Refactor plotting functionality into some non-exported bits
 #    It stopped handling ylab when I did the axis hardcoding -- should be smarter
@@ -103,11 +103,10 @@
     type <- dots[["type"]]
     
     if(!xts:::is.OHLC(x)) stop(type, '-chart not supported for non-OHLC series')
-    if(type == 'bars') stop('OHLC bars not yet implemented.')
     
-    do_plot.ohlc.candles(x, bar.col = bar.col, candle.col = candle.col, 
+    do_plot.ohlc(x, bar.col = bar.col, candle.col = candle.col, 
           major.ticks = major.ticks, minor.ticks = minor.ticks, 
-          auto.grid = auto.grid, major.format = major.format, main = main, ...)
+          auto.grid = auto.grid, major.format = major.format, main = main, candles = (type == "candles"), ...)
   } else {  
     # Else need to do layout plots
     screens <- do_layout(x, screens = screens, layout.screens = layout.screens)
@@ -299,8 +298,8 @@ do_add.event <- function(){}
 
 do_add.legend <- function(){}
 
-do_plot.ohlc.candles <- function(x, bar.col, candle.col, major.ticks, 
-                                 minor.ticks, major.format, auto.grid, ...){
+do_plot.ohlc <- function(x, bar.col, candle.col, major.ticks, 
+                                 minor.ticks, major.format, auto.grid, candles, ...){
   
   # Extract OHLC Columns
   x <- x[,xts:::has.OHLC(x, TRUE)] 
@@ -309,7 +308,14 @@ do_plot.ohlc.candles <- function(x, bar.col, candle.col, major.ticks,
               minor.ticks = minor.ticks, auto.grid = auto.grid, 
               have_x_axis = TRUE, have_y_axis = TRUE, ...)
   
-  xts:::plot.ohlc.candles(x, bar.col = bar.col, candle.col = candle.col)
+  width = .2*deltat(x)
+  order = xts:::has.OHLC(x, which = TRUE)
+  # Candles -- not happy about lwd fixed: make dynamic / smart?
+  if(candles) segments(.index(x), x[,order[2]], .index(x), x[,order[3]], col = bar.col)
+  
+  # Bars for all OHLC
+  rect(.index(x) - width, x[, order[1]], .index(x) + width, x[, order[4]], col = candle.col, border = candle.col)
+  
   return(invisible(reclass(x)))
 }
 
@@ -328,4 +334,4 @@ get.elm.from.dots <- function(par, dots, screens, n){
     get.elm.recycle(split(rep(if(length(levels(screens)) == 1L) list(dots[[par]]) else dots[[par]],
      length.out = length(screens)), screens), n)
 }
-  
+
