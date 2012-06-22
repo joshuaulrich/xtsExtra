@@ -10,7 +10,7 @@ Plotting methods for xts objects.
                 	auto.grid=TRUE,
                     major.ticks='auto', minor.ticks=TRUE, 
                     major.format=TRUE,
-                    bar.col='grey', candle.col='white',
+                    bar.col='black', candle.col='red',
                     xy.labels = FALSE, xy.lines = NULL, 
                        ...)
 }

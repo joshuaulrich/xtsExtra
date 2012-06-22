@@ -50,7 +50,7 @@
                        auto.grid=TRUE,
                        major.ticks='auto', minor.ticks=TRUE, 
                        major.format=TRUE,
-                       bar.col='grey', candle.col='white',
+                       bar.col='black', candle.col='red',
                        xy.labels = FALSE, xy.lines = NULL,
                        ...) {
   
@@ -301,7 +301,15 @@ do_add.legend <- function(){}
 do_plot.ohlc <- function(x, bar.col, candle.col, major.ticks, 
                                  minor.ticks, major.format, auto.grid, candles, ...){
   
-  # Extract OHLC Columns
+  if(QUANTMOD_MESSAGE) {
+    message("Note that CRAN Package quantmod provides much better OHLC charting.\n",
+            "This message will show once per sesion.")
+    assignInMyNamespace("QUANTMOD_MESSAGE",FALSE) 
+    # Is there a better way to do this ? 
+    # I'd think lexical scoping but I get a locked binding error
+  }
+  
+  # Extract OHLC Columns and order them
   x <- x[,xts:::has.OHLC(x, TRUE)] 
   
   do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
@@ -309,12 +317,15 @@ do_plot.ohlc <- function(x, bar.col, candle.col, major.ticks,
               have_x_axis = TRUE, have_y_axis = TRUE, ...)
   
   width = .2*deltat(x)
-  order = xts:::has.OHLC(x, which = TRUE)
+  
+  # Better to do this with xts:::Op etc when moved to xts package
+  
   # Candles -- not happy about lwd fixed: make dynamic / smart?
-  if(candles) segments(.index(x), x[,order[2]], .index(x), x[,order[3]], col = bar.col)
+  if(candles) segments(.index(x), x[,2L], .index(x), x[,3L], col = candle.col)
   
   # Bars for all OHLC
-  rect(.index(x) - width, x[, order[1]], .index(x) + width, x[, order[4]], col = candle.col, border = candle.col)
+  rect(.index(x) - width, x[, 1L], .index(x) + width, x[, 4L], 
+       col = bar.col, border = bar.col)
   
   return(invisible(reclass(x)))
 }
@@ -335,3 +346,4 @@ get.elm.from.dots <- function(par, dots, screens, n){
      length.out = length(screens)), screens), n)
 }
 
+QUANTMOD_MESSAGE <- TRUE # Suggests quantmod to user of OHLC plot.xts
