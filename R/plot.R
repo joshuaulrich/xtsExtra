@@ -50,8 +50,8 @@
                        screens = 'auto', layout.screens = 'auto',
                        auto.grid=TRUE,
                        major.ticks='auto', minor.ticks=TRUE, 
-                       major.format=TRUE,
-                       bar.col='black', candle.col='red',
+                       major.format=TRUE, bar.col.up = 'white',
+                       bar.col.dn ='black', candle.col='black',
                        xy.labels = FALSE, xy.lines = NULL,
                        ...) {
   
@@ -105,9 +105,11 @@
     
     if(!xts:::is.OHLC(x)) stop(type, '-chart not supported for non-OHLC series')
     
-    do_plot.ohlc(x, bar.col = bar.col, candle.col = candle.col, 
-          major.ticks = major.ticks, minor.ticks = minor.ticks, 
-          auto.grid = auto.grid, major.format = major.format, main = main, candles = (type == "candles"), ...)
+    do_plot.ohlc(x, bar.col.up = bar.col.up, bar.col.dn = bar.col.dn, 
+                 candle.col = candle.col, major.ticks = major.ticks, 
+                 minor.ticks = minor.ticks, auto.grid = auto.grid, 
+                 major.format = major.format, main = main, 
+                 candles = (type == "candles"), ...)
   } else {  
     # Else need to do layout plots
     screens <- do_layout(x, screens = screens, layout.screens = layout.screens)
@@ -299,7 +301,7 @@ do_add.event <- function(){}
 
 do_add.legend <- function(){}
 
-do_plot.ohlc <- function(x, bar.col, candle.col, major.ticks, 
+do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks, 
                                  minor.ticks, major.format, auto.grid, candles, ...){
   
   if(QUANTMOD_MESSAGE) {
@@ -326,7 +328,7 @@ do_plot.ohlc <- function(x, bar.col, candle.col, major.ticks,
   
   # Bars for all OHLC
   rect(.index(x) - width, x[, 1L], .index(x) + width, x[, 4L], 
-       col = bar.col, border = bar.col)
+       col = ifelse(x[,4L] > x[,1L], bar.col.up, bar.col.dn), border = candle.col)
   
   return(invisible(reclass(x)))
 }

@@ -6,12 +6,12 @@ Plotting methods for xts objects.
 }
 \usage{
 \method{plot}{xts}(x, y = NULL, 
-                	screens = 'auto', layout.screens = 'auto',
-                	auto.grid=TRUE,
-                    major.ticks='auto', minor.ticks=TRUE, 
-                    major.format=TRUE,
-                    bar.col='black', candle.col='red',
-                    xy.labels = FALSE, xy.lines = NULL, 
+                       screens = 'auto', layout.screens = 'auto',
+                       auto.grid=TRUE,
+                       major.ticks='auto', minor.ticks=TRUE, 
+                       major.format=TRUE, bar.col.up = 'white',
+                       bar.col.dn ='black', candle.col='black',
+                       xy.labels = FALSE, xy.lines = NULL,
                        ...)
 }
 \arguments{
@@ -23,8 +23,9 @@ Plotting methods for xts objects.
   \item{major.ticks}{should major tickmarks be drawn and labeled}
   \item{minor.ticks}{should minor tickmarks be drawn}
   \item{major.format}{passed along to axTicksByTime.}
-  \item{bar.col}{the color of the bars when type is \sQuote{bars} or \sQuote{candles}}
-  \item{candle.col}{the color of the candles when type is \sQuote{candles}}
+  \item{bar.col.dn}{the color of the \dQuote{down} bars when \code{type} is \sQuote{bars} or \sQuote{candles}}
+  \item{bar.col.up}{the color of the \dQuote{up} bars when \code{type} is \sQuote{bars} or \sQuote{candles}}
+  \item{candle.col}{the color of the candles when \code{type} is \sQuote{candles}. Also the outside of the bars.}
   \item{xy.labels}{label points in scatterplot?}
   \item{xy.lines}{connect points in scatterplot?}
   \item{\dots}{additional graphical arguments}
