@@ -27,7 +27,12 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   # xts format assures us of this
   # 
   # stacked = TRUE is default, scale = FALSE scales percentages
-  # Negatives are trickier to deal with reasonably
+  # Negatives are trickier to deal with reasonably so not yet supported
+  
+  if(scale){
+    if(any(x < 0)) stop("Rescaling values for negative data not yet supported")
+    x <- x/rowSums(x) # Recycling makes this work I'm pretty sure
+  }
   
   op <- par(no.readonly = TRUE)
   on.exit(par(op))
@@ -66,8 +71,11 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   
   # Vectorize this?
   posn = barplot(coredata(x), plot=FALSE, space=space)
+  if(!stacked) posn <- posn*nc
   for(i in 1:length(ep)) 
     ep1[i] = posn[ep[i]]
+  
+  
     
   if(is.null(colorset)) colorset <- seq_len(nc)
     
@@ -87,17 +95,27 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   positives = x * (x > 0)
   negatives = x * (x < 0)
   
-  # Set ylim to ends of stacked bars
+  # Set ylim to ends of stacked bars and to max/min if not stacked
   if(is.null(ylim)){
-    ymax=max(0,apply(positives,FUN=sum,MARGIN=1))
-    ymin=min(0,apply(negatives,FUN=sum,MARGIN=1))
-    ylim=c(ymin,ymax)
+    if(stacked){
+      ymax <- max(0, rowSums(positives)) # Faster than apply statement
+      ymin <- min(0, rowSums(negatives)) # Use rowSums to stack by dates
+      ylim <- c(ymin, ymax)
+    } else{
+      ymax <- max(0, positives)
+      ymin <- min(0, negatives)
+      ylim <- c(ymin, ymax)
+    }
   }
     
   # Use barplot.default to actually draw the bars
   # t() drops xts-ness and returns a named matrix so dispatches properly
-  barplot(t(positives), col=colorset, space=space, axisnames = FALSE, axes = FALSE, ylim=ylim, ...)
-  barplot(t(negatives), add=TRUE , col=colorset, space=space, las = las, xlab = xlab, cex.names = cex.lab, axes = FALSE, axisnames = FALSE, ylim=ylim, ...)
+  if(stacked){
+    barplot(t(positives), col=colorset, space=space, axisnames = FALSE, axes = FALSE, ylim=ylim, ...)
+    barplot(t(negatives), add=TRUE , col=colorset, space=space, las = las, xlab = xlab, cex.names = cex.lab, axes = FALSE, axisnames = FALSE, ylim=ylim, ...)
+  } else {
+    barplot(t(x), beside = TRUE, col = colorset, axes = FALSE, axisnames = FALSE, ylim = ylim, ...)
+  }
   
   axis(2, col = element.color, las = las, cex.axis = cex.axis)
   
@@ -130,6 +148,10 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
     do_barplot.legend("center", legend=colnames(x), cex = cex.legend, fill=colorset, ncol=ncol, box.col=element.color, border.col = element.color)
   }
   invisible(height)
+}
+
+do_unstacked.barplot <- function(){
+  
 }
 
 do_barplot.legend <- function (x, y = NULL, legend, fill = NULL, col = par("col"),
