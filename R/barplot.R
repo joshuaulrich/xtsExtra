@@ -56,7 +56,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   ep = axTicksByTime(x, major.ticks, format.labels = date.format)
   ep1 = ep
   
-  posn = barplot(coredata(x), plot=FALSE, space=space)
+  posn = barplot(t(x), plot=FALSE, space=space)
   if(!stacked) posn <- posn*nc
   
   # Vectorize this?
@@ -116,7 +116,6 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
       xaxis.labels = names(ep1)
     else
       ep1 = 1:length(xaxis.labels)
-    
     axis(1, at=ep1, labels=xaxis.labels, las=las, lwd=1, mgp=c(3,label.height,0), cex.axis = cex.axis) 
     #axis(1, at = lab.ind, lab=rownames[lab.ind], cex.axis = cex.axis, col = elementcolor)
     #             title(xlab = xlab, cex = cex.lab)
