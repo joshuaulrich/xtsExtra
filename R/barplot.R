@@ -23,7 +23,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
                         cex.legend = 0.8, cex.lab = 1, cex.labels = 0.8, cex.main = 1,
                         xaxis=TRUE, element.color = "darkgray", xlab="Date",
                         ylab="Value", major.ticks='auto', minor.ticks=TRUE,
-                        las = 0, xaxis.labels = NULL, col = NULL, ...) {
+                        las = 3, xaxis.labels = NULL, col = NULL, ...) {
   # Don't like this name for input variable, 
   # but we must match S3 generic so we'll just change it
   x = height 
@@ -133,11 +133,8 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
     
     do_barplot.legend("center", legend=colnames(x), cex = cex.legend, fill=col, ncol=ncol, box.col=element.color, border.col = element.color)
   }
+  assign(".barplot.xts",recordPlot(),.GlobalEnv)
   invisible(height)
-}
-
-do_unstacked.barplot <- function(){
-  
 }
 
 do_barplot.legend <- function (x, y = NULL, legend, fill = NULL, col = par("col"),

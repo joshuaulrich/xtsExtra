@@ -1,8 +1,16 @@
+# WHY DON'T DEPENDENCIES COVER THESE IMPORTS? 
+import(stats)
+import(utils)
+import(graphics)
+import(xts)
+import(zoo)
+
 ## Graphics
 
 export("plot.xts")
-# export("barplot.xts") -- Not yet ready
+export("barplot.xts")
 S3method(plot, xts)
+S3method(barplot, xts)
 
 ## Analytics
 
@@ -35,11 +43,6 @@ export("stl")
 S3method(stl, default)
 S3method(stl, xts)
 
-# WHY DON'T DEPENDENCIES COVER THESE IMPORTS? 
-import(stats)
-import(utils)
-import(xts)
-import(zoo)
 
 ## Data frame capability
 S3method(Ops, xtsdf)
