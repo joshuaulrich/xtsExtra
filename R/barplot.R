@@ -47,7 +47,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   
   if(nr == 1L){
     warning("Time-oriented barplot for single observation not well defined.\n  Dispatching instead to unstacked default barplot.")
-    # SHould I instead let this be forced?
+    # Should I instead let this be forced?
     return(barplot(coredata(x), ylim=NULL, space = 0.2, 
                    ylab="Value",las = 2, xaxis.labels = xaxis.labels, col = col, ...))
   }
@@ -62,7 +62,10 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   # Vectorize this?
   for(i in 1:length(ep)) 
     ep1[i] = posn[ep[i]]
-    
+  
+  # Handle strange double-plotting from axTicksByTime
+  ep1 <- ep1[!duplicated(ep1)]
+  
   if(is.null(col)) col <- seq_len(nc)
     
   minmargin <- if(is.null(xlab)) 3 else 5
