@@ -18,7 +18,12 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRUE, ...) {
+barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRUE, 
+                        date.format = "%b %y", ylim=NULL, space = 0.2, cex.axis=0.8,
+                        cex.legend = 0.8, cex.lab = 1, cex.labels = 0.8, cex.main = 1,
+                        xaxis=TRUE, element.color = "darkgray", xlab="Date",
+                        ylab="Value", major.ticks='auto', minor.ticks=TRUE,
+                        las = 0, xaxis.labels = NULL, col = NULL, ...) {
   # Don't like this name for input variable, 
   # but we must match S3 generic so we'll just change it
   x = height 
@@ -37,47 +42,28 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   op <- par(no.readonly = TRUE)
   on.exit(par(op))
   
-  # Args from charts.StackedBar -- which of this go into signature and which from dots?
-  colorset = NULL
-  space = 0.2
-  cex.axis=0.8
-  cex.legend = 0.8
-  cex.lab = 1
-  cex.labels = 0.8
-  cex.main = 1
-  xaxis=TRUE
-  element.color = "darkgray"
-  unstacked = TRUE
-  xlab="Date"
-  ylab="Value"
-  ylim=NULL
-  date.format = "%b %y"
-  major.ticks='auto'
-  minor.ticks=TRUE
-  las = 0
-  xaxis.labels = NULL
-  
   nc = NCOL(x)
   nr = NROW(x)
   
   if(nr == 1L){
-    stop("Time-oriented barplot for single observation is not yet supported.")
-    # This should dispatch to an unstacked plot, but those aren't working just yet
+    warning("Time-oriented barplot for single observation not well defined.\n  Dispatching instead to unstacked default barplot.")
+    # SHould I instead let this be forced?
+    return(barplot(coredata(x), ylim=NULL, space = 0.2, 
+                   ylab="Value",las = 2, xaxis.labels = xaxis.labels, col = col, ...))
   }
     
   time.scale = periodicity(x)$scale
   ep = axTicksByTime(x, major.ticks, format.labels = date.format)
   ep1 = ep
   
-  # Vectorize this?
   posn = barplot(coredata(x), plot=FALSE, space=space)
   if(!stacked) posn <- posn*nc
+  
+  # Vectorize this?
   for(i in 1:length(ep)) 
     ep1[i] = posn[ep[i]]
-  
-  
     
-  if(is.null(colorset)) colorset <- seq_len(nc)
+  if(is.null(col)) col <- seq_len(nc)
     
   minmargin <- if(is.null(xlab)) 3 else 5
     
@@ -111,10 +97,10 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   # Use barplot.default to actually draw the bars
   # t() drops xts-ness and returns a named matrix so dispatches properly
   if(stacked){
-    barplot(t(positives), col=colorset, space=space, axisnames = FALSE, axes = FALSE, ylim=ylim, ...)
-    barplot(t(negatives), add=TRUE , col=colorset, space=space, las = las, xlab = xlab, cex.names = cex.lab, axes = FALSE, axisnames = FALSE, ylim=ylim, ...)
+    barplot(t(positives), col=col, space=space, axisnames = FALSE, axes = FALSE, ylim=ylim, ...)
+    barplot(t(negatives), add=TRUE, col=col, space=space, las = las, xlab = xlab, cex.names = cex.lab, axes = FALSE, axisnames = FALSE, ylim=ylim, ...)
   } else {
-    barplot(t(x), beside = TRUE, col = colorset, axes = FALSE, axisnames = FALSE, ylim = ylim, ...)
+    barplot(t(x), beside = TRUE, col = col, axes = FALSE, axisnames = FALSE, ylim = ylim, ...)
   }
   
   axis(2, col = element.color, las = las, cex.axis = cex.axis)
@@ -145,7 +131,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
     
     ncol = min(nc, 4)
     
-    do_barplot.legend("center", legend=colnames(x), cex = cex.legend, fill=colorset, ncol=ncol, box.col=element.color, border.col = element.color)
+    do_barplot.legend("center", legend=colnames(x), cex = cex.legend, fill=col, ncol=ncol, box.col=element.color, border.col = element.color)
   }
   invisible(height)
 }
