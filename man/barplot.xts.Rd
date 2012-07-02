@@ -73,3 +73,30 @@ Used to provide time-oriented barplots.
 }
 \value{Invisibly returns the plotted object. Also assigns \code{.barplot.xts} to \code{.GlobalEnv} which can be used to "replay" the plot.}
 \author{Peter Carl with modifications by Michael Weylandt}
+
+\examples{
+weights <- xts(matrix(runif(42, 0.1, 0.3), ncol = 6), as.yearmon(Sys.Date()) + 0:6)
+names(weights) <- paste("Factor", LETTERS[1:6])
+
+barplot(weights)
+
+# No legend
+barplot(weights, auto.legend = FALSE)
+
+# Not Stacked
+barplot(weights, stacked = FALSE)
+
+# Scale weights to sum to 1
+barplot(weights, scale = TRUE)
+
+# A nicer color pallette
+# rainbow6equal from Performance Analytics
+barplot(weights, scale = TRUE, col = c("#BF4D4D", "#BFBF4D", "#4DBF4D", "#4DBFBF","#4D4DBF", "#BF4DBF"))
+
+# Include negative data
+weights[,3] <- weights[,3] * -1
+
+barplot(weights)
+
+barplot(weights, stacked = FALSE)
+}
