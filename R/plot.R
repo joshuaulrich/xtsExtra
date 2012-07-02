@@ -48,8 +48,8 @@
 
 `plot.xts` <- function(x, y = NULL, 
                        screens = 'auto', layout.screens = 'auto',
-                       auto.grid=TRUE,
-                       major.ticks='auto', minor.ticks=TRUE, 
+                       ylab.loc = c("none","out","in","flip", "left", "right"), 
+                       auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE,
                        major.format=TRUE, bar.col.up = 'white',
                        bar.col.dn ='black', candle.col='black',
                        xy.labels = FALSE, xy.lines = NULL,
@@ -112,10 +112,12 @@
                  candles = (type == "candles"), ...)
   } else {  
     # Else need to do layout plots
-    screens <- do_layout(x, screens = screens, layout.screens = layout.screens)
+    screens <- do_layout(x, screens = screens, layout.screens = layout.screens, 
+                         ylab.loc = match.arg(ylab.loc))
     
     have_x_axis <- screens[["have_x_axis"]]
     have_y_axis <- screens[["have_y_axis"]]
+    ylab.axis <- screens[["ylab.axis"]]
     screens <- screens[["screens"]]
     
     x.split <- split.xts.by.cols(x, screens)
@@ -124,8 +126,6 @@
     for(i in seq_along(levels((screens)))){
       x.plot <- x.split[[i]]
     
-      # Set Margins for each panel here!
-      
       # Handle the screen-wise parameters here
       if("ylab" %in% names(dots)) {
         ylab.panel <- get.elm.recycle(dots[["ylab"]],i)
@@ -138,11 +138,12 @@
       } else {
         log.panel <- ""
       }
-      
+
       # Note that do_add.grid also sets up axes and what not
       do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
                 auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
-                  have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i])
+                  have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i],
+                  ylab.axis = ylab.axis[i])
       
       col.panel  <- get.elm.from.dots("col", dots, screens, i)
       pch.panel  <- get.elm.from.dots("pch", dots, screens, i)
@@ -155,7 +156,7 @@
     }
     
   }  
-  title(main, outer = length(levels(screens)) > 1L)
+  title(main, outer = TRUE) # outer = length(levels(screens)) > 1L)
   assign(".plot.xts",recordPlot(),.GlobalEnv)
   return(invisible(reclass(x)))
 }
@@ -193,7 +194,7 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex
   return(invisible(xy.xts))
 }
 
-do_layout <- function(x, screens, layout.screens){
+do_layout <- function(x, screens, layout.screens, ylab.loc){
   # By default one screen per panel
   screens <- factor(if(identical(screens,"auto")) 1:NCOL(x) else 
     rep(screens, length.out = NCOL(x)))
@@ -231,20 +232,48 @@ do_layout <- function(x, screens, layout.screens){
     }
   }
   
-  if(length(levels(screens)) > 1L) par(mar = c(0,0,0,0), oma = c(4, 6, 4, 4))
+  # Here we handle y-axis labeling case by case and mark when margins are needed
+  # From this part, we return a vector ylab.axis giving L/R/None marks for y-labels
+  # Margins are set appropriately back in main function body
   
-  #####
-  #
-  #  SOME CODE TO MAKE SURE screens.layout IS LEGAL ? 
-  #
-  #####
+  if(ylab.loc == "none") ylab.axis <- rep("none", length.out = length(have_y_axis))
   
-  # TODO: return boolean of where x-axes labels should go
-  return(list(screens = screens, have_x_axis = have_x_axis, have_y_axis = have_y_axis))
+  # If labels are set to left/right we need them in all panels
+  if(ylab.loc == "right" || ylab.loc == "left") {
+    have_y_axis[] <- TRUE # Since forcing labels, we write a y-axis everywhere
+    ylab.axis <- rep(ylab.loc, length.out = length(have_y_axis))
+  }
+    
+  if(ylab.loc == "out" || ylab.loc == "in"){
+    if(NCOL(layout.screens) > 2L) stop("ylab.loc not consistent with layout -- too many columns.")
+    # If labels are set to out we need them for outer panels only
+    # If labels are set to in we need them for inner panels only
+    ylab.axis <- layout.screens 
+    ylab.axis[,1] <- if(ylab.loc == "out") "left" else "right"
+    ylab.axis[,2] <- if(ylab.loc == "out") "right" else "left"
+    if(ylab.loc == "in") have_y_axis[] <- TRUE # Axes for all if TRUE
+  }
+  
+  # If labels are set to flip we do a little bit of work to arrange them
+  if(ylab.loc == "flip") stop("Need to implement ylab.loc == 'flip'")
+  
+  # Moving internal margin code to the panel-wise setup, leaving oma (outer) margin here
+  if(length(levels(screens)) > 1L) par(oma = c(1,1,4,1))
+  if(ylab.loc == "none") par(oma = c(1,4,4,3))
+  
+  return(list(screens = screens, have_x_axis = have_x_axis, 
+              have_y_axis = have_y_axis, ylab.axis = ylab.axis))
 }
 
 do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes, 
-                        auto.grid, xlab, ylab, log, have_x_axis, have_y_axis, ...){
+                        auto.grid, xlab, ylab, log, have_x_axis, have_y_axis, 
+                        ylab.axis, ...){
+
+  # Set Margins for each panel here!
+  par(mar = have_x_axis*c(3.4,0,0,0) + switch(ylab.axis,
+                   none = c(0,0,0,0),
+                   left = c(0, 4.5, 0, 1.5), 
+                   right = c(0, 1.5, 0, 4.5)))
   
   # Plotting Defaults
   if(missing(axes)) axes <- TRUE
@@ -253,8 +282,8 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   if(missing(log))  log  <- ''
   
   xy <- list(x = .index(x), y = seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE), length.out = NROW(x)))
-  plot(xy$x, xy$y, type = "n", axes=FALSE, xlab = xlab, ylab = ylab, log = log)
-  
+  plot(xy$x, xy$y, type = "n", axes=FALSE, xlab = xlab, ylab = '', log = log)
+  mtext(side = 2 + 2*(ylab.axis == "right"), text = if(ylab.axis == "none") "" else ylab, line = 3, cex = 0.8)
   ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
   
   if(auto.grid) {
@@ -269,7 +298,7 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
     }
     
     if(have_y_axis){
-      axis(2)  
+      axis(2 + 2*(ylab.axis == "right"))  
     }
   }
   
@@ -314,10 +343,10 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
   
   # Extract OHLC Columns and order them
   x <- x[,xts:::has.OHLC(x, TRUE)] 
-  
+  par(oma = c(1,4,4,3))
   do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
               minor.ticks = minor.ticks, auto.grid = auto.grid, 
-              have_x_axis = TRUE, have_y_axis = TRUE, ...)
+              have_x_axis = TRUE, have_y_axis = TRUE, ylab.axis = "none", ...)
   
   width = .2*deltat(x)
   
