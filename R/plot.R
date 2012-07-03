@@ -339,7 +339,7 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
 
 do_add.shading <- function(){}
 
-do_add.event <- function(time, label, col = "red", lty = 2, y = ylim[2]){
+do_add.event <- function(time, label, y, col = "red", lty = 2){
   abline(v = time, col = col, lty = lty)
   text(x = time, y = y, label = label, offset = 0.2, pos = 2, srt = 90, col = col)
 }
