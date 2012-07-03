@@ -53,7 +53,7 @@
                        major.format=TRUE, bar.col.up = 'white',
                        bar.col.dn ='black', candle.col='black',
                        xy.labels = FALSE, xy.lines = NULL,
-                       events, 
+                       events, blocks,
                        ...) {
   
   # Restore old par() options from what I change in here
@@ -157,6 +157,14 @@
         }
       }
       
+      if(!missing(blocks)){
+        for(j in seq_along(blocks)){
+          do_add.shading(start.time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(blocks[["start.time"]], j))),
+                         end.time   = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(blocks[["end.time"]], j))),
+                         col = if(!is.null(blocks[["col"]])) get.elm.recycle(blocks[["col"]],j) else "lightblue1", 
+                         y = range(ylim))
+        }
+      }
       col.panel  <- get.elm.from.dots("col", dots, screens, i)
       pch.panel  <- get.elm.from.dots("pch", dots, screens, i)
       cex.panel  <- get.elm.from.dots("cex", dots, screens, i)
@@ -337,7 +345,9 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
   }
 }
 
-do_add.shading <- function(){}
+do_add.shading <- function(start.time, end.time, y, col = "lightblue1"){
+  rect(as.double(start.time), 0.5*y[1], as.double(end.time), 1.5*y[2], col = col, border = NA)
+}
 
 do_add.event <- function(time, label, y, col = "red", lty = 2){
   abline(v = time, col = col, lty = lty)

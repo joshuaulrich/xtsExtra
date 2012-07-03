@@ -12,7 +12,7 @@ Plotting methods for xts objects.
             major.format=TRUE, bar.col.up = 'white',
             bar.col.dn ='black', candle.col='black',
             xy.labels = FALSE, xy.lines = NULL, 
-            events, ...)
+            events, blocks ...)
 }
 \arguments{
   \item{x}{an \code{xts} object}
@@ -31,6 +31,8 @@ Plotting methods for xts objects.
   \item{xy.lines}{connect points in scatterplot?}
   \item{events}{A list with mandatory elements \code{time} and \code{label} and optional 
   elements \code{col} and \code{lty} giving the events to be highlighted. See examples.}
+  \item{blocks}{A list with mandatory elements \code{start.time} and \code{end.time} and 
+  optional element \code{col} giving time-blocks to be highlighted. See examples.}
   \item{\dots}{additional graphical arguments}
 }
 \details{
