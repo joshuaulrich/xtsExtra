@@ -293,22 +293,11 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   ylim <- xy$y
   
   if(!missing(blocks)){
-    for(j in seq_along(blocks[["time"]])){
-      do_add.shading(start.time = as.POSIXct(get.elm.recycle(blocks[["start.time"]], j)),
-                     end.time   = as.POSIXct(get.elm.recycle(blocks[["end.time"]], j)),
-                     col = if(!is.null(blocks[["col"]])) get.elm.recycle(blocks[["col"]],j) else "lightblue1", 
-                     y = range(ylim))
-    }
+    do_add.shading(blocks, ylim)
   }
   
   if(!missing(events)){
-    for(j in seq_along(events[["time"]])){
-      do_add.event(time = as.POSIXct(get.elm.recycle(events[["time"]],j)),
-                   label = get.elm.recycle(events[["label"]], j),
-                   col = if(!is.null(events[["col"]])) get.elm.recycle(events[["col"]],j) else "red", 
-                   lty = if(!is.null(events[["lty"]])) get.elm.recycle(events[["lty"]],j) else 2,
-                   y = range(ylim)[2])
-    }
+    do_add.event(events, ylim)
   }
   
   
@@ -350,13 +339,25 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
   }
 }
 
-do_add.shading <- function(start.time, end.time, y, col = "lightblue1"){
-  rect(as.double(start.time), 0.5*y[1], as.double(end.time), 1.5*y[2], col = col, border = NA)
+do_add.shading <- function(blocks, y){
+  browser()
+  for(j in seq_along(blocks[["start.time"]])){
+    rect(as.POSIXct(get.elm.recycle(blocks[["start.time"]], j)), 0.5*min(y), 
+         as.POSIXct(get.elm.recycle(blocks[["end.time"]], j)), 1.5 * max(y),
+         col = if(!is.null(blocks[["col"]])) get.elm.recycle(blocks[["col"]],j) else "lightblue1",
+         border = NA)
+  }
 }
 
-do_add.event <- function(time, label, y, col = "red", lty = 2){
-  abline(v = time, col = col, lty = lty)
-  text(x = time, y = y, label = label, offset = 0.2, pos = 2, srt = 90, col = col)
+do_add.event <- function(events, y){
+  for(j in seq_along(events[["time"]])){
+    time = as.POSIXct(get.elm.recycle(events[["time"]],j))
+    label = get.elm.recycle(events[["label"]], j)
+    col = if(!is.null(events[["col"]])) get.elm.recycle(events[["col"]],j) else "red"
+    lty = if(!is.null(events[["lty"]])) get.elm.recycle(events[["lty"]],j) else 2
+    text(x = time, y = max(y), label = label, offset = 0.2, pos = 2, srt = 90, col = col)
+    abline(v = time, col = col, lty = lty)
+  }
 }
 
 do_add.legend <- function(){}
@@ -380,16 +381,6 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
               minor.ticks = minor.ticks, auto.grid = auto.grid, 
               have_x_axis = TRUE, have_y_axis = TRUE, ylab.axis = "none",
               events = events, blocks = blocks, ...)
-  
-  if(!missing(events)){
-    for(j in seq_along(events)){
-      do_add.event(time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(events[["time"]], j))),
-                   label = get.elm.recycle(events[["label"]], j),
-                   col = if(!is.null(events[["col"]])) get.elm.recycle(events[["col"]],j) else "red", 
-                   lty = if(!is.null(events[["lty"]])) get.elm.recycle(events[["lty"]],j) else 2,
-                   y = range(ylim)[2])
-    }
-  }
   
   width = .2*deltat(x)
   
