@@ -168,7 +168,7 @@
 do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex, xlim, ylim, type, pch, ...){
   if(missing(main)) main <- paste(xlab, "vs.", ylab)
   if(missing(log))  log  <- ''
-  if(missing(cex))  cex  <-  0.8
+  if(missing(cex))  cex  <- 0.8
   if(missing(pch))  pch  <- 1L
   
   x <- try.xts(x); y <- try.xts(y)

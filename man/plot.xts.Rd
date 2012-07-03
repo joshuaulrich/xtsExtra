@@ -12,7 +12,7 @@ Plotting methods for xts objects.
             major.format=TRUE, bar.col.up = 'white',
             bar.col.dn ='red', candle.col='black',
             xy.labels = FALSE, xy.lines = NULL, 
-            events, blocks ...)
+            events, blocks, ...)
 }
 \arguments{
   \item{x}{an \code{xts} object}
