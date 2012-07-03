@@ -51,7 +51,7 @@
                        ylab.loc = c("none","out","in","flip", "left", "right"), 
                        auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE,
                        major.format=TRUE, bar.col.up = 'white',
-                       bar.col.dn ='black', candle.col='black',
+                       bar.col.dn ='red', candle.col='black',
                        xy.labels = FALSE, xy.lines = NULL,
                        events, blocks,
                        ...) {
