@@ -396,7 +396,7 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
   # Better to do this with xts:::Op etc when moved to xts package
   
   # Candles -- not happy about lwd fixed: make dynamic / smart?
-  if(candles) segments(.index(x), x[,2L], .index(x), x[,3L], col = candle.col)
+  if(candles) rect(.index(x) - width/4, x[,2L], .index(x) + width/4, x[,3L], col = candle.col)
   
   # Bars for all OHLC
   rect(.index(x) - width, x[, 1L], .index(x) + width, x[, 4L], 
