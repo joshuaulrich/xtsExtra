@@ -110,7 +110,8 @@
                  candle.col = candle.col, major.ticks = major.ticks, 
                  minor.ticks = minor.ticks, auto.grid = auto.grid, 
                  major.format = major.format, main = main, 
-                 candles = (type == "candles"), events = events, ...)
+                 candles = (type == "candles"), events = events, 
+                 blocks = blocks, ...)
     
   } else {  
     # Else need to do layout plots
@@ -142,29 +143,12 @@
       }
 
       # Note that do_add.grid also sets up axes and what not
-      ylim <- do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
-                auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
-                  have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i],
-                  ylab.axis = ylab.axis[i])
+      do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
+            auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
+            have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i],
+            ylab.axis = ylab.axis[i], events = events, blocks = blocks)
       
-      if(!missing(events)){
-        for(j in seq_along(events)){
-          do_add.event(time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(events[["time"]], j))),
-                       label = get.elm.recycle(events[["label"]], j),
-                       col = if(!is.null(events[["col"]])) get.elm.recycle(events[["col"]],j) else "red", 
-                       lty = if(!is.null(events[["lty"]])) get.elm.recycle(events[["lty"]],j) else 2,
-                       y = range(ylim)[2])
-        }
-      }
       
-      if(!missing(blocks)){
-        for(j in seq_along(blocks)){
-          do_add.shading(start.time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(blocks[["start.time"]], j))),
-                         end.time   = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(blocks[["end.time"]], j))),
-                         col = if(!is.null(blocks[["col"]])) get.elm.recycle(blocks[["col"]],j) else "lightblue1", 
-                         y = range(ylim))
-        }
-      }
       col.panel  <- get.elm.from.dots("col", dots, screens, i)
       pch.panel  <- get.elm.from.dots("pch", dots, screens, i)
       cex.panel  <- get.elm.from.dots("cex", dots, screens, i)
@@ -287,7 +271,7 @@ do_layout <- function(x, screens, layout.screens, ylab.loc){
 
 do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes, 
                         auto.grid, xlab, ylab, log, have_x_axis, have_y_axis, 
-                        ylab.axis, ...){
+                        ylab.axis, events, blocks, ...){
 
   # Set Margins for each panel here!
   par(mar = have_x_axis*c(3.4,0,0,0) + switch(ylab.axis,
@@ -306,6 +290,28 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   mtext(side = 2 + 2*(ylab.axis == "right"), text = if(ylab.axis == "none") "" else ylab, line = 3, cex = 0.8)
   ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
   
+  ylim <- xy$y
+  
+  if(!missing(blocks)){
+    for(j in seq_along(blocks)){
+      do_add.shading(start.time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(blocks[["start.time"]], j))),
+                     end.time   = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(blocks[["end.time"]], j))),
+                     col = if(!is.null(blocks[["col"]])) get.elm.recycle(blocks[["col"]],j) else "lightblue1", 
+                     y = range(ylim))
+    }
+  }
+  
+  if(!missing(events)){
+    for(j in seq_along(events)){
+      do_add.event(time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(events[["time"]], j))),
+                   label = get.elm.recycle(events[["label"]], j),
+                   col = if(!is.null(events[["col"]])) get.elm.recycle(events[["col"]],j) else "red", 
+                   lty = if(!is.null(events[["lty"]])) get.elm.recycle(events[["lty"]],j) else 2,
+                   y = range(ylim)[2])
+    }
+  }
+  
+  
   if(auto.grid) {
     abline(v=xy$x[ep], col='grey', lty=4)
     grid(NA,NULL)
@@ -323,7 +329,6 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   }
   
   box()
-  return(xy$y)
 }
 
 do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
@@ -358,7 +363,7 @@ do_add.legend <- function(){}
 
 do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks, 
                         minor.ticks, major.format, auto.grid, 
-                        candles, events, ...){
+                        candles, events, blocks, ...){
   
   if(QUANTMOD_MESSAGE) {
     message("Note that CRAN Package quantmod provides much better OHLC charting.\n",
@@ -373,7 +378,8 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
   par(oma = c(1,4,4,3))
   ylim <- do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
               minor.ticks = minor.ticks, auto.grid = auto.grid, 
-              have_x_axis = TRUE, have_y_axis = TRUE, ylab.axis = "none", ...)
+              have_x_axis = TRUE, have_y_axis = TRUE, ylab.axis = "none",
+              events = events, blocks = blocks, ...)
   
   if(!missing(events)){
     for(j in seq_along(events)){
