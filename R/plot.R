@@ -340,7 +340,6 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
 }
 
 do_add.shading <- function(blocks, y){
-  browser()
   for(j in seq_along(blocks[["start.time"]])){
     rect(as.POSIXct(get.elm.recycle(blocks[["start.time"]], j)), 0.5*min(y), 
          as.POSIXct(get.elm.recycle(blocks[["end.time"]], j)), 1.5 * max(y),
