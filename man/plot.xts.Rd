@@ -113,7 +113,7 @@ plot(merge(x,x), type = "p", col = 1:5, pch = 1:5, cex = 1:5)
 plot(merge(x,x), type = "p", col = list(1:5, 1:3), pch = list(1:5, 1:3), cex = list(1:5, 1:3))
 
 # Using the events argument
-plot(x[,1], events = list(time = c("2007-03-15", "2007-05-01"), label = "bad day"))
+plot(sample_xts[,1], events = list(time = c("2007-03-15", "2007-05-01"), label = "bad day"))
 
 # Makes a scatterplot if we pass two series
 plot(sample_xts[,1],sample_xts[,2])

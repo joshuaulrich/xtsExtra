@@ -293,17 +293,17 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   ylim <- xy$y
   
   if(!missing(blocks)){
-    for(j in seq_along(blocks)){
-      do_add.shading(start.time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(blocks[["start.time"]], j))),
-                     end.time   = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(blocks[["end.time"]], j))),
+    for(j in seq_along(blocks[["time"]])){
+      do_add.shading(start.time = as.POSIXct(get.elm.recycle(blocks[["start.time"]], j)),
+                     end.time   = as.POSIXct(get.elm.recycle(blocks[["end.time"]], j)),
                      col = if(!is.null(blocks[["col"]])) get.elm.recycle(blocks[["col"]],j) else "lightblue1", 
                      y = range(ylim))
     }
   }
   
   if(!missing(events)){
-    for(j in seq_along(events)){
-      do_add.event(time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(events[["time"]], j))),
+    for(j in seq_along(events[["time"]])){
+      do_add.event(time = as.POSIXct(get.elm.recycle(events[["time"]],j)),
                    label = get.elm.recycle(events[["label"]], j),
                    col = if(!is.null(events[["col"]])) get.elm.recycle(events[["col"]],j) else "red", 
                    lty = if(!is.null(events[["lty"]])) get.elm.recycle(events[["lty"]],j) else 2,
