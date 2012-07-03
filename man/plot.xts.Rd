@@ -6,12 +6,13 @@ Plotting methods for xts objects.
 }
 \usage{
 \method{plot}{xts}(x, y = NULL, 
-                  screens = 'auto', layout.screens = 'auto',
-                  ylab.loc = c("none","out","in","flip", "left", "right"),
-                  auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE, 
-                  major.format=TRUE, bar.col.up = 'white',
-                  bar.col.dn ='black', candle.col='black',
-                  xy.labels = FALSE, xy.lines = NULL, ...)
+            screens = 'auto', layout.screens = 'auto',
+            ylab.loc = c("none","out","in","flip", "left", "right"),
+            auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE, 
+            major.format=TRUE, bar.col.up = 'white',
+            bar.col.dn ='black', candle.col='black',
+            xy.labels = FALSE, xy.lines = NULL, 
+            events, ...)
 }
 \arguments{
   \item{x}{an \code{xts} object}
@@ -28,6 +29,8 @@ Plotting methods for xts objects.
   \item{candle.col}{the color of the candles when \code{type} is \sQuote{candles}. Also the outside of the bars.}
   \item{xy.labels}{label points in scatterplot?}
   \item{xy.lines}{connect points in scatterplot?}
+  \item{events}{A list with mandatory elements \code{time} and \code{label} and optional 
+  elements \code{col} and \code{lty} giving the events to be highlighted. See examples.}
   \item{\dots}{additional graphical arguments}
 }
 \details{
@@ -106,6 +109,9 @@ plot(merge(x,x,x), type = "p", pch = list(1:5, 1:3))
 plot(x, type = "p", col = 1:5, pch = 1:5, cex = 1:5)
 plot(merge(x,x), type = "p", col = 1:5, pch = 1:5, cex = 1:5)
 plot(merge(x,x), type = "p", col = list(1:5, 1:3), pch = list(1:5, 1:3), cex = list(1:5, 1:3))
+
+# Using the events argument
+plot(x[,1], events = list(time = c("2007-03-15", "2007-05-01"), label = "bad day"))
 
 # Makes a scatterplot if we pass two series
 plot(sample_xts[,1],sample_xts[,2])

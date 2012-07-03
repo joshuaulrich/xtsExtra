@@ -53,6 +53,7 @@
                        major.format=TRUE, bar.col.up = 'white',
                        bar.col.dn ='black', candle.col='black',
                        xy.labels = FALSE, xy.lines = NULL,
+                       events, 
                        ...) {
   
   # Restore old par() options from what I change in here
@@ -109,7 +110,8 @@
                  candle.col = candle.col, major.ticks = major.ticks, 
                  minor.ticks = minor.ticks, auto.grid = auto.grid, 
                  major.format = major.format, main = main, 
-                 candles = (type == "candles"), ...)
+                 candles = (type == "candles"), events = events, ...)
+    
   } else {  
     # Else need to do layout plots
     screens <- do_layout(x, screens = screens, layout.screens = layout.screens, 
@@ -140,10 +142,20 @@
       }
 
       # Note that do_add.grid also sets up axes and what not
-      do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
+      ylim <- do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
                 auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
                   have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i],
                   ylab.axis = ylab.axis[i])
+      
+      if(!missing(events)){
+        for(j in seq_along(events)){
+          do_add.event(time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(events[["time"]], j))),
+                       label = get.elm.recycle(events[["label"]], j),
+                       col = if(!is.null(events[["col"]])) get.elm.recycle(events[["col"]],j) else "red", 
+                       lty = if(!is.null(events[["lty"]])) get.elm.recycle(events[["lty"]],j) else 2,
+                       y = range(ylim)[2])
+        }
+      }
       
       col.panel  <- get.elm.from.dots("col", dots, screens, i)
       pch.panel  <- get.elm.from.dots("pch", dots, screens, i)
@@ -303,6 +315,7 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   }
   
   box()
+  return(xy$y)
 }
 
 do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
@@ -326,12 +339,16 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
 
 do_add.shading <- function(){}
 
-do_add.event <- function(){}
+do_add.event <- function(time, label, col = "red", lty = 2, y = ylim[2]){
+  abline(v = time, col = col, lty = lty)
+  text(x = time, y = y, label = label, offset = 0.2, pos = 2, srt = 90, col = col)
+}
 
 do_add.legend <- function(){}
 
 do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks, 
-                                 minor.ticks, major.format, auto.grid, candles, ...){
+                        minor.ticks, major.format, auto.grid, 
+                        candles, events, ...){
   
   if(QUANTMOD_MESSAGE) {
     message("Note that CRAN Package quantmod provides much better OHLC charting.\n",
@@ -344,9 +361,19 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
   # Extract OHLC Columns and order them
   x <- x[,xts:::has.OHLC(x, TRUE)] 
   par(oma = c(1,4,4,3))
-  do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
+  ylim <- do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
               minor.ticks = minor.ticks, auto.grid = auto.grid, 
               have_x_axis = TRUE, have_y_axis = TRUE, ylab.axis = "none", ...)
+  
+  if(!missing(events)){
+    for(j in seq_along(events)){
+      do_add.event(time = do.call(paste0("as.",indexClass(x))[1], list(get.elm.recycle(events[["time"]], j))),
+                   label = get.elm.recycle(events[["label"]], j),
+                   col = if(!is.null(events[["col"]])) get.elm.recycle(events[["col"]],j) else "red", 
+                   lty = if(!is.null(events[["lty"]])) get.elm.recycle(events[["lty"]],j) else 2,
+                   y = range(ylim)[2])
+    }
+  }
   
   width = .2*deltat(x)
   
