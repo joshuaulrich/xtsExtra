@@ -146,7 +146,8 @@
       do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
             auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
             have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i],
-            ylab.axis = ylab.axis[i], events = events, blocks = blocks)
+            ylab.axis = ylab.axis[i], events = events, blocks = blocks,
+            ylab.loc = ylab.loc)
       
       
       col.panel  <- get.elm.from.dots("col", dots, screens, i)
@@ -276,14 +277,18 @@ do_layout <- function(x, screens, layout.screens, ylab.loc){
 
 do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes, 
                         auto.grid, xlab, ylab, log, have_x_axis, have_y_axis, 
-                        ylab.axis, events, blocks, ...){
+                        ylab.axis, events, blocks, ylab.loc, ...){
 
   # Set Margins for each panel here!
-  par(mar = have_x_axis*c(3.4,0,0,0) + switch(ylab.axis,
-                   none = c(0,0,0,0),
-                   left = c(0, 4.5, 0, 1.5), 
-                   right = c(0, 1.5, 0, 4.5)))
-  
+  if(ylab.loc == "flip"){
+    par(mar = have_x_axis*c(3.4, 0, 0, 0) + c(0, 4.5, 0, 4.5))
+  } else {
+    par(mar = have_x_axis*c(3.4,0,0,0) +
+         switch(ylab.axis,
+              none = c(0,0,0,0),
+              left = c(0, 4.5, 0, 1.5), 
+              right = c(0, 1.5, 0, 4.5)))
+  }
   # Plotting Defaults
   if(missing(axes)) axes <- TRUE
   if(missing(ylab)) ylab <- ''
