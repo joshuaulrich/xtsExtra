@@ -255,7 +255,7 @@ do_layout <- function(x, screens, layout.screens, ylab.loc){
     ylab.axis <- layout.screens 
     ylab.axis[,1] <- if(ylab.loc == "out") "left" else "right"
     ylab.axis[,2] <- if(ylab.loc == "out") "right" else "left"
-    if(ylab.loc == "in") have_y_axis[] <- TRUE # Axes for all if TRUE
+    have_y_axis[] <- TRUE # Axes for all if TRUE
   }
   
   # If labels are set to flip we do a little bit of work to arrange them
@@ -311,7 +311,6 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
       if(minor.ticks) axis(1, at=xy$x, labels=FALSE, col='#BBBBBB')
       axis(1, at=xy$x[ep], labels=names(ep), las=1, lwd=1, mgp=c(3,2,0))  
     }
-    
     if(have_y_axis){
       axis(2 + 2*(ylab.axis == "right"))  
     }
