@@ -99,6 +99,8 @@
     }
   }
   
+  ylab.loc <- match.arg(ylab.loc)
+  
   # Catch OHLC case independently
   if("type" %in% names(dots) && dots[["type"]] %in% c('candles','bars')){
     
@@ -111,12 +113,12 @@
                  minor.ticks = minor.ticks, auto.grid = auto.grid, 
                  major.format = major.format, main = main, 
                  candles = (type == "candles"), events = events, 
-                 blocks = blocks, ...)
+                 blocks = blocks, ylab.loc = ylab.loc, ...)
     
   } else {  
     # Else need to do layout plots
     screens <- do_layout(x, screens = screens, layout.screens = layout.screens, 
-                         ylab.loc = match.arg(ylab.loc))
+                         ylab.loc = ylab.loc)
     
     have_x_axis <- screens[["have_x_axis"]]
     have_y_axis <- screens[["have_y_axis"]]
@@ -261,9 +263,8 @@ do_layout <- function(x, screens, layout.screens, ylab.loc){
   
   # If labels are set to flip we do a little bit of work to arrange them
   if(ylab.loc == "flip") {
-    warning("This is currently still real bad -- I despise margins...")
     ylab.axis <- layout.screens
-    for(i in seq_len(NCOL(ylab.axis))) ylab.axis[,i] <- c("left","right") 
+    for(i in seq_len(NCOL(ylab.axis))) ylab.axis[,i] <- rep(c("left","right"), length.out = NROW(ylab.axis))
     have_y_axis[] <- TRUE
   }
   
@@ -372,7 +373,7 @@ do_add.legend <- function(){}
 
 do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks, 
                         minor.ticks, major.format, auto.grid, 
-                        candles, events, blocks, ...){
+                        candles, events, blocks, ylab.loc, ...){
   
   if(QUANTMOD_MESSAGE) {
     message("Note that CRAN Package quantmod provides much better OHLC charting.\n",
@@ -388,7 +389,7 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
   ylim <- do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
               minor.ticks = minor.ticks, auto.grid = auto.grid, 
               have_x_axis = TRUE, have_y_axis = TRUE, ylab.axis = "none",
-              events = events, blocks = blocks, ...)
+              events = events, blocks = blocks, ylab.loc = ylab.loc, ...)
   
   width = .2*deltat(x)
   
