@@ -259,7 +259,12 @@ do_layout <- function(x, screens, layout.screens, ylab.loc){
   }
   
   # If labels are set to flip we do a little bit of work to arrange them
-  if(ylab.loc == "flip") stop("Need to implement ylab.loc == 'flip'")
+  if(ylab.loc == "flip") {
+    warning("This is currently still real bad -- I despise margins...")
+    ylab.axis <- layout.screens
+    for(i in seq_len(NCOL(ylab.axis))) ylab.axis[,i] <- c("left","right") 
+    have_y_axis[] <- TRUE
+  }
   
   # Moving internal margin code to the panel-wise setup, leaving oma (outer) margin here
   if(length(levels(screens)) > 1L) par(oma = c(1,1,4,1))
