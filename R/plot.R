@@ -175,7 +175,6 @@
     
   }  
   title(main, outer = TRUE) # outer = length(levels(screens)) > 1L)
-  assign(".plot.xts",recordPlot(),.GlobalEnv)
   return(invisible(reclass(x)))
 }
 
