@@ -67,9 +67,23 @@
     xlab <- if("xlab" %in% names(dots)) dots[["xlab"]] else deparse(substitute(x))
     ylab <- if("ylab" %in% names(dots)) dots[["ylab"]] else deparse(substitute(y))
     
-    if(NCOL(x) > 1 || NCOL(y) > 1) stop("Scatter plots only for univariate series")
-    
-    return(do_scatterplot(x, y, xy.labels, xy.lines, xlab, ylab, ...))
+    if(NCOL(x) > 1L || NCOL(y) > 1L){
+      layout(matrix(seq_len(NCOL(x)*NCOL(y)),ncol = NCOL(x), nrow = NCOL(y)))
+      par(mar = c(2,2,2,2), oma = c(0,0,3,0))
+      
+      for(i in seq_len(NCOL(x))){
+        for(j in seq_len(NCOL(y))){
+          do_scatterplot(x[,i], y[,j], xy.labels, xy.lines, xlab = "", ylab = "", ..., 
+                         main = paste(names(x)[i],"vs.",names(y)[j]))  
+        }
+      }
+      
+      mtext(paste(xlab, "vs.", ylab), outer = TRUE, line = 0)
+      
+      return(invisible(merge(x,y)))
+    } else {
+      return(do_scatterplot(x,y, xy.labels, xy.lines, xlab, ylab, ...))
+    }
   }
   
   ## Else : no y, only x
