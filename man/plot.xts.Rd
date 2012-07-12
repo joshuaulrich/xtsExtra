@@ -12,7 +12,7 @@ Plotting methods for xts objects.
             major.format=TRUE, bar.col.up = 'white',
             bar.col.dn ='red', candle.col='black',
             xy.labels = FALSE, xy.lines = NULL, 
-            events, blocks, ...)
+            events, blocks, nc, nr, ...)
 }
 \arguments{
   \item{x}{an \code{xts} object}
@@ -33,6 +33,8 @@ Plotting methods for xts objects.
   elements \code{col} and \code{lty} giving the events to be highlighted. See examples.}
   \item{blocks}{A list with mandatory elements \code{start.time} and \code{end.time} and 
   optional element \code{col} giving time-blocks to be highlighted. See examples.}
+  \item{nc}{Number of columns to be used if \code{layout} is set to \code{'auto'}.}
+  \item{nr}{Number of rows to be used if \code{layout} is set to \code{'auto'}.}
   \item{\dots}{additional graphical arguments}
 }
 \details{

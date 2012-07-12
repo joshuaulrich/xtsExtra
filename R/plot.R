@@ -23,15 +23,12 @@
 #    I think layout is working, but need to turn off x/y labels smartly when things are adjacent
 #    Handle not adjacent cases
 #    
-#    DO LAYOUT WITHOUT USING LAYOUT -- NEED TO BE ABLE TO MOVE BETWEEN PLOTS WHEN ADDING LINES?
-#    GET LAYOUT TO SUPPORT ADJACENT COLUMNS
+#    DO LAYOUT WITHOUT USING LAYOUT? -- NEED TO BE ABLE TO MOVE BETWEEN PLOTS WHEN ADDING LINES?
 #    legend.loc
 #    COLOR GRADIENT FOR SCATTERPLOT CASE
-#    Combine OHLC and multi-panel (i.e., if passed cbind(SPY, AGG)) 
-#    Smarter OHLC candle width? I like bar width
-#    Change default OHLC colors
-#    Support up/down OHLC bar colors or is it better to use quantmod at this point?
-#    ylab.loc = c("left", "right", "out","in","flip","above") -- above kills panel alignment automatically
+#    ylab.loc = "above" -- above kills panel alignment automatically
+#    ylab.loc = "none"  -- needs to do ylim better
+#    ylim handling?
 #    Refactor plotting functionality into some non-exported bits
 #    It stopped showing ylab when I did the axis hardcoding -- should be fixed with margins
 #    x <- as.xts(sample_matrix); plot(cbind(x, x[,1]), layout = matrix(1:6, ncol = 2)) -- is this a bug?: JMU
@@ -53,7 +50,7 @@
                        major.format=TRUE, bar.col.up = 'white',
                        bar.col.dn ='red', candle.col='black',
                        xy.labels = FALSE, xy.lines = NULL,
-                       events, blocks,
+                       events, blocks, nc, nr,
                        ...) {
   
   # Restore old par() options from what I change in here
@@ -118,7 +115,7 @@
   } else {  
     # Else need to do layout plots
     screens <- do_layout(x, screens = screens, layout.screens = layout.screens, 
-                         ylab.loc = ylab.loc)
+                         ylab.loc = ylab.loc, nc = nc, nr = nr)
     
     have_x_axis <- screens[["have_x_axis"]]
     have_y_axis <- screens[["have_y_axis"]]
@@ -201,13 +198,21 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex
   return(invisible(xy.xts))
 }
 
-do_layout <- function(x, screens, layout.screens, ylab.loc){
+do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr){
   # By default one screen per panel
   screens <- factor(if(identical(screens,"auto")) 1:NCOL(x) else 
     rep(screens, length.out = NCOL(x)))
   
+  
+  
   if(identical(layout.screens, "auto")){
     layout.screens <- seq_along(levels(screens))
+    if(!missing(nc) && !missing(nr)) 
+      layout.screens <- matrix(layout.screens, ncol = nc, nrow = nrow)
+    if(missing(nc) && !missing(nr))
+      layout.screens <- matrix(layout.screens, nrow = nr)
+    if(!missing(nc) && missing(nr))
+      layout.screens <- matrix(layout.screens, ncol = nc)
   }
   
   layout.screens <- as.matrix(layout.screens)
