@@ -178,11 +178,12 @@
   return(invisible(reclass(x)))
 }
 
-do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex, xlim, ylim, type, pch, ...){
+do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex, xlim, ylim, type, pch, col, ...){
   if(missing(main)) main <- paste(xlab, "vs.", ylab)
   if(missing(log))  log  <- ''
   if(missing(cex))  cex  <- 0.8
   if(missing(pch))  pch  <- 1L
+  if(missing(col))  col  <- 1
   
   x <- try.xts(x); y <- try.xts(y)
   
@@ -203,10 +204,12 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex
   type  <- if(missing(type)){if(do.lab) "c" else "l"} else type
 
   plot(xy[1:2], type = ptype, main = main, xlab = xlab, 
-        ylab = ylab, xlim = xlim, ylim = ylim, log = log, pch = pch)
+        ylab = ylab, xlim = xlim, ylim = ylim, log = log, pch = pch, col = col)
 
-  if(do.lab) text(xy[1:2], cex = cex, labels = if(!is.logical(xy.labels)) xy.labels else index2char(index(xy.xts)))
-  if(xy.lines) lines(xy[1:2], type = type)
+  if(do.lab) text(xy[1:2], cex = cex, labels = if(!is.logical(xy.labels)) xy.labels else index2char(index(xy.xts)), col = col)
+  
+  if(xy.lines) segments(xy[[1]][-NROW(xy[[1]])],xy[[2]][-NROW(xy[[2]])], 
+                     xy[[1]][-1],xy[[2]][-1], col = col)
 
   return(invisible(xy.xts))
 }

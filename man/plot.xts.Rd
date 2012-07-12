@@ -123,8 +123,9 @@ plot(sample_xts[,1],sample_xts[,2])
 # With some options
 plot(sample_xts[1:100,1],sample_xts[1:100,2], xy.labels = TRUE)
 
-# This will make more sense when color-gradient is implemented
-plot(sample_xts[,1],sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE)
+# Use of color gradient
+cr <- colorRampPalette(c("#00FF00","#FF0000"))
+plot(sample_xts[,1],sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE, col = cr(NROW(sample_xts)))
 
 plot(sample_xts[,1], sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE, type = "l")
 }
