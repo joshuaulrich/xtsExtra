@@ -4,7 +4,7 @@ MULTITYPE OBJECTS
   -- Most everything
   
 ANALYTICS
-  -- 
+  -- regularize()
   
 GRAPHICS
   -- plot.xts

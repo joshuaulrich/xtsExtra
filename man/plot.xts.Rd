@@ -115,7 +115,11 @@ plot(merge(x,x), type = "p", col = 1:5, pch = 1:5, cex = 1:5)
 plot(merge(x,x), type = "p", col = list(1:5, 1:3), pch = list(1:5, 1:3), cex = list(1:5, 1:3))
 
 # Using the events argument
-plot(sample_xts[,1], events = list(time = c("2007-03-15", "2007-05-01"), label = "bad day"))
+plot(sample_xts[,1], events = list(time = c("2007-03-15", "2007-05-01"), label = "bad days"))
+
+plot(sample_xts[,1], events = list(time = c("2007-03-15","2007-05-01"), label = "bad days"), blocks = list(start.time = c("2007-03-05", "2007-04-15"), end.time = c("2007-03-20","2007-05-30"), col = c("lightblue", "lightgreen")))
+
+plot(sample_xts, layout.screens = matrix(c(1,1,2,3,4,4), ncol = 2, byrow = TRUE), events = list(time = c("2007-03-15","2007-05-01"), label = "bad days"), blocks = list(start.time = c("2007-03-05", "2007-04-15"), end.time = c("2007-03-20","2007-05-30"), col = c("lightblue", "lightgreen")))
 
 # Makes a scatterplot if we pass two series
 plot(sample_xts[,1],sample_xts[,2])
