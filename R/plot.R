@@ -18,31 +18,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# To do: 
-#    REMOVE par() ARGS FROM FORMALS AND INSTEAD TREAT ... BETTER [Still need to do "type"]
-#    I think layout is working, but need to turn off x/y labels smartly when things are adjacent
-#    Handle not adjacent cases
-#    
-#    DO LAYOUT WITHOUT USING LAYOUT? -- NEED TO BE ABLE TO MOVE BETWEEN PLOTS WHEN ADDING LINES?
-#    legend.loc
-#    COLOR GRADIENT FOR SCATTERPLOT CASE
-#    ylab.loc = "above" -- above kills panel alignment automatically
-#    ylab.loc = "none"  -- needs to do ylim better
-#    ylim handling?
-#    Refactor plotting functionality into some non-exported bits
-#    It stopped showing ylab when I did the axis hardcoding -- should be fixed with margins
-#    x <- as.xts(sample_matrix); plot(cbind(x, x[,1]), layout = matrix(1:6, ncol = 2)) -- is this a bug?: JMU
-#    Option to have fixed y-scale throughout
-#    xlim smart subsetting should be panel-wise
-
-## How I really want to handle screens
-## Give user ultimate flexibility in setting up screens combining them as desired with layout-like interface
-## Go by rows on matrix and whenever number of panels changes, add new time axis
-## E.g. layout(matrix(c(1,1,1,1), ncol = 2) has one time axis 
-## E.g. layout(matrix(c(1,2,1,2), ncol = 2) has one time axis
-## E.g. layout(matrix(c(1,2,1,3), ncol = 2) has three time axes -- one underneath the first set of panels, two more for each of the second row
-## E.g. layout(matrix(c(1,2,3,1,4,5), ncol=2) has three time axes -- one underneath the first set of panels, two more for each of the third row [since shared with second]
-
 `plot.xts` <- function(x, y = NULL, 
                        screens = 'auto', layout.screens = 'auto',
                        ylab.loc = c("none","out","in","flip", "left", "right"), 

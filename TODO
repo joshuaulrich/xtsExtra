@@ -1,0 +1,26 @@
+TODO list for GSOC 2012 / xtsExtra
+
+MULTITYPE OBJECTS 
+  -- Most everything
+  
+ANALYTICS
+  -- 
+  
+GRAPHICS
+  -- plot.xts
+    -- Features: 
+         auto-legend: use code from Performance Analytics. Nees to support blocks, events, lines, etc. 
+         xlim acting panelwise
+         xlim to allow plotting trading hours only
+         ylim -- fixed scale? 
+         ylab.loc = "above" -- put ylabels where titles normally go
+    -- Bugs: 
+        ylim: Need to align ylim for ylab.loc = "none" or else its disengenuous
+        
+    -- Not Sure: 
+        x <- as.xts(sample_matrix); plot(cbind(x, x[,1]), layout = matrix(1:6, ncol = 2)) -- is this a bug? ggplot2 is ok with it
+        
+    -- Long term: 
+        Do layout with layout so we can move back and forth among screens?
+        Write demo or vignette
+  -- barplot.xts
