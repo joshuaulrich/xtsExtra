@@ -236,7 +236,7 @@ do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr){
   # Would like to use do.call and as.list so pro-users can pass widths and heights
   # to layout -- currently undocumented behavior
   # do.call("layout", as.list(layout.screens)) 
-  layout(layout.screens)
+  if(length(layout.screens) > 1L) layout(layout.screens)
   
   have_x_axis <- logical(length(levels(screens)))
   for(i in seq_len(NROW(layout.screens))){
@@ -396,12 +396,12 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
                         minor.ticks, major.format, auto.grid, 
                         candles, events, blocks, ylab.loc, ...){
   
-  if(QUANTMOD_MESSAGE) {
+  if(exists(".QUANTMOD_MESSAGE", .GlobalEnv) && get(".QUANTMOD_MESSAGE", .GlobalEnv)) {
     message("Note that CRAN Package quantmod provides much better OHLC charting.\n",
             "This message will show once per session.")
-    assignInMyNamespace("QUANTMOD_MESSAGE",FALSE) 
-    # Is there a better way to do this ? 
-    # I'd think lexical scoping but I get a locked binding error
+    # Help page says not to use assignInMyNamespace() so we'll do it manually in .GlobalEnv
+    # Also, it was only introduced in R 2.15 so probably better to remove it
+    assign(".QUANTMOD_MESSAGE", FALSE, envir = .GlobalEnv)
   }
   
   # Extract OHLC Columns and order them
@@ -441,5 +441,3 @@ get.elm.from.dots <- function(par, dots, screens, n){
     get.elm.recycle(split(rep(if(length(levels(screens)) == 1L) list(dots[[par]]) else dots[[par]],
      length.out = length(screens)), screens), n)
 }
-
-QUANTMOD_MESSAGE <- TRUE # Suggests quantmod to user of OHLC plot.xts
