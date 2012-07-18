@@ -12,7 +12,7 @@ Plotting methods for xts objects.
             major.format=TRUE, bar.col.up = 'white',
             bar.col.dn ='red', candle.col='black',
             xy.labels = FALSE, xy.lines = NULL, 
-            events, blocks, nc, nr, ...)
+            ylim = 'auto', events, blocks, nc, nr, ...)
 }
 \arguments{
   \item{x}{an \code{xts} object}
@@ -29,6 +29,7 @@ Plotting methods for xts objects.
   \item{candle.col}{the color of the candles when \code{type} is \sQuote{candles}. Also the outside of the bars.}
   \item{xy.labels}{label points in scatterplot?}
   \item{xy.lines}{connect points in scatterplot?}
+  \item{ylim}{How to handle \code{ylim} for plots. If \code{'fixed'} all panels share \code{ylim = range(x)}; if \code{'auto'} panels sharing a y axis have the same limits. If a numeric matrix, rows are recycled panel-wise as \code{ylim}.}
   \item{events}{A list with mandatory elements \code{time} and \code{label} and optional 
   elements \code{col} and \code{lty} giving the events to be highlighted. See examples.}
   \item{blocks}{A list with mandatory elements \code{start.time} and \code{end.time} and 

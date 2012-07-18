@@ -12,7 +12,6 @@ GRAPHICS
          auto-legend: use code from Performance Analytics. Nees to support blocks, events, lines, etc. 
          xlim acting panelwise
          xlim to allow plotting trading hours only
-         ylim -- fixed scale? 
          ylab.loc = "above" -- put ylabels where titles normally go
     -- Bugs: 
         ylim: Need to align ylim for ylab.loc = "none" or else its disengenuous

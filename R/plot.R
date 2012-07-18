@@ -18,15 +18,12 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-`plot.xts` <- function(x, y = NULL, 
-                       screens = 'auto', layout.screens = 'auto',
-                       ylab.loc = c("none","out","in","flip", "left", "right"), 
-                       auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE,
-                       major.format=TRUE, bar.col.up = 'white',
-                       bar.col.dn ='red', candle.col='black',
-                       xy.labels = FALSE, xy.lines = NULL,
-                       events, blocks, nc, nr,
-                       ...) {
+`plot.xts` <- function(x, y = NULL, screens = 'auto', layout.screens = 'auto',
+      ylab.loc = c("none","out","in","flip", "left", "right"), 
+      auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE, major.format=TRUE, 
+      bar.col.up = 'white', bar.col.dn ='red', candle.col='black',
+      xy.labels = FALSE, xy.lines = NULL, ylim = 'auto', 
+      events, blocks, nc, nr, ...) {
   
   # Restore old par() options from what I change in here
   old.par <- par(no.readonly = TRUE)
@@ -99,16 +96,17 @@
                  minor.ticks = minor.ticks, auto.grid = auto.grid, 
                  major.format = major.format, main = main, 
                  candles = (type == "candles"), events = events, 
-                 blocks = blocks, ylab.loc = ylab.loc, ...)
+                 blocks = blocks, ylab.loc = ylab.loc, ylim = ylim, ...)
     
   } else {  
     # Else need to do layout plots
     screens <- do_layout(x, screens = screens, layout.screens = layout.screens, 
-                         ylab.loc = ylab.loc, nc = nc, nr = nr)
+                         ylab.loc = ylab.loc, nc = nc, nr = nr, ylim = ylim)
     
     have_x_axis <- screens[["have_x_axis"]]
     have_y_axis <- screens[["have_y_axis"]]
     ylab.axis <- screens[["ylab.axis"]]
+    ylim <- screens[["ylim"]]
     screens <- screens[["screens"]]
     
     x.split <- split.xts.by.cols(x, screens)
@@ -135,7 +133,7 @@
             auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
             have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i],
             ylab.axis = ylab.axis[i], events = events, blocks = blocks,
-            ylab.loc = ylab.loc)
+            ylab.loc = ylab.loc, ylim = get.elm.recycle(ylim, i))
       
       
       col.panel  <- get.elm.from.dots("col", dots, screens, i)
@@ -189,12 +187,10 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex
   return(invisible(xy.xts))
 }
 
-do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr){
+do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr, ylim){
   # By default one screen per panel
   screens <- factor(if(identical(screens,"auto")) 1:NCOL(x) else 
     rep(screens, length.out = NCOL(x)))
-  
-  
   
   if(identical(layout.screens, "auto")){
     layout.screens <- seq_along(levels(screens))
@@ -248,7 +244,7 @@ do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr){
   }
     
   if(ylab.loc == "out" || ylab.loc == "in"){
-    if(NCOL(layout.screens) > 2L) stop("ylab.loc not consistent with layout -- too many columns.")
+    if(NCOL(layout.screens) != 2L) stop("ylab.loc not consistent with layout -- too many columns.")
     # If labels are set to out we need them for outer panels only
     # If labels are set to in we need them for inner panels only
     ylab.axis <- layout.screens 
@@ -268,13 +264,28 @@ do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr){
   if(length(levels(screens)) > 1L) par(oma = c(1,1,4,1))
   if(ylab.loc == "none") par(oma = c(1,4,4,3))
   
+  if(identical(ylim,'fixed')){
+    ylim <- list(range(x))
+  } else if(identical(ylim, 'auto')){
+    if(ylab.loc == "none") {
+      ylim <- lapply(1:NROW(layout.screens), function(y) {
+        do.call(range,split.xts.by.cols(x, screens)[layout.screens[y,]])
+      })
+    } else {
+      ylim <- lapply(split.xts.by.cols(x, screens), range)
+    }
+  } else{
+    if(!is.matrix(ylim)) dim(ylim) <- c(1L, NROW(ylim))
+    ylim <- lapply(1:NROW(ylim), function(x) ylim[x,1:2])
+  }
+  
   return(list(screens = screens, have_x_axis = have_x_axis, 
-              have_y_axis = have_y_axis, ylab.axis = ylab.axis))
+              have_y_axis = have_y_axis, ylab.axis = ylab.axis, ylim = ylim))
 }
 
 do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes, 
                         auto.grid, xlab, ylab, log, have_x_axis, have_y_axis, 
-                        ylab.axis, events, blocks, ylab.loc, ...){
+                        ylab.axis, events, blocks, ylab.loc, ylim, ...){
 
   # Set Margins for each panel here!
   if(ylab.loc == "flip"){
@@ -293,11 +304,9 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   if(missing(log))  log  <- ''
   
   xy <- list(x = .index(x), y = seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE), length.out = NROW(x)))
-  plot(xy$x, xy$y, type = "n", axes=FALSE, xlab = xlab, ylab = '', log = log)
+  plot(xy$x, xy$y, type = "n", axes=FALSE, xlab = xlab, ylab = '', log = log, ylim = ylim)
   mtext(side = 2 + 2*(ylab.axis == "right"), text = if(ylab.axis == "none") "" else ylab, line = 3, cex = 0.8)
   ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
-  
-  ylim <- xy$y
   
   if(!missing(blocks)){
     do_add.shading(blocks, ylim)
@@ -369,7 +378,7 @@ do_add.legend <- function(){}
 
 do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks, 
                         minor.ticks, major.format, auto.grid, 
-                        candles, events, blocks, ylab.loc, ...){
+                        candles, events, blocks, ylab.loc, ylim, ...){
   
   if(exists(".QUANTMOD_MESSAGE", .GlobalEnv) && get(".QUANTMOD_MESSAGE", .GlobalEnv)) {
     message("Note that CRAN Package quantmod provides much better OHLC charting.\n",
@@ -379,17 +388,19 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
     assign(".QUANTMOD_MESSAGE", FALSE, envir = .GlobalEnv)
   }
   
+  if(identical(ylim, 'auto') || identical(ylim, 'fixed')) ylim <- range(x)
+  
   # Extract OHLC Columns and order them
   x <- x[,xts:::has.OHLC(x, TRUE)] 
   par(oma = c(1,4,4,3))
-  ylim <- do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
+  do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
               minor.ticks = minor.ticks, auto.grid = auto.grid, 
               have_x_axis = TRUE, have_y_axis = TRUE, ylab.axis = "none",
-              events = events, blocks = blocks, ylab.loc = ylab.loc, ...)
+              events = events, blocks = blocks, ylab.loc = ylab.loc, ylim = ylim, ...)
   
   width = .2*deltat(x)
   
-  # Better to do this with xts:::Op etc when moved to xts package
+  # Better to do this with xts:::Op etc when moved to xts package?
   
   # Candles -- not happy about lwd fixed: make dynamic / smart?
   if(candles) rect(.index(x) - width/4, x[,2L], .index(x) + width/4, x[,3L], col = candle.col)
