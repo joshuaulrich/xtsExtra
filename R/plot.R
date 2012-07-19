@@ -268,7 +268,7 @@ do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr, ylim){
     ylim <- list(range(x))
   } else if(identical(ylim, 'auto')){
     if(ylab.loc == "none") {
-      ylim <- lapply(1:NROW(layout.screens), function(y) {
+      ylim <- lapply((1:NROW(layout.screens))[!duplicated(layout.screens)], function(y) {
         do.call(range,split.xts.by.cols(x, screens)[layout.screens[y,]])
       })
     } else {
