@@ -19,11 +19,11 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRUE, 
-                        date.format = "%b %y", ylim=NULL, space = 0.2, cex.axis=0.8,
+                        major.format = TRUE, ylim=NULL, space = 0.2, cex.axis=0.8,
                         cex.legend = 0.8, cex.lab = 1, cex.labels = 0.8, cex.main = 1,
-                        xaxis=TRUE, element.color = "darkgray", xlab="Date",
+                        xaxis=TRUE, box.color = "black", xlab="Date",
                         ylab="Value", major.ticks='auto', minor.ticks=TRUE,
-                        las = 3, xaxis.labels = NULL, col = NULL, ...) {
+                        xaxis.labels = NULL, col = NULL, ...) {
   # Don't like this name for input variable, 
   # but we must match S3 generic so we'll just change it
   x = height 
@@ -49,12 +49,12 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
     warning("Time-oriented barplot for single observation not well defined.\n  Dispatching instead to unstacked default barplot.")
     # Should I instead let this be forced?
     return(barplot(coredata(x), ylim=NULL, space = 0.2, 
-                   ylab="Value",las = 2, xaxis.labels = xaxis.labels, col = col, ...))
+                   ylab="Value", xaxis.labels = xaxis.labels, col = col, ...))
   }
     
   time.scale = periodicity(x)$scale
-  ep = axTicksByTime(x, major.ticks, format.labels = date.format)
-  ep1 = ep
+  
+  ep1 <- ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
   
   posn = barplot(t(x), plot=FALSE, space=space)
   if(!stacked) posn <- posn*nc
@@ -101,31 +101,30 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   # t() drops xts-ness and returns a named matrix so dispatches properly
   if(stacked){
     barplot(t(positives), col=col, space=space, axisnames = FALSE, axes = FALSE, ylim=ylim, ...)
-    barplot(t(negatives), add=TRUE, col=col, space=space, las = las, xlab = xlab, cex.names = cex.lab, axes = FALSE, axisnames = FALSE, ylim=ylim, ...)
+    barplot(t(negatives), add=TRUE, col=col, space=space, xlab = xlab, cex.names = cex.lab, axes = FALSE, axisnames = FALSE, ylim=ylim, ...)
   } else {
     barplot(t(x), beside = TRUE, col = col, axes = FALSE, axisnames = FALSE, ylim = ylim, ...)
   }
   
-  axis(2, col = element.color, las = las, cex.axis = cex.axis)
+  axis(2, col = box.color, cex.axis = cex.axis)
   
   title(ylab = ylab, cex = cex.lab)
   
   if (xaxis) {
     if(minor.ticks)
       axis(1, at=posn, labels=FALSE, col='#BBBBBB')
-    label.height = .25 + cex.axis * apply(t(names(ep1)),1, function(X) max(strheight(X, units="in")/par('cin')[2]) )
     
     if(is.null(xaxis.labels))
       xaxis.labels = names(ep1)
     else
       ep1 = 1:length(xaxis.labels)
-    axis(1, at=ep1, labels=xaxis.labels, las=las, lwd=1, mgp=c(3,label.height,0), cex.axis = cex.axis) 
-    #axis(1, at = lab.ind, lab=rownames[lab.ind], cex.axis = cex.axis, col = elementcolor)
+    axis(1, at=ep1, labels=xaxis.labels, lwd=1, mgp=c(3,1.5,0), cex.axis = cex.axis) 
+    #axis(1, at = lab.ind, lab=rownames[lab.ind], cex.axis = cex.axis, col = box.color)
     #             title(xlab = xlab, cex = cex.lab)
     # use axis(..., las=3) for vertical labels.
   }
   
-  box(col = element.color)
+  box(col = box.color)
     
   if(auto.legend){ # For now, only supporting under-legend
     par(mar=c(0,2,0,1)+.1) # set the margins of the second panel
@@ -133,7 +132,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
     
     ncol = min(nc, 4)
     
-    do_barplot.legend("center", legend=colnames(x), cex = cex.legend, fill=col, ncol=ncol, box.col=element.color, border.col = element.color)
+    do_barplot.legend("center", legend=colnames(x), cex = cex.legend, fill=col, ncol=ncol, box.col=box.color, border.col = box.color)
   }
   assign(".barplot.xts",recordPlot(),.GlobalEnv)
   invisible(height)

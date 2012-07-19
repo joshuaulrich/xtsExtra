@@ -4,20 +4,21 @@
 \description{A barplot method for xts objects.}
 \usage{
 \method{barplot}{xts}(height, stacked = TRUE, scale = FALSE, auto.legend = TRUE, 
-                        date.format = '\%b \%y', ylim=NULL, space = 0.2, cex.axis=0.8,
+                        major.format = TRUE, ylim=NULL, space = 0.2, cex.axis=0.8,
                         cex.legend = 0.8, cex.lab = 1, cex.labels = 0.8, cex.main = 1,
-                        xaxis=TRUE, element.color = "darkgray", xlab="Date",
+                        xaxis=TRUE, box.color = "black", xlab="Date",
                         ylab="Value", major.ticks='auto', minor.ticks=TRUE,
-                        las = 3, xaxis.labels = NULL, col = NULL, ...)
+                        xaxis.labels = NULL, col = NULL, ...)
 }
 \arguments{
   \item{height}{An \code{xts} object of desired frequency. Use \code{to.period}
   functions to aggregate data outside of \code{barplot}.}
   \item{stacked}{logical. Should barplot be stacked?}
   \item{scale}{logical. Should data be rescaled to sum to 100\% at each bar? 
-  Currently does not support negative values.}
+      Currently does not support negative values.}
   \item{auto.legend}{logical. Should a legend be placed underneath the barplot?}
-  \item{date.format}{Format string for x-axis time labels.}
+  \item{major.format}{Format string for x-axis time labels. If \code{TRUE}, 
+      automatically chosen}
   \item{ylim}{Limits of y-axis. If \code{NULL}, sensible defaults are chosen.}
   \item{space}{the amount of space (as a fraction of the
   average bar width) left before each bar, as in
@@ -42,7 +43,7 @@
 
   \item{xaxis}{If true, draws the x axis}
   
-  \item{element.color}{provides the color for drawing
+  \item{box.color}{provides the color for drawing
   less-important chart elements, such as the box lines,
   axis lines, etc.}
 
@@ -57,9 +58,6 @@
   \item{minor.ticks}{Should minor tickmarks be drawn,
   default TRUE}
   
-  \item{las}{Sets orientation of axis labels, as described in \code{\link{par}}. 
-  Here defalts to 3}
-
   \item{xaxis.labels}{Allows for non-date labeling of date
   axes, default is NULL}
 
