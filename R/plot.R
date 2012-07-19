@@ -19,7 +19,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 `plot.xts` <- function(x, y = NULL, screens = 'auto', layout.screens = 'auto',
-      ylab.loc = c("none","out","in","flip", "left", "right"), 
+      yax.loc = c("none","out","in","flip", "left", "right"), 
       auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE, major.format=TRUE, 
       bar.col.up = 'white', bar.col.dn ='red', candle.col='black',
       xy.labels = FALSE, xy.lines = NULL, ylim = 'auto', 
@@ -82,7 +82,7 @@
     }
   }
   
-  ylab.loc <- match.arg(ylab.loc)
+  yax.loc <- match.arg(yax.loc)
   
   # Catch OHLC case independently
   if("type" %in% names(dots) && dots[["type"]] %in% c('candles','bars')){
@@ -96,12 +96,12 @@
                  minor.ticks = minor.ticks, auto.grid = auto.grid, 
                  major.format = major.format, main = main, 
                  candles = (type == "candles"), events = events, 
-                 blocks = blocks, ylab.loc = ylab.loc, ylim = ylim, ...)
+                 blocks = blocks, yax.loc = yax.loc, ylim = ylim, ...)
     
   } else {  
     # Else need to do layout plots
     screens <- do_layout(x, screens = screens, layout.screens = layout.screens, 
-                         ylab.loc = ylab.loc, nc = nc, nr = nr, ylim = ylim)
+                         yax.loc = yax.loc, nc = nc, nr = nr, ylim = ylim)
     
     have_x_axis <- screens[["have_x_axis"]]
     have_y_axis <- screens[["have_y_axis"]]
@@ -133,7 +133,7 @@
             auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
             have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i],
             ylab.axis = ylab.axis[i], events = events, blocks = blocks,
-            ylab.loc = ylab.loc, ylim = get.elm.recycle(ylim, i))
+            yax.loc = yax.loc, ylim = get.elm.recycle(ylim, i))
       
       
       col.panel  <- get.elm.from.dots("col", dots, screens, i)
@@ -187,7 +187,7 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex
   return(invisible(xy.xts))
 }
 
-do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr, ylim){
+do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   # By default one screen per panel
   screens <- factor(if(identical(screens,"auto")) 1:NCOL(x) else 
     rep(screens, length.out = NCOL(x)))
@@ -235,26 +235,26 @@ do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr, ylim){
   # From this part, we return a vector ylab.axis giving L/R/None marks for y-labels
   # Margins are set appropriately back in main function body
   
-  if(ylab.loc == "none") ylab.axis <- rep("none", length.out = length(have_y_axis))
+  if(yax.loc == "none") ylab.axis <- rep("none", length.out = length(have_y_axis))
   
   # If labels are set to left/right we need them in all panels
-  if(ylab.loc == "right" || ylab.loc == "left") {
+  if(yax.loc == "right" || yax.loc == "left") {
     have_y_axis[] <- TRUE # Since forcing labels, we write a y-axis everywhere
-    ylab.axis <- rep(ylab.loc, length.out = length(have_y_axis))
+    ylab.axis <- rep(yax.loc, length.out = length(have_y_axis))
   }
     
-  if(ylab.loc == "out" || ylab.loc == "in"){
-    if(NCOL(layout.screens) != 2L) stop("ylab.loc not consistent with layout -- too many columns.")
+  if(yax.loc == "out" || yax.loc == "in"){
+    if(NCOL(layout.screens) != 2L) stop("yax.loc not consistent with layout -- too many columns.")
     # If labels are set to out we need them for outer panels only
     # If labels are set to in we need them for inner panels only
     ylab.axis <- layout.screens 
-    ylab.axis[,1] <- if(ylab.loc == "out") "left" else "right"
-    ylab.axis[,2] <- if(ylab.loc == "out") "right" else "left"
+    ylab.axis[,1] <- if(yax.loc == "out") "left" else "right"
+    ylab.axis[,2] <- if(yax.loc == "out") "right" else "left"
     have_y_axis[] <- TRUE # Axes for all if TRUE
   }
   
   # If labels are set to flip we do a little bit of work to arrange them
-  if(ylab.loc == "flip") {
+  if(yax.loc == "flip") {
     ylab.axis <- layout.screens
     for(i in seq_len(NCOL(ylab.axis))) ylab.axis[,i] <- rep(c("left","right"), length.out = NROW(ylab.axis))
     have_y_axis[] <- TRUE
@@ -262,12 +262,12 @@ do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr, ylim){
   
   # Moving internal margin code to the panel-wise setup, leaving oma (outer) margin here
   if(length(levels(screens)) > 1L) par(oma = c(1,1,4,1))
-  if(ylab.loc == "none") par(oma = c(1,4,4,3))
+  if(yax.loc == "none") par(oma = c(1,4,4,3))
   
   if(identical(ylim,'fixed')){
     ylim <- list(range(x))
   } else if(identical(ylim, 'auto')){
-    if(ylab.loc == "none") {
+    if(yax.loc == "none") {
       ylim <- lapply((1:NROW(layout.screens))[!duplicated(layout.screens)], function(y) {
         do.call(range,split.xts.by.cols(x, screens)[layout.screens[y,]])
       })
@@ -285,10 +285,10 @@ do_layout <- function(x, screens, layout.screens, ylab.loc, nc, nr, ylim){
 
 do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes, 
                         auto.grid, xlab, ylab, log, have_x_axis, have_y_axis, 
-                        ylab.axis, events, blocks, ylab.loc, ylim, ...){
+                        ylab.axis, events, blocks, yax.loc, ylim, ...){
 
   # Set Margins for each panel here!
-  if(ylab.loc == "flip"){
+  if(yax.loc == "flip"){
     par(mar = have_x_axis*c(3.4, 0, 0, 0) + c(0, 4.5, 0, 4.5))
   } else {
     par(mar = have_x_axis*c(3.4,0,0,0) +
@@ -378,7 +378,7 @@ do_add.legend <- function(){}
 
 do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks, 
                         minor.ticks, major.format, auto.grid, 
-                        candles, events, blocks, ylab.loc, ylim, ...){
+                        candles, events, blocks, yax.loc, ylim, ...){
   
   if(exists(".QUANTMOD_MESSAGE", .GlobalEnv) && get(".QUANTMOD_MESSAGE", .GlobalEnv)) {
     message("Note that CRAN Package quantmod provides much better OHLC charting.\n",
@@ -396,7 +396,7 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
   do_add.grid(x, major.ticks = major.ticks, major.format = major.format, 
               minor.ticks = minor.ticks, auto.grid = auto.grid, 
               have_x_axis = TRUE, have_y_axis = TRUE, ylab.axis = "none",
-              events = events, blocks = blocks, ylab.loc = ylab.loc, ylim = ylim, ...)
+              events = events, blocks = blocks, yax.loc = yax.loc, ylim = ylim, ...)
   
   width = .2*deltat(x)
   

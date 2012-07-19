@@ -7,7 +7,7 @@ Plotting methods for xts objects.
 \usage{
 \method{plot}{xts}(x, y = NULL, 
             screens = 'auto', layout.screens = 'auto',
-            ylab.loc = c("none","out","in","flip", "left", "right"),
+            yax.loc = c("none","out","in","flip", "left", "right"),
             auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE, 
             major.format=TRUE, bar.col.up = 'white',
             bar.col.dn ='red', candle.col='black',
@@ -19,7 +19,7 @@ Plotting methods for xts objects.
   \item{y}{an \code{xts} object or \code{NULL}}
   \item{screens}{factor (or coerced to factor) whose levels specify which graph each series is to be plotted in. If not specified, then defaults to a single series per screen for \code{type} not \code{"candles"} or \code{"bars"} See examples.}
   \item{layout.screens}{ Matrix (in a form that could be passed to layout) which arranges screens.}
-  \item{ylab.loc}{Where to put y-axis labels if they are to be drawn.}
+  \item{yax.loc}{Where to put y-axis labels if they are to be drawn.}
   \item{auto.grid}{should grid lines be drawn}
   \item{major.ticks}{should major tickmarks be drawn and labeled}
   \item{minor.ticks}{should minor tickmarks be drawn}
