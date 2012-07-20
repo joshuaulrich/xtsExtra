@@ -56,12 +56,20 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   
   ep1 <- ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
   
-  posn = barplot(t(x), plot=FALSE, space=space)
-  if(!stacked) posn <- posn*nc
+  ### Patch from Kent Russell on Jul 20 
+  #######################################
   
-  # Vectorize this?
-  for(i in 1:length(ep)) 
-    ep1[i] = posn[ep[i]]
+  if(stacked){
+    posn = barplot(t(x), plot = FALSE, space = space)
+    for(i in seq_along(ep)) ep1[i] = posn[ep[i]] # Vectorize?
+  } else {
+    posn = barplot(t(x), plot = FALSE, beside = TRUE) 
+    # FIXME support space: space = c(0, space) ? 
+    for(i in seq_along(ep)) ep1[i] = posn[2,ep[i]] # Vectorize?
+  }
+  
+  #######################################
+  
   
   # Handle strange double-plotting from axTicksByTime
   ep1 <- ep1[!duplicated(ep1)]
@@ -112,7 +120,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   
   if (xaxis) {
     if(minor.ticks)
-      axis(1, at=posn, labels=FALSE, col='#BBBBBB')
+      axis(1, at = if(stacked) posn else posn[2,], labels = FALSE, col = '#BBBBBB')
     
     if(is.null(xaxis.labels))
       xaxis.labels = names(ep1)
