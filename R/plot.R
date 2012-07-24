@@ -204,11 +204,6 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   
   layout.screens <- as.matrix(layout.screens)
   
-  # Would like to use do.call and as.list so pro-users can pass widths and heights
-  # to layout -- currently undocumented behavior
-  # do.call("layout", as.list(layout.screens)) 
-  if(length(layout.screens) > 1L) layout(layout.screens)
-  
   have_x_axis <- logical(length(levels(screens)))
   for(i in seq_len(NROW(layout.screens))){
     if(i == NROW(layout.screens)){
@@ -263,6 +258,7 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   # Moving internal margin code to the panel-wise setup, leaving oma (outer) margin here
   if(length(levels(screens)) > 1L) par(oma = c(1,1,4,1))
   if(yax.loc == "none") par(oma = c(1,4,4,3))
+  if(length(levels(screens)) == 1L && yax.loc != "none") par(oma = c(1,1,4,1))
   
   if(identical(ylim,'fixed')){
     ylim <- list(range(x))
@@ -278,6 +274,16 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
     if(!is.matrix(ylim)) dim(ylim) <- c(1L, NROW(ylim))
     ylim <- lapply(1:NROW(ylim), function(x) ylim[x,1:2])
   }
+  
+  # Would like to use do.call and as.list so pro-users can pass widths and heights
+  # to layout -- currently undocumented behavior
+  # do.call("layout", as.list(layout.screens)) 
+  # Currently I add a little bit extra height to those screens with x-axes
+  if(length(layout.screens) > 1L) 
+    layout(layout.screens, heights = 1 + 0.05*NROW(unique(layout.screens)) * 
+      sapply(1:NROW(layout.screens), # More dirty hacking.... still not perfect
+                            function(j) any(have_x_axis[layout.screens[j,]])))
+  
   
   return(list(screens = screens, have_x_axis = have_x_axis, 
               have_y_axis = have_y_axis, ylab.axis = ylab.axis, ylim = ylim))
