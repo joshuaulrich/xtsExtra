@@ -1,0 +1,98 @@
+%\VignetteIndexEntry{xts: Extensible Time Series}
+\documentclass{article}
+\usepackage{hyperref}
+\hypersetup{colorlinks,%
+            citecolor=black,%
+            linkcolor=blue,%
+            urlcolor=blue,%
+            }
+
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\R}{\texttt{R}~}
+\newcommand{\CRAN}{\texttt{CRAN}~}
+\newcommand{\pkg}[1]{\textbf{#1}}
+
+\title{\bf xts Plots }
+\author{Michael Weylandt}
+\date{\today}
+
+<<echo=FALSE>>=
+library(xtsExtra)
+options(width = 70)
+@
+
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+As part of the Google Summer of Code 2012, the plotting functionalities availble for \code{xts} objects has been greatly extended. This new plotitng functionality is currently available in a package \pkg{xtsExtra} available off R-forge and is under active development. Care has been taken not to break back compatability with the published \code{xts::plot.xts} available from the \CRAN version of \pkg{xts} while providing a new and powerful set of plotting routines for time-oriented data. 
+
+While care has been taken to make sure the new \code{plot.xts} behaves intuitively, flexibility does come at a price of some API complexity and this document is provided as a guide for both developers and advanced users who may wish to make use of the extended capabilities. Note that this document may lag development from time to time and is subject to non-back-compatible change. 
+
+The \code{xts} time series class was designed to provide users and developers an intuitive and transparent platform for time series analysis in \R~\cite{R}. While the functions described in this document will only be called automatically when used on \code{xts} objects, the \code{reclass} paradigm described in the \pkg{xts} vignette \cite{xts} is used internally, so that all time series classes may make use of advanced plotting capabilities. 
+
+\section{Barplots}
+The first of the graphical primitives provided in \pkg{xtsExtra} is a \code{barplot} method, adapted from Peter Carl's code in \pkg{PerformanceAnalytics}~\cite{PerformanceAnalytics}. Implemented as an exported and registered method of the \code{S3} generic \code{barplot}, \code{barplot.xts} has the following arguments: 
+
+<<>>=
+library(xtsExtra)
+names(formals(barplot.xts))
+@
+
+Let us examine these arguments in order. 
+\begin{description}
+\item[\code{height}] So called for compatability with \code{graphics::barplot}, this should be an \code{xts}-ible object as it will be converted by \code{xts::try.xts} internally. 
+\item[\code{stacked}] Defaulting to \code{TRUE}, this defines whether a \emph{stacked} barplot should be produced. In the author's opinion, stacked barplots are to be preferred for time-oriented barplots as they align observations into a single vertical unit. 
+\item[\code{scale}] Defaulting to \code{FALSE}, this applies the transform \code{x <- x / rowSums(x)} to data; this transform is useful for seeing how the relative makeup of \code{height} changes over time. Currently, if \code{any(height < 0)}, this option throws an error. It is also likely to cause problems if \code{any(rowSums(height) == 0)}.
+\item[\code{auto.legend}] Defaulting to \code{TRUE}, this places a legend underneath the barplot. Column names are used as the legend labels. Attractive defaults have been chosen, but for more detailed control, the user is encouraged to add the legend himself using the unexported \code{xtsExtra::do\_barplot.legend}, as described below. 
+\item[\code{major.format}] Control the format of the time axis labels; see the details \code{?strptime} for formatting codes. If left as the default (\code{TRUE}), \code{axTicksByTime} attempts to automatically pick an appropriate labelling convention. 
+\item[\code{ylim}] Control the $y$-axis limits of the resulting plot. If default (\code{NULL}), the limits will be chosen automatically. Expect handling to be moved to \code{...} in future development. 
+\item[\code{space}] Specifies the width of the interbar spacing ; not currently supported for plots with \code{stacked = FALSE}. Possibly will be reworked to provide more robust support in light of the $x$-axis spacing given by the index of the \code{xts} class. 
+\item[\code{cex.*}] These arguments control the size of various labels. Expect their handling to be moved to use \code{...} and \code{par} arguments in future development.
+\item[\code{xaxis}] Defaulting to \code{TRUE}, should an $x$-axis and labels be drawn?
+\item[\code{box.color}] Defaulting to \code{"black"}, gives the color of less important plot elements, such as the outside boundaries and the legend box. Some authors prefer \code{box.color = "darkgray"} for a softer appearance. 
+\item[\code{xlab, ylab}] Labels for the $x$- and $y$-axes. Expect their handling to be moved to \code{...} in future development. 
+\item[\code{major.ticks, minor.ticks}] See the fuller description of these arguments given for \code{plot.xts} (Section \ref{sec:plot}). 
+\item[\code{col}] Color of the bars. If missing, defaults to \code{col = seq\_len(NCOL(height))} chosen according to the somewhat unattractive \R defaults provided by \code{palette}. See more on color palettes below. 
+\end{description}
+
+\section{plot.xts}
+\label{sec:plot}
+
+\clearpage
+\begin{thebibliography}{99}
+\bibitem{zoo} Achim Zeileis and Gabor Grothendieck (2005):
+\emph{ zoo: S3 Infrastructure for Regular and Irregular Time Series.}
+Journal of Statistical Software, 14(6), 1-27. URL http://www.jstatsoft.org/v14/i06/
+
+\bibitem{ISO} International Organization for Standardization (2004):
+\emph{ISO 8601: Data elements and interchage formats ---
+      Information interchange --- Representation of dates and time}
+URL http://www.iso.org
+
+\bibitem{R} R Development Core Team:
+\emph{R: A Language and Environment for Statistical Computing},
+R Foundation for Statistical Computing, Vienna, Austria.
+ISBN 3-900051-07-0, URL http://www.R-project.org
+
+\bibitem{quantmod} Jeffrey A. Ryan (2008):
+\emph{quantmod: Quantitative Financial Modelling Framework.}
+R package version 0.3-5. URL http://www.quantmod.com
+URL http://r-forge.r-project.org/projects/quantmod
+
+\bibitem{xts} Jeffrey A. Ryan \& Joshua M. Ulrich (2008):
+\emph{xts: Extensible Time Series}
+R package version 0.8-7. 
+URL http://r-forge.r-project.org/projects/xts/
+
+\bibitem{PerformanceAnalytics} Peter Carl and Brian G. Peterson (2012):
+\emph{PerformanceAnalytics: Econometric tools for performance and risk analysis.},
+R package version 1.0.4.5
+URL http://r-forge.r-project.org/projects/returnanalytics/
+
+\end{thebibliography}
+\end{document}
