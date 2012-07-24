@@ -63,7 +63,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
     posn = barplot(t(x), plot = FALSE, space = space)
     for(i in seq_along(ep)) ep1[i] = posn[ep[i]] # Vectorize?
   } else {
-    posn = barplot(t(x), plot = FALSE, beside = TRUE) 
+    posn = barplot(t(x), plot = FALSE, beside = TRUE)
     # FIXME support space: space = c(0, space) ? 
     for(i in seq_along(ep)) ep1[i] = posn[2,ep[i]] # Vectorize?
   }

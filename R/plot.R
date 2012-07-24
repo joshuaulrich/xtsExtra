@@ -356,8 +356,8 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
 
 do_add.shading <- function(blocks, y){
   for(j in seq_along(blocks[["start.time"]])){
-    rect(as.POSIXct(get.elm.recycle(blocks[["start.time"]], j)), 0.5*min(y), 
-         as.POSIXct(get.elm.recycle(blocks[["end.time"]], j)), 1.5 * max(y),
+    rect(as.POSIXct(get.elm.recycle(blocks[["start.time"]], j)), min(0, -3*min(y), 3*min(y)), ## Dirty hack!
+         as.POSIXct(get.elm.recycle(blocks[["end.time"]], j)), max(0, 3*max(y), -3*max(y)), 
          col = if(!is.null(blocks[["col"]])) get.elm.recycle(blocks[["col"]],j) else "lightblue1",
          border = NA)
   }
