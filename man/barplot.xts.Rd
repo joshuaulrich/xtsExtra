@@ -8,7 +8,7 @@
                         cex.legend = 0.8, cex.lab = 1, cex.labels = 0.8, cex.main = 1,
                         xaxis=TRUE, box.color = "black", xlab="Date",
                         ylab="Value", major.ticks='auto', minor.ticks=TRUE,
-                        xaxis.labels = NULL, col = NULL, ...)
+                        xaxis.labels = NULL, col, ...)
 }
 \arguments{
   \item{height}{An \code{xts} object of desired frequency. Use \code{to.period}
@@ -47,22 +47,17 @@
   less-important chart elements, such as the box lines,
   axis lines, etc.}
 
-  \item{xlab}{the x-axis label, which defaults to 'NULL'.}
+  \item{xlab}{the x-axis label, which defaults to \code{NULL}.}
 
-  \item{ylab}{Set the y-axis label, same as in
-  \code{\link{plot}}}
+  \item{ylab}{Set the y-axis label, same as in \code{\link{plot}}}
 
-  \item{major.ticks}{Should major tickmarks be drawn and
-  labeled, default 'auto'}
+  \item{major.ticks}{Should major tickmarks be drawn and labeled? Default \code{'auto'}}
 
-  \item{minor.ticks}{Should minor tickmarks be drawn,
-  default TRUE}
+  \item{minor.ticks}{Should minor tickmarks be drawn? default \code{TRUE}}
   
-  \item{xaxis.labels}{Allows for non-date labeling of date
-  axes, default is NULL}
-
-  \item{col}{Color of bars. Defaults to a bright color pallette rather than the
-  grays that are the default of other \code{baplot} methods.}
+  \item{xaxis.labels}{Allows for non-date labeling of date axes, default is \code{NULL}}
+  
+  \item{col}{Color of the bars. If missing, defaults to the somewhat garish colors provided by \code{\link{palette}}.}
 
   \item{\dots}{ additional graphical arguments passed to \code{\link{barplot}}.}
 }

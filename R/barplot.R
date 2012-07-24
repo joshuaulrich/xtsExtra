@@ -19,11 +19,11 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRUE, 
-                        major.format = TRUE, ylim=NULL, space = 0.2, cex.axis=0.8,
+                        major.format = TRUE, ylim = NULL, space = 0.2, cex.axis = 0.8,
                         cex.legend = 0.8, cex.lab = 1, cex.labels = 0.8, cex.main = 1,
                         xaxis=TRUE, box.color = "black", xlab="Date",
                         ylab="Value", major.ticks='auto', minor.ticks=TRUE,
-                        xaxis.labels = NULL, col = NULL, ...) {
+                        xaxis.labels = NULL, col, ...) {
   # Don't like this name for input variable, 
   # but we must match S3 generic so we'll just change it
   x = try.xts(height)
@@ -45,11 +45,16 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   nc = NCOL(x)
   nr = NROW(x)
   
+  # dotsArgs <- as.list(substitute((...),env=parent.frame()))[-1]
+  
+  if(missing(col)) col = seq_len(nc)
+  
   if(nr == 1L){
-    warning("Time-oriented barplot for single observation not well defined.\n  Dispatching instead to unstacked default barplot.")
+    warning("Time-oriented barplot for single observation not well defined.\n",
+            "Dispatching instead to unstacked default barplot.")
     # Should I instead let this be forced?
-    return(barplot(coredata(x), ylim=NULL, space = 0.2, 
-                   ylab="Value", xaxis.labels = xaxis.labels, col = col, ...))
+    return(barplot(coredata(x), ylim = NULL, space = 0.2, 
+                   ylab = "Value", xaxis.labels = xaxis.labels, ...))
   }
     
   time.scale = periodicity(x)$scale
@@ -73,8 +78,6 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   
   # Handle strange double-plotting from axTicksByTime
   ep1 <- ep1[!duplicated(ep1)]
-  
-  if(is.null(col)) col <- seq_len(nc)
     
   minmargin <- if(is.null(xlab)) 3 else 5
     
@@ -83,8 +86,8 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   # For now we only support under-legend
   # Set up two panels if needed
   if(auto.legend){
-    layout(rbind(1,2), heights=c(6,1), widths=1)
-    par(mar=c(3,4,4,2)+.1) # set the margins of the barplot panel
+    layout(rbind(1,2), heights = c(6,1), widths = 1)
+    par(mar = c(3,4,4,2) +.1) # set the margins of the barplot panel
       # Note to self: mar= order is c(bottom, left, top, right)
   }
     
@@ -108,10 +111,14 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   # Use barplot.default to actually draw the bars
   # t() drops xts-ness and returns a named matrix so dispatches properly
   if(stacked){
-    barplot(t(positives), col=col, space=space, axisnames = FALSE, axes = FALSE, ylim=ylim, ...)
-    barplot(t(negatives), add=TRUE, col=col, space=space, xlab = xlab, cex.names = cex.lab, axes = FALSE, axisnames = FALSE, ylim=ylim, ...)
+    barplot(t(positives), col = col, space = space, axisnames = FALSE, 
+            axes = FALSE, ylim = ylim, ...)
+    barplot(t(negatives), add =TRUE, col = col, space = space, 
+        xlab = xlab, cex.names = cex.lab, axes = FALSE, axisnames = FALSE, 
+            ylim = ylim, ...)
   } else {
-    barplot(t(x), beside = TRUE, col = col, axes = FALSE, axisnames = FALSE, ylim = ylim, ...)
+    barplot(t(x), beside = TRUE, col = col, axes = FALSE, axisnames = FALSE,
+            ylim = ylim, ...)
   }
   
   axis(2, col = box.color, cex.axis = cex.axis)
@@ -135,24 +142,26 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   box(col = box.color)
     
   if(auto.legend){ # For now, only supporting under-legend
-    par(mar=c(0,2,0,1)+.1) # set the margins of the second panel
+    par(mar = c(0,2,0,1)+.1) # set the margins of the second panel
     plot.new()
     
     ncol = min(nc, 4)
     
-    do_barplot.legend("center", legend=colnames(x), cex = cex.legend, fill=col, ncol=ncol, box.col=box.color, border.col = box.color)
+    do_barplot.legend("center", legend = colnames(x), cex = cex.legend, 
+        fill = col, ncol = ncol, box.col = box.color, border.col = box.color)
   }
   assign(".barplot.xts",recordPlot(),.GlobalEnv)
   invisible(height)
 }
 
 do_barplot.legend <- function (x, y = NULL, legend, fill = NULL, col = par("col"),
-                               lty, lwd, pch, angle = 45, density = NULL, bty = "o", bg = par("bg"),
-                               pt.bg = NA, cex = 1, pt.cex = cex, pt.lwd = lwd, xjust = 0,
-                               yjust = 1, x.intersp = 1, y.intersp = 1, adj = c(0, 0.5),
-                               text.width = NULL, text.col = par("col"), merge = do.lines &&
-                                 has.pch, trace = FALSE, plot = TRUE, ncol = 1, horiz = FALSE,
-                               title = NULL, inset = 0, border.col = NULL, border.lwd = 1, border.lty = "solid", box.col = NULL, box.lwd = 1, box.lty = "solid")
+        lty, lwd, pch, angle = 45, density = NULL, bty = "o", bg = par("bg"),
+        pt.bg = NA, cex = 1, pt.cex = cex, pt.lwd = lwd, xjust = 0,
+        yjust = 1, x.intersp = 1, y.intersp = 1, adj = c(0, 0.5),
+        text.width = NULL, text.col = par("col"), merge = do.lines && has.pch, 
+        trace = FALSE, plot = TRUE, ncol = 1, horiz = FALSE,
+        title = NULL, inset = 0, border.col = NULL, border.lwd = 1, 
+        border.lty = "solid", box.col = NULL, box.lwd = 1, box.lty = "solid")
 {
   # Modifications to core graphics legend() function
   # @author R Core Dev Team
@@ -196,7 +205,9 @@ do_barplot.legend <- function (x, y = NULL, legend, fill = NULL, col = par("col"
   else nx <- 0
   xlog <- par("xlog")
   ylog <- par("ylog")
-  rect2 <- function(left, top, dx, dy, density = NULL, angle, border = border.col, lty = border.lty, lwd = border.lwd, ...) {
+  rect2 <- function(left, top, dx, dy, density = NULL, angle, 
+                    border = border.col, lty = border.lty, 
+                    lwd = border.lwd, ...) {
     r <- left + dx
     if (xlog) {
       left <- 10^left
@@ -207,7 +218,8 @@ do_barplot.legend <- function (x, y = NULL, legend, fill = NULL, col = par("col"
       top <- 10^top
       b <- 10^b
     }
-    rect(left, top, r, b, angle = angle, density = density, border = border, lty = lty, lwd = lwd, ...)
+    rect(left, top, r, b, angle = angle, density = density, border = border, 
+         lty = lty, lwd = lwd, ...)
   }
   segments2 <- function(x1, y1, dx, dy, ...) {
     x2 <- x1 + dx
@@ -343,7 +355,8 @@ do_barplot.legend <- function (x, y = NULL, legend, fill = NULL, col = par("col"
     if (trace)
       catn("  rect2(", left, ",", top, ", w=", w, ", h=",
            h, ", ...)", sep = "")
-    rect2(left, top, dx = w, dy = h, col = bg, density = NULL, border = border.col)#added border = border.col
+    rect2(left, top, dx = w, dy = h, col = bg, density = NULL, border = border.col)
+    #added border = border.col
   }
   xt <- left + xchar + xextra + (w0 * rep.int(0:(ncol - 1),
                                               rep.int(n.legpercol, ncol)))[1:n.leg]
@@ -400,8 +413,8 @@ do_barplot.legend <- function (x, y = NULL, legend, fill = NULL, col = par("col"
   xt <- xt + x.intersp * xchar
   if (plot) {
     if (!is.null(title))
-      text2(left + w/2, top - ymax, labels = title, adj = c(0.5,
-                                                            0), cex = cex, col = text.col)
+      text2(left + w/2, top - ymax, labels = title, 
+            adj = c(0.5, 0), cex = cex, col = text.col)
     text2(xt, yt, labels = legend, adj = adj, cex = cex,
           col = text.col)
   }
