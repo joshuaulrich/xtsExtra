@@ -26,7 +26,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
                         xaxis.labels = NULL, col = NULL, ...) {
   # Don't like this name for input variable, 
   # but we must match S3 generic so we'll just change it
-  x = height 
+  x = try.xts(height)
   
   # x should be organized as columns by category, rows by period
   # xts format assures us of this
