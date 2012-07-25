@@ -1,5 +1,7 @@
 %\VignetteIndexEntry{xts: Extensible Time Series}
 \documentclass{article}
+\usepackage[parfill]{parskip}
+\usepackage{subfigure}
 \usepackage{hyperref}
 \hypersetup{colorlinks,%
             citecolor=black,%
@@ -35,11 +37,13 @@ While care has been taken to make sure the new \code{plot.xts} behaves intuitive
 
 The \code{xts} time series class was designed to provide users and developers an intuitive and transparent platform for time series analysis in \R~\cite{R}. While the functions described in this document will only be called automatically when used on \code{xts} objects, the \code{reclass} paradigm described in the \pkg{xts} vignette \cite{xts} is used internally, so that all time series classes may make use of advanced plotting capabilities. 
 
-\section{Barplots}
-The first of the graphical primitives provided in \pkg{xtsExtra} is a \code{barplot} method, adapted from Peter Carl's code in \pkg{PerformanceAnalytics}~\cite{PerformanceAnalytics}. Implemented as an exported and registered method of the \code{S3} generic \code{barplot}, \code{barplot.xts} has the following arguments: 
+\section{plot.xts}
+\label{sec:plot}
+
+\section{barplot.xts}
+The second of the graphical primitives provided in \pkg{xtsExtra} is a \code{barplot} method, adapted from Peter Carl's code in \pkg{PerformanceAnalytics}~\cite{PerformanceAnalytics}. Implemented as an exported and registered method of the \code{S3} generic \code{barplot}, \code{barplot.xts} has the following arguments: 
 
 <<>>=
-library(xtsExtra)
 names(formals(barplot.xts))
 @
 
@@ -60,39 +64,144 @@ Let us examine these arguments in order.
 \item[\code{col}] Color of the bars. If missing, defaults to \code{col = seq\_len(NCOL(height))} chosen according to the somewhat unattractive \R defaults provided by \code{palette}. See more on color palettes below. 
 \end{description}
 
-\section{plot.xts}
-\label{sec:plot}
+\subsection{Time Oriented Barplots}
+We begin by creating an example of an \code{xts} barplot and then we discuss its construction in more detail. 
+<<>>=
+x <- xts(matrix(abs(rnorm(72)), ncol = 6), Sys.Date() + 1:12)
+colnames(x) <- LETTERS[1:6]
+barplot(x)
+@
+\begin{figure}[htb]
+<<fig=TRUE, echo=FALSE>>=
+barplot(x)
+@
+\caption{\code{barplot(x)}}
+\label{fig:basic.barplot}
+\end{figure}
+producing the plot in figure \ref{fig:basic.barplot}.
 
+We note immediately that, by default, the produced barplot is a so-called ``stacked'' barplot, corresponding to \code{beside = FALSE} in the default \code{barplot} method. An advantage of this display is that observations for each time period are aligned vertically; a current limitation of the barplot code is that $x$-axis spacing does not accurately reflect irregularities in the underlying data, as in figure \ref{fig:skipping.barplot}.
+\begin{figure}[htb]
+<<fig=TRUE,echo=FALSE>>=
+barplot(x[c(1:5, 12),])
+@
+\caption{\code{barplot(x[c(1:5,12),])}}
+\label{fig:skipping.barplot}
+\end{figure}
+We see in both the preceeding plots that the default axis labels accurately reflect the underlying daily periodicity of our data set, as with \code{plot.xts} more control could be had by passing a format string to \code{major.format}. E.g., to remove year labelling, we would pass \code{major.format = "\%b \%d"} to print names of the format ``Jul 25.'' 
+
+Note that negative values are stacked underneath the $x$-axis following the exampleof\code{barchart} in the \pkg{lattice} package. 
+
+\subsection{Scaled and Unstacked Plots}
+A limitation of stacked barplots is that the eye is naturally drawn to the size of the bar, rather than the widths of the bands which comprise it. Further, while it is possible to compare the size of the bottom stripe, comparing the higher stripes is more difficult as they do not generally share a common baseline. Graphics experts like Cleveland~\cite{Cleveland} and Tufte~\cite{Tufte} use of the trellis or small multiples paradigm to avoid these problems.\footnote{See, e.g., \code{barchart} in the recommended \pkg{lattice} package.} Over and against their better judgement, we provide two possible customizations to address these concerns. 
+
+In certain applications, e.g., asset class weights in finance, shifting population dynamics in ecology, or server load balance in IT, it is sometimes of greater interest to see how the relative make-up of quantities change over time rather than the scale of those quantities. For those cases, \code{barplot.xts} can be used with the option \code{scale = TRUE} which applies the transform \code{x <- x / rowSums(x)} before plotting. 
+
+For example, the data created above can be interpreted as asset classes and we can show the effect of the scaled plots. 
+<<>>=
+colnames(x) <- c("Equity", "Fixed Income", "Commodities",
+                 "FX","Convertibles","Alternatives")
+@
+producing \ref{fig:scaled.barplot}. 
+\begin{figure}[htb]
+\subfigure[Unscaled Plot]{
+<<fig=TRUE, echo=FALSE>>=
+barplot(x, scale = FALSE)
+@
+}
+\subfigure[Scaled Plot]{
+<<fig=TRUE,echo=FALSE>>=
+barplot(x, scale = TRUE)
+@
+}
+\caption{Scaled Barplots}
+\label{fig:scaled.barplot}
+\end{figure}
+
+Currently, quantity scaling is only supported for non-negative data. For data of alternating sign, the scale transform is not uniquely defined and is, as such, left to the user. Two common choices are given here, but not implemented within the package.
+<<eval=FALSE>>=
+scale1 <- function(x){x/rowSums(abs(x))}
+scale2 <- function(x){
+    ## Can this be vectorized?
+    for(j in seq_len(NROW(x))){
+        x[j, x[j,] > 0] <- x[j, x[j,] > 0] / sum(x[j, x[j,] > 0])
+        x[j, x[j,] < 0] <- -1 * x[j, x[j,] < 0] / sum(x[j, x[j,] < 0])
+    }
+    x
+}
+@
+\code{scale1()} transforms \code{x} such that the height of each bar is \code{1}, as with the non-negative scale transform. Since bars may now contain negative quantities, the entirety of the bar will shift up and down as a linear transform of its sum. This rescaling is helpful in seeing how the total value transforms over time.  % FIXME: Put that more eloquently
+
+\code{scale2()} scales both the positive and negative row elements to sum to \code{1} independently. This is useful in more specialized circumstances, such as examing exposures of a long-short portfolio. 
+
+If absolute quantities are of interest, it is sometimes desirable to create a time-oriented barplot without stacked bars, that is, with each data point being anchored on the $x$-axis. To do so, we simply use \code{stacked = FALSE}, which corresponds to \code{beside = TRUE} in the default method of \code{barplot}. This method has the slight disadvantage of no longer aligning simultaneous observations along the time axis, but can be helpful if properly interpreted, as shown in figure \ref{fig:barplot.unstacked}.
+\begin{figure}[htb]
+<<echo=FALSE,fig=TRUE>>=
+barplot(x, stacked = FALSE)
+@
+\caption{\code{barplot(x, stacked = FALSE)}}
+\label{fig:barplot.unstacked}
+\end{figure}
+
+Note that the form of the unstacked barplot is subject to change as the author is not entirely happy with it. 
+
+\subsection{Color Pallettes}
+The color pallete defaulted to by \code{barplot.xts} is, in the eyes of many, somewhat garish; in the particular case of barplots, the eye is too strongly drawn to the brighter elements, particularly the green and purple, causing misinterpretation. \pkg{PerformanceAnalytics} provides four chosen color pallettes to mitigate this effect and we document them here. Their use is highly recommended:
+<<>>=
+rainbow6equal <- c("#BF4D4D", "#BFBF4D", "#4DBF4D", "#4DBFBF", 
+                   "#4D4DBF", "#BF4DBF")
+rainbow8equal <- c("#BF4D4D", "#BFA34D", "#86BF4D", "#4DBF69", 
+                   "#4DBFBF", "#4D69BF", "#864DBF", "#BF4DA3")
+rainbow10equal <- c("#BF4D4D", "#BF914D", "#A8BF4D", "#63BF4D", 
+                    "#4DBF7A", "#4DBFBF", "#4D7ABF", "#634DBF",
+                    "#A84DBF", "#BF4D91")
+rainbow12equal <- c("#BF4D4D", "#BF864D", "#BFBF4D", "#86BF4D", 
+                    "#4DBF4D", "#4DBF86", "#4DBFBF", "#4D86BF", 
+                    "#4D4DBF", "#864DBF", "#BF4DBF", "#BF4D86")
+@
+For more advanced pallete construction, see the \CRAN packages \pkg{RColorBrewer} and \pkg{colorspace}.
 \clearpage
 \begin{thebibliography}{99}
-\bibitem{zoo} Achim Zeileis and Gabor Grothendieck (2005):
-\emph{ zoo: S3 Infrastructure for Regular and Irregular Time Series.}
-Journal of Statistical Software, 14(6), 1-27. URL http://www.jstatsoft.org/v14/i06/
+\bibitem{zoo} Achim Zeileis and Gabor Grothendieck (2005): \\
+\emph{ zoo: S3 Infrastructure for Regular and Irregular Time Series.} \\
+Journal of Statistical Software, 14(6), 1-27. \\
+\url{http://www.jstatsoft.org/v14/i06/}
 
-\bibitem{ISO} International Organization for Standardization (2004):
+\bibitem{ISO} International Organization for Standardization (2004):\\
 \emph{ISO 8601: Data elements and interchage formats ---
-      Information interchange --- Representation of dates and time}
-URL http://www.iso.org
+      Information interchange --- Representation of dates and time}\\
+\url{http://www.iso.org}
 
-\bibitem{R} R Development Core Team:
-\emph{R: A Language and Environment for Statistical Computing},
-R Foundation for Statistical Computing, Vienna, Austria.
-ISBN 3-900051-07-0, URL http://www.R-project.org
+\bibitem{R} R Development Core Team: \\
+\emph{R: A Language and Environment for Statistical Computing}, \\
+R Foundation for Statistical Computing, Vienna, Austria. \\
+ISBN 3-900051-07-0\\
+\url{http://www.R-project.org}
 
 \bibitem{quantmod} Jeffrey A. Ryan (2008):
-\emph{quantmod: Quantitative Financial Modelling Framework.}
-R package version 0.3-5. URL http://www.quantmod.com
-URL http://r-forge.r-project.org/projects/quantmod
+\emph{quantmod: Quantitative Financial Modelling Framework.}\\
+R package version 0.3-5. \\
+\url{http://www.quantmod.com} \\
+\url{http://r-forge.r-project.org/projects/quantmod}
 
-\bibitem{xts} Jeffrey A. Ryan \& Joshua M. Ulrich (2008):
-\emph{xts: Extensible Time Series}
-R package version 0.8-7. 
-URL http://r-forge.r-project.org/projects/xts/
+\bibitem{xts} Jeffrey A. Ryan \& Joshua M. Ulrich (2008):\\
+\emph{xts: Extensible Time Series}\\
+R package version 0.8-7. \\
+\url{http://r-forge.r-project.org/projects/xts/}
 
-\bibitem{PerformanceAnalytics} Peter Carl and Brian G. Peterson (2012):
-\emph{PerformanceAnalytics: Econometric tools for performance and risk analysis.},
-R package version 1.0.4.5
-URL http://r-forge.r-project.org/projects/returnanalytics/
+\bibitem{PerformanceAnalytics} Peter Carl and Brian G. Peterson (2012):\\
+\emph{PerformanceAnalytics: Econometric tools for performance and risk analysis.},\\
+R package version 1.0.4.5\\
+\url{http://r-forge.r-project.org/projects/returnanalytics/}
+
+\bibitem{Cleveland} Cleveland, W.S. (1994):\\
+\emph{The Elements of Graphing Data}\\
+Summit, NJ: Hobart Press. 
+
+\bibitem{Tufte} Tufte, Edward R. (2001):\\
+\emph{The Visual Display of Quantitative Information, 2nd. ed}.\\
+Chesire, CN: The Graphics Press.\\
+See also \url{http://www.edwardtufte.com}.
 
 \end{thebibliography}
 \end{document}

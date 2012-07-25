@@ -25,4 +25,5 @@ GRAPHICS
     -- Features:
     -- Bugs:
         space argument for unstacked plots 
+        x axis spacing for irregular xts
     -- Long term:
