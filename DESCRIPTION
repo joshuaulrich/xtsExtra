@@ -8,6 +8,6 @@ Description: Supplementary functionality that can be used with the
 	xts package. The package also serves as a development platform
         for the GSoC 2012 xts project, which may eventually end up in
         the xts package.
-Depends: zoo, xts (>= 0.8-7)
+Depends: zoo, xts
 License: GPL-2
 URL: http://r-forge.r-project.org/projects/xts/
