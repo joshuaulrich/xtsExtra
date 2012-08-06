@@ -20,9 +20,9 @@
 
 `plot.xts` <- function(x, y = NULL, screens = 'auto', layout.screens = 'auto',
       yax.loc = c("none","out","in","flip", "left", "right"), 
-      auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE, major.format=TRUE, 
+      auto.grid = TRUE, major.ticks = 'auto', minor.ticks = TRUE, major.format = TRUE, 
       bar.col.up = 'white', bar.col.dn ='red', candle.col='black',
-      xy.labels = FALSE, xy.lines = NULL, ylim = 'auto', 
+      xy.labels = FALSE, xy.lines = NULL, ylim = 'auto', panel = lines,
       events, blocks, nc, nr, ...) {
   
   # Restore old par() options from what I change in here
@@ -142,8 +142,10 @@
       lwd.panel  <- get.elm.from.dots("lwd", dots, screens, i)
       type.panel <- get.elm.from.dots("type", dots, screens, i)
       
-      do_add.lines(x.plot, col = col.panel, lwd = lwd.panel, pch = pch.panel, 
-                   type = type.panel, cex = cex.panel)
+      panel <- match.fun(panel)
+      
+      do_add.lines(x.plot, panel = panel, col = col.panel, lwd = lwd.panel, 
+                   pch = pch.panel, type = type.panel, cex = cex.panel)
     }
     
   }  
@@ -341,7 +343,7 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   box()
 }
 
-do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
+do_add.lines <- function(x, col, pch, cex, lwd, type, panel, ...){
   
   if(is.null(col)) col <- 1:NCOL(x)
   if(is.null(pch)) pch <- 1
@@ -356,7 +358,13 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, ...){
     lwd.t  <- get.elm.recycle(lwd, j)
     type.t <- get.elm.recycle(type, j)
     
-    lines(x[,j], col = col.t, pch = pch.t, type = type.t, lwd = lwd.t, cex = cex.t)
+    if(identical(panel, lines)){
+      panel(x[,j], col = col.t, pch = pch.t, type = type.t, lwd = lwd.t, cex = cex.t)
+    } else {
+      panel(as.POSIXct(index(x)), x[,j], col = col.t, pch = pch.t, type = type.t, lwd = lwd.t, cex = cex.t)
+    }
+    
+    
   }
 }
 
