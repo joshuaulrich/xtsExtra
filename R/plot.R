@@ -343,7 +343,7 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   if(axes) {
     if(have_x_axis){
       if(minor.ticks) axis(1, at=xy$x, labels=FALSE, col='#BBBBBB')
-      axis(1, at=xy$x[ep], labels=names(ep), las=1, lwd=1, mgp=c(3,2,0))  
+      axis(1, at = xy$x[ep], labels = names(ep), lwd = 1, mgp = c(3,2,0))  
     }
     if(have_y_axis){
       axis(2 + 2*(ylab.axis == "right"))  
