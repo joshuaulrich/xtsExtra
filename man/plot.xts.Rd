@@ -99,6 +99,18 @@ plot(sample_xts[,1:3], main = "A Truly Remarkble Time Series Plot")
 # Type = "h" nicely illustrates independent points
 plot(sample_xts[1:75,1:2] - 50.5, type = c("l","h"), lwd = c(1,2))
 
+# Arrangement of axis-labels
+plot(sample_xts[,1:3], layout = matrix(c(1,1,2,3), ncol = 2, byrow = TRUE), yax.loc = "none")
+plot(sample_xts[,1:3], layout = matrix(c(1,1,2,3), ncol = 2, byrow = TRUE), yax.loc = "left")
+plot(sample_xts[,1:3], layout = matrix(c(1,1,2,3), ncol = 2, byrow = TRUE), yax.loc = "right")
+
+plot(sample_xts, layout = matrix(1:4, ncol = 2), yax.loc = "in")
+plot(sample_xts, layout = matrix(1:4, ncol = 2), yax.loc = "out")
+plot(sample_xts, layout = matrix(1:4, ncol = 2), yax.loc = "flip")
+
+plot(sample_xts[,c(1:4, 3:4)], layout = matrix(c(1,1,1,1,2,2,3,4,5,6), ncol = 2, byrow = TRUE), yax.loc = "in")
+
+
 # Type = "p" allows for transparent handling of the pch= argument
 x <- xts(1:5, Sys.Date() + 1:5)
 plot(x, type = "p")

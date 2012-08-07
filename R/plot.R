@@ -133,7 +133,7 @@
       do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
             auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
             have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i],
-            ylab.axis = ylab.axis[as.vector(layout.screens)][layout.screens == i][1], 
+            ylab.axis = ylab.axis[which.max(layout.screens == i)], # Use which.max to get first hit 
             events = events, blocks = blocks,
             yax.loc = yax.loc, ylim = get.elm.recycle(ylim, i))
       
@@ -234,21 +234,21 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   # From this part, we return a vector ylab.axis giving L/R/None marks for y-labels
   # Margins are set appropriately back in main function body
   
-  if(yax.loc == "none") ylab.axis <- rep("none", length.out = length(have_y_axis))
+  ylab.axis <- layout.screens
+  
+  if(yax.loc == "none") ylab.axis[] <- "none"
   
   # If labels are set to left/right we need them in all panels
   if(yax.loc == "right" || yax.loc == "left") {
     have_y_axis[] <- TRUE # Since forcing labels, we write a y-axis everywhere
-    ylab.axis <- rep(yax.loc, length.out = length(have_y_axis))
+    
+    ylab.axis[] <- yax.loc
   }
     
   if(yax.loc == "out" || yax.loc == "in"){
     if(NCOL(layout.screens) != 2L) stop("yax.loc not consistent with layout -- too many columns.")
     # If labels are set to out we need them for outer panels only
     # If labels are set to in we need them for inner panels only
-    
-    ylab.axis <- layout.screens 
-    
     ylab.axis[,1] <- if(yax.loc == "out") "left" else "right"
     ylab.axis[,2] <- if(yax.loc == "out") "right" else "left"
     have_y_axis[] <- TRUE # Axes for all if TRUE
@@ -256,7 +256,6 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   
   # If labels are set to flip we do a little bit of work to arrange them
   if(yax.loc == "flip") {
-    ylab.axis <- layout.screens
     for(i in seq_len(NCOL(ylab.axis))) ylab.axis[,i] <- rep(c("left","right"), length.out = NROW(ylab.axis))
     have_y_axis[] <- TRUE
   }
