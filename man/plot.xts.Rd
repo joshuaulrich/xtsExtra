@@ -7,7 +7,7 @@ Plotting methods for xts objects.
 \usage{
 \method{plot}{xts}(x, y = NULL, 
             screens = 'auto', layout.screens = 'auto',
-            yax.loc = c("none","out","in","flip", "left", "right"),
+            yax.loc = c("none","out","in","flip", "left", "right", "top"),
             auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE, 
             major.format=TRUE, bar.col.up = 'white',
             bar.col.dn ='red', candle.col='black',
@@ -19,7 +19,8 @@ Plotting methods for xts objects.
   \item{y}{an \code{xts} object or \code{NULL}}
   \item{screens}{factor (or coerced to factor) whose levels specify which graph each series is to be plotted in. If not specified, then defaults to a single series per screen for \code{type} not \code{"candles"} or \code{"bars"} See examples.}
   \item{layout.screens}{ Matrix (in a form that could be passed to layout) which arranges screens.}
-  \item{yax.loc}{Where to put y-axis labels if they are to be drawn.}
+  \item{yax.loc}{Where to put y-axis labels if they are to be drawn? \code{'none'}, \code{'left'},\code{'right'} are rather self-evident. \code{'in'} and \code{'out'} currently only work for two column layouts. \code{'flip'} attemps to arrange the axes to alternate between the left and right hand sides of the plot to avoid label collision. \code{'top'} is something of a misnomer: it places the y-axis labels above each panel while leaving all plots with their own x- and y-axes. 
+  }
   \item{auto.grid}{should grid lines be drawn}
   \item{major.ticks}{should major tickmarks be drawn and labeled}
   \item{minor.ticks}{should minor tickmarks be drawn}
@@ -108,7 +109,11 @@ plot(sample_xts, layout = matrix(1:4, ncol = 2), yax.loc = "in")
 plot(sample_xts, layout = matrix(1:4, ncol = 2), yax.loc = "out")
 plot(sample_xts, layout = matrix(1:4, ncol = 2), yax.loc = "flip")
 
-plot(sample_xts[,c(1:4, 3:4)], layout = matrix(c(1,1,1,1,2,2,3,4,5,6), ncol = 2, byrow = TRUE), yax.loc = "in")
+plot(sample_xts[,c(1:4, 3:4)], layout = matrix(c(1,1,1,1,2,2,3,4,5,6), ncol = 2, byrow = TRUE), yax.loc = "flip")
+
+plot(sample_xts[,c(1:4, 3:4)], layout = matrix(c(1,1,1,1,2,2,3,4,5,6), ncol = 2, byrow = TRUE), yax.loc = "left")
+
+plot(sample_xts[,c(1:4, 3:4)], layout = matrix(c(1,1,1,1,2,2,3,4,5,6), ncol = 2, byrow = TRUE), yax.loc = "top")
 
 
 # Type = "p" allows for transparent handling of the pch= argument

@@ -19,7 +19,7 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 `plot.xts` <- function(x, y = NULL, screens = 'auto', layout.screens = 'auto',
-      yax.loc = c("none","out","in","flip", "left", "right"), 
+      yax.loc = c("none", "out", "in", "flip", "left", "right", "top"), 
       auto.grid = TRUE, major.ticks = 'auto', minor.ticks = TRUE, major.format = TRUE, 
       bar.col.up = 'white', bar.col.dn ='red', candle.col='black',
       xy.labels = FALSE, xy.lines = NULL, ylim = 'auto', panel = lines,
@@ -260,6 +260,12 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
     have_y_axis[] <- TRUE
   }
   
+  if(yax.loc == "top"){
+    ylab.axis[] <- yax.loc
+    have_y_axis[] <- TRUE
+    have_x_axis[] <- TRUE
+  }
+  
   # Moving internal margin code to the panel-wise setup, leaving oma (outer) margin here
   if(length(levels(screens)) > 1L) par(oma = c(1,1,4,1))
   if(yax.loc == "none") par(oma = c(1,4,4,3))
@@ -304,9 +310,10 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   } else {
     par(mar = have_x_axis*c(3.4,0,0,0) +
          switch(ylab.axis,
-              none = c(0,0,0,0),
-              left = c(0, 4.5, 0, 1.5), 
-              right = c(0, 1.5, 0, 4.5)))
+              none  = c(0,   0, 0,   0),
+              left  = c(0, 4.5, 0, 1.5), 
+              right = c(0, 1.5, 0, 4.5),
+              top   = c(0, 4.5, 1.5, 1.5)))
   }
   # Plotting Defaults
   if(missing(axes)) axes <- TRUE
@@ -316,7 +323,8 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   
   xy <- list(x = .index(x), y = seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE), length.out = NROW(x)))
   plot(xy$x, xy$y, type = "n", axes=FALSE, xlab = xlab, ylab = '', log = log, ylim = ylim)
-  mtext(side = 2 + 2*(ylab.axis == "right"), text = if(ylab.axis == "none") "" else ylab, line = 3, cex = 0.8)
+  mtext(side = 2 + 2*(ylab.axis == "right") + 1*(ylab.axis == "top"), text = if(ylab.axis == "none") "" else ylab, 
+        line = 3 - 2.5*(ylab.axis == "top"), cex = 0.8)
   ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
   
   if(!missing(blocks)){
