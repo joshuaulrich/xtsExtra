@@ -103,6 +103,7 @@
     screens <- do_layout(x, screens = screens, layout.screens = layout.screens, 
                          yax.loc = yax.loc, nc = nc, nr = nr, ylim = ylim)
     
+    layout.screens <- screens[["layout.screens"]]
     have_x_axis <- screens[["have_x_axis"]]
     have_y_axis <- screens[["have_y_axis"]]
     ylab.axis <- screens[["ylab.axis"]]
@@ -127,12 +128,13 @@
       } else {
         log.panel <- ""
       }
-
+      
       # Note that do_add.grid also sets up axes and what not
       do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
             auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
             have_x_axis = have_x_axis[i], have_y_axis = have_y_axis[i],
-            ylab.axis = ylab.axis[i], events = events, blocks = blocks,
+            ylab.axis = ylab.axis[as.vector(layout.screens)][layout.screens == i][1], 
+            events = events, blocks = blocks,
             yax.loc = yax.loc, ylim = get.elm.recycle(ylim, i))
       
       
@@ -244,7 +246,9 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
     if(NCOL(layout.screens) != 2L) stop("yax.loc not consistent with layout -- too many columns.")
     # If labels are set to out we need them for outer panels only
     # If labels are set to in we need them for inner panels only
+    
     ylab.axis <- layout.screens 
+    
     ylab.axis[,1] <- if(yax.loc == "out") "left" else "right"
     ylab.axis[,2] <- if(yax.loc == "out") "right" else "left"
     have_y_axis[] <- TRUE # Axes for all if TRUE
@@ -287,7 +291,7 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
                             function(j) any(have_x_axis[layout.screens[j,]])))
   
   
-  return(list(screens = screens, have_x_axis = have_x_axis, 
+  return(list(layout.screens = layout.screens, screens = screens, have_x_axis = have_x_axis, 
               have_y_axis = have_y_axis, ylab.axis = ylab.axis, ylim = ylim))
 }
 

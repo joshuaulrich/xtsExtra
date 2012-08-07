@@ -131,9 +131,7 @@ plot(sample_xts[1:100,1],sample_xts[1:100,2], xy.labels = TRUE)
 
 # Use of color gradient
 cr <- colorRampPalette(c("#00FF00","#FF0000"))
-plot(sample_xts[,1],sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE, col = cr(NROW(sample_xts)))
-
-plot(sample_xts[,1], sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE, type = "l")
+plot(sample_xts[,1],sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE, col = cr(NROW(sample_xts)), type = "l")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
