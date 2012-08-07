@@ -32,6 +32,9 @@
   on.exit(assign(".plot.xts", recordPlot(), .GlobalEnv), add = TRUE)
   
   dots <- list(...)
+  
+  do.call(par, dots[!(names(dots) %in% 
+    c("col", "type", "lwd", "pch", "log", "cex", "ylab", "main", "axes", "xlab"))])
    
   ## if y supplied: scatter plot y ~ x
   if(!is.null(y)) {
@@ -116,18 +119,20 @@
     for(i in seq_along(levels((screens)))){
       x.plot <- x.split[[i]]
     
-      # Handle the screen-wise parameters here
-      if("ylab" %in% names(dots)) {
-        ylab.panel <- get.elm.recycle(dots[["ylab"]],i)
-      } else {
-        ylab.panel <- if(!is.null(colnames(x.plot)[[1]])) colnames(x.plot)[[1]] else ""
-      }
-        
-      if("log" %in% names(dots)){
-        log.panel <- get.elm.recycle(dots[["log"]],i)
-      } else {
-        log.panel <- ""
-      }
+      col.panel  <- get.elm.from.dots("col", dots, screens, i)
+      pch.panel  <- get.elm.from.dots("pch", dots, screens, i)
+      cex.panel  <- get.elm.from.dots("cex", dots, screens, i)
+      lwd.panel  <- get.elm.from.dots("lwd", dots, screens, i)
+      type.panel <- get.elm.from.dots("type", dots, screens, i)
+      
+      # Set these defaults here
+      ylab.panel <- get.elm.from.dots("ylab", dots, screens, i)
+      if(is.null(ylab.panel)) ylab.panel <- if(!is.null(colnames(x.plot)[[1]])) colnames(x.plot)[[1]] else ""
+      
+      log.panel <- get.elm.from.dots("log", dots, screens, i)
+      if(is.null(log.panel)) log.panel <- ""
+      
+      panel <- match.fun(panel)
       
       # Note that do_add.grid also sets up axes and what not
       do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
@@ -136,15 +141,6 @@
             ylab.axis = ylab.axis[which.max(layout.screens == i)], # Use which.max to get first hit 
             events = events, blocks = blocks,
             yax.loc = yax.loc, ylim = get.elm.recycle(ylim, i))
-      
-      
-      col.panel  <- get.elm.from.dots("col", dots, screens, i)
-      pch.panel  <- get.elm.from.dots("pch", dots, screens, i)
-      cex.panel  <- get.elm.from.dots("cex", dots, screens, i)
-      lwd.panel  <- get.elm.from.dots("lwd", dots, screens, i)
-      type.panel <- get.elm.from.dots("type", dots, screens, i)
-      
-      panel <- match.fun(panel)
       
       do_add.lines(x.plot, panel = panel, col = col.panel, lwd = lwd.panel, 
                    pch = pch.panel, type = type.panel, cex = cex.panel)
@@ -155,7 +151,9 @@
   return(invisible(reclass(x)))
 }
 
-do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex, xlim, ylim, type, pch, col, ...){
+do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, 
+                           log, cex, xlim, ylim, type, pch, col, ...){
+  
   if(missing(main)) main <- paste(xlab, "vs.", ylab)
   if(missing(log))  log  <- ''
   if(missing(cex))  cex  <- 0.8
@@ -183,7 +181,8 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main, log, cex
   plot(xy[1:2], type = ptype, main = main, xlab = xlab, 
         ylab = ylab, xlim = xlim, ylim = ylim, log = log, pch = pch, col = col)
 
-  if(do.lab) text(xy[1:2], cex = cex, labels = if(!is.logical(xy.labels)) xy.labels else index2char(index(xy.xts)), col = col)
+  if(do.lab) text(xy[1:2], cex = cex, labels = if(!is.logical(xy.labels)) 
+    xy.labels else index2char(index(xy.xts)), col = col)
   
   if(xy.lines) segments(xy[[1]][-NROW(xy[[1]])],xy[[2]][-NROW(xy[[2]])], 
                      xy[[1]][-1],xy[[2]][-1], col = col)
