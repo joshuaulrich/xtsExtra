@@ -7,7 +7,7 @@
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation, either version 3 of the License, or
+#   the Free Software Foundation, either version 2 of the License, or
 #   (at your option) any later version.
 #
 #   This program is distributed in the hope that it will be useful,
@@ -21,8 +21,8 @@
 barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRUE, 
                         major.format = TRUE, ylim = NULL, space = 0.2, cex.axis = 0.8,
                         cex.legend = 0.8, cex.lab = 1, cex.labels = 0.8, cex.main = 1,
-                        xaxis=TRUE, box.color = "black", xlab="Date",
-                        ylab="Value", major.ticks='auto', minor.ticks=TRUE,
+                        xaxis = TRUE, box.color = "black", xlab = "Date",
+                        ylab = "Value", major.ticks = 'auto', minor.ticks = TRUE,
                         xaxis.labels = NULL, col, ...) {
   # Don't like this name for input variable, 
   # but we must match S3 generic so we'll just change it
@@ -87,7 +87,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   # Set up two panels if needed
   if(auto.legend){
     layout(rbind(1,2), heights = c(6,1), widths = 1)
-    par(mar = c(3,4,4,2) +.1) # set the margins of the barplot panel
+    par(mar = c(3, 4, 4, 2) + 0.1) # set the margins of the barplot panel
       # Note to self: mar= order is c(bottom, left, top, right)
   }
     
@@ -113,7 +113,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   if(stacked){
     barplot(t(positives), col = col, space = space, axisnames = FALSE, 
             axes = FALSE, ylim = ylim, ...)
-    barplot(t(negatives), add =TRUE, col = col, space = space, 
+    barplot(t(negatives), add = TRUE, col = col, space = space, 
         xlab = xlab, cex.names = cex.lab, axes = FALSE, axisnames = FALSE, 
             ylim = ylim, ...)
   } else {
@@ -133,7 +133,8 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
       xaxis.labels = names(ep1)
     else
       ep1 = 1:length(xaxis.labels)
-    axis(1, at=ep1, labels=xaxis.labels, lwd=1, mgp=c(3,1.5,0), cex.axis = cex.axis) 
+    
+    axis(1, at = ep1, labels = xaxis.labels, lwd = 1, mgp = c(3,1.5,0), cex.axis = cex.axis) 
     #axis(1, at = lab.ind, lab=rownames[lab.ind], cex.axis = cex.axis, col = box.color)
     #             title(xlab = xlab, cex = cex.lab)
     # use axis(..., las=3) for vertical labels.
@@ -142,7 +143,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
   box(col = box.color)
     
   if(auto.legend){ # For now, only supporting under-legend
-    par(mar = c(0,2,0,1)+.1) # set the margins of the second panel
+    par(mar = c(0, 2, 0, 1) + 0.1) # set the margins of the second panel
     plot.new()
     
     ncol = min(nc, 4)
@@ -150,7 +151,7 @@ barplot.xts <- function(height, stacked = TRUE, scale = FALSE, auto.legend = TRU
     do_barplot.legend("center", legend = colnames(x), cex = cex.legend, 
         fill = col, ncol = ncol, box.col = box.color, border.col = box.color)
   }
-  assign(".barplot.xts",recordPlot(),.GlobalEnv)
+  assign(".barplot.xts", recordPlot(), .GlobalEnv)
   invisible(height)
 }
 

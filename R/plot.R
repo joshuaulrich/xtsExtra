@@ -7,7 +7,7 @@
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation, either version 3 of the License, or
+#   the Free Software Foundation, either version 2 of the License, or
 #   (at your option) any later version.
 #
 #   This program is distributed in the hope that it will be useful,
@@ -113,6 +113,8 @@
     ylim <- screens[["ylim"]]
     screens <- screens[["screens"]]
     
+    panel <- match.fun(panel)
+    
     x.split <- split.xts.by.cols(x, screens)
     
     # For now, loop over screens one by one constructing relevant elements
@@ -131,8 +133,6 @@
       
       log.panel <- get.elm.from.dots("log", dots, screens, i)
       if(is.null(log.panel)) log.panel <- ""
-      
-      panel <- match.fun(panel)
       
       # Note that do_add.grid also sets up axes and what not
       do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
@@ -368,13 +368,10 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, panel, ...){
     lwd.t  <- get.elm.recycle(lwd, j)
     type.t <- get.elm.recycle(type, j)
     
-    if(identical(panel, lines)){
-      panel(x[,j], col = col.t, pch = pch.t, type = type.t, lwd = lwd.t, cex = cex.t)
-    } else {
-      panel(as.POSIXct(index(x)), x[,j], col = col.t, pch = pch.t, type = type.t, lwd = lwd.t, cex = cex.t)
-    }
-    
-    
+    # Panel function (by default lines.xts) always uses POSIXct for plotting internally
+    # No need to special case lines: this formulation emulates lines.xts
+    panel(.index(x), x[,j], col = col.t, pch = pch.t, tpe = type.t, 
+          lwd = lwd.t, cex = cex.t)
   }
 }
 
@@ -428,8 +425,6 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
   width = .2*deltat(x)
   
   # Better to do this with xts:::Op etc when moved to xts package?
-  
-  # Candles -- not happy about lwd fixed: make dynamic / smart?
   if(candles) rect(.index(x) - width/4, x[,2L], .index(x) + width/4, x[,3L], 
                    col = candle.col, border = candle.col)
   
@@ -451,21 +446,18 @@ get.elm.recycle <- function(vec, n){
 }
 
 get.elm.from.dots <- function(par, dots, screens, n){
-  if(!(par %in% names(dots))) {
-    # Return NULL if par is not supplied
-    return(NULL)
+  # Return NULL if par is not supplied
+  if(!(par %in% names(dots))) return(NULL)
+  
+  # Repeat par to length of screens and take n-th screen
+  if(length(screens) == 1L){
+    par <- rep(list(dots[[par]]), length.out = length(screens))
   } else {
-    # Repeat par to length of screens and take n-th screen
-    if(length(screens) == 1L){
-      par <- rep(list(dots[[par]]), length.out = length(screens))
-    } else {
-      par <- rep(dots[[par]], length.out = length(screens))
-    }
+    par <- rep(dots[[par]], length.out = length(screens))
+  }
     
+  par <- split(par, screens)
     
-    par <- split(par, screens)
-    
-    j <- n %% length(par)
-    par[[if(j) j else length(par)]]
-  }  
+  j <- n %% length(par)
+  par[[if(j) j else length(par)]]  
 }

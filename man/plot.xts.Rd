@@ -155,6 +155,16 @@ plot(sample_xts[1:100,1],sample_xts[1:100,2], xy.labels = TRUE)
 cr <- colorRampPalette(c("#00FF00","#FF0000"))
 plot(sample_xts[,1],sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE, col = cr(NROW(sample_xts)), type = "l")
 
+# Can also use non-xts time series classes if called explicitly
+tser <- ts(cumsum(rnorm(50, 0.05, 0.15)), start = 2007, frequency = 12)
+plot(tser)
+plot.xts(tser)
+
+tser <- cbind(tser, ts(cumsum(rnorm(50, 0.05, 0.15)), start = 2007, frequency = 12))
+plot(tser)
+plot.xts(tser)
+
+
 \dontrun{
 # Some of these will fail because they try to access the 
 # parent frame in ways not congruent with plot.xts
