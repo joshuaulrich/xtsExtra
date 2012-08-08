@@ -47,9 +47,10 @@ can also plot basic OHLC series using \code{type='candles'} or \code{type='bars'
 Care has been taken to make plotting arguments passed by \code{...} behave smartly by classifying them as 'global', 'screen-wise', or 'column-wise' arguments and treating them as such. A partial listing includes:
 \itemize{
   \item Global parameters: \code{main}
-  \item Screen-wise parameters: \code{log}
-  \item Column-wise parameters: \code{col},\code{type},\code{lwd}
+  \item Screen-wise parameters: \code{log}, \code{ylab}
+  \item Column-wise parameters: \code{col},\code{type},\code{lwd}, \code{pch}, \code{cex}
 }
+Arguments that are not set to recycle are applied to all the plots via \code{par} internally; \code{par} is reset to the user's previous state upon exiting the function. 
 
 Better financial plots can be found in the \pkg{quantmod} package, though
 these are generally incompatible with standard R graphics tools.
@@ -65,6 +66,10 @@ plot(sample_xts[,1])
 
 # A candle chart. quantmod does this much better
 plot(sample_xts, type='candles') 
+
+plot(sample_xts[1:30, ], type = "candles")
+
+plot(sample_xts[1:30, ], type = "candles", bar.col.up = "blue", bar.col.dn = "violet", candle.col = "green4")
 
 # By default prefers panels
 plot(sample_xts[,1:2]) 
@@ -119,14 +124,14 @@ plot(sample_xts[,c(1:4, 3:4)], layout = matrix(c(1,1,1,1,2,2,3,4,5,6), ncol = 2,
 # Type = "p" allows for transparent handling of the pch= argument
 x <- xts(1:5, Sys.Date() + 1:5)
 plot(x, type = "p")
-plot(x, type = "p", pch = 1:5)
+plot(x, type = "p", pch = 1:5, col = 1:5)
 
 # Multivariate recycles over columns
-plot(merge(x,x), type = "p", pch = 1:5)
+plot(merge(x,x), type = "p", pch = 1:5, col = 1:2)
 
 # Unless you use a list
-plot(merge(x,x), type = "p", pch = list(1:5))
-plot(merge(x,x,x), type = "p", pch = list(1:5, 1:3))
+plot(merge(x,x), type = "p", pch = list(1:5), col = 1:2)
+plot(merge(x,x,x), type = "p", pch = list(1:5, 1:3), col = 1:3)
 
 # Same for col= and cex= arguments
 plot(x, type = "p", col = 1:5, pch = 1:5, cex = 1:5)
@@ -149,6 +154,14 @@ plot(sample_xts[1:100,1],sample_xts[1:100,2], xy.labels = TRUE)
 # Use of color gradient
 cr <- colorRampPalette(c("#00FF00","#FF0000"))
 plot(sample_xts[,1],sample_xts[,2], xy.labels = FALSE, xy.lines = TRUE, col = cr(NROW(sample_xts)), type = "l")
+
+\dontrun{
+# Some of these will fail because they try to access the 
+# parent frame in ways not congruent with plot.xts
+plot.zoo <- plot.xts
+example(plot.zoo)
+rm(plot.zoo)
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

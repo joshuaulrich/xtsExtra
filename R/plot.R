@@ -430,7 +430,8 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
   # Better to do this with xts:::Op etc when moved to xts package?
   
   # Candles -- not happy about lwd fixed: make dynamic / smart?
-  if(candles) rect(.index(x) - width/4, x[,2L], .index(x) + width/4, x[,3L], col = candle.col)
+  if(candles) rect(.index(x) - width/4, x[,2L], .index(x) + width/4, x[,3L], 
+                   col = candle.col, border = candle.col)
   
   # Bars for all OHLC
   rect(.index(x) - width, x[, 1L], .index(x) + width, x[, 4L], 
@@ -450,7 +451,21 @@ get.elm.recycle <- function(vec, n){
 }
 
 get.elm.from.dots <- function(par, dots, screens, n){
-  if(!(par %in% names(dots))) NULL else 
-    get.elm.recycle(split(rep(if(length(levels(screens)) == 1L) list(dots[[par]]) else dots[[par]],
-     length.out = length(screens)), screens), n)
+  if(!(par %in% names(dots))) {
+    # Return NULL if par is not supplied
+    return(NULL)
+  } else {
+    # Repeat par to length of screens and take n-th screen
+    if(length(screens) == 1L){
+      par <- rep(list(dots[[par]]), length.out = length(screens))
+    } else {
+      par <- rep(dots[[par]], length.out = length(screens))
+    }
+    
+    
+    par <- split(par, screens)
+    
+    j <- n %% length(par)
+    par[[if(j) j else length(par)]]
+  }  
 }
