@@ -55,7 +55,7 @@ Care has been taken to make plotting arguments passed by \code{...} behave smart
 \itemize{
   \item Global parameters: \code{main}
   \item Screen-wise parameters: \code{log}, \code{ylab}
-  \item Column-wise parameters: \code{col},\code{type},\code{lwd}, \code{pch}, \code{cex}
+  \item Column-wise parameters: \code{col},\code{type},\code{lwd}, \code{pch}, \code{cex}, \code{lty} 
 }
 Arguments that are not set to recycle are applied to all the plots via \code{par} internally; \code{par} is reset to the user's previous state upon exiting the function. 
 

@@ -35,7 +35,7 @@
   dots <- list(...)
   
   do.call(par, dots[!(names(dots) %in% 
-    c("col", "type", "lwd", "pch", "log", "cex", "ylab", "main", "axes", "xlab"))])
+    c("col", "type", "lwd", "pch", "log", "cex", "ylab", "main", "axes", "xlab", "lty"))])
    
   ## if y supplied: scatter plot y ~ x
   if(!is.null(y)) {
@@ -124,11 +124,12 @@
     for(i in seq_along(levels((screens)))){
       x.plot <- x.split[[i]]
     
-      col.panel  <- get.elm.from.dots("col", dots, screens, i)
-      pch.panel  <- get.elm.from.dots("pch", dots, screens, i)
-      cex.panel  <- get.elm.from.dots("cex", dots, screens, i)
-      lwd.panel  <- get.elm.from.dots("lwd", dots, screens, i)
+      col.panel  <- get.elm.from.dots("col",  dots, screens, i)
+      pch.panel  <- get.elm.from.dots("pch",  dots, screens, i)
+      cex.panel  <- get.elm.from.dots("cex",  dots, screens, i)
+      lwd.panel  <- get.elm.from.dots("lwd",  dots, screens, i)
       type.panel <- get.elm.from.dots("type", dots, screens, i)
+      lty.panel  <- get.elm.from.dots("lty",  dots, screens, i)
       
       # Set these defaults here
       ylab.panel <- get.elm.from.dots("ylab", dots, screens, i)
@@ -146,7 +147,7 @@
             yax.loc = yax.loc, ylim = get.elm.recycle(ylim, i))
       
       legend.pars.add <- do_add.lines(x.plot, panel = panel, col = col.panel, lwd = lwd.panel, 
-                   pch = pch.panel, type = type.panel, cex = cex.panel)
+                   pch = pch.panel, type = type.panel, cex = cex.panel, lty = lty.panel)
 
       if(auto.legend) do.call(do_add.legend, 
                   c(legend.names = list(legend.names[[i]]), 
@@ -361,13 +362,14 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   box()
 }
 
-do_add.lines <- function(x, col, pch, cex, lwd, type, panel, ...){
+do_add.lines <- function(x, col, pch, cex, lwd, type, panel, lty, ...){
   
-  if(is.null(col)) col <- 1:NCOL(x)
-  if(is.null(pch)) pch <- 1
-  if(is.null(cex)) cex <- 1
-  if(is.null(lwd)) lwd <- 1
+  if(is.null(col))  col <- 1:NCOL(x)
+  if(is.null(pch))  pch <- 1
+  if(is.null(cex))  cex <- 1
+  if(is.null(lwd))  lwd <- 1
   if(is.null(type)) type <- "l"
+  if(is.null(lty))  lty <- 1
   
   for(j in 1:NCOL(x)){
     col.t  <- get.elm.recycle(col, j)
@@ -375,13 +377,14 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, panel, ...){
     cex.t  <- get.elm.recycle(cex, j)
     lwd.t  <- get.elm.recycle(lwd, j)
     type.t <- get.elm.recycle(type, j)
+    lty.t  <- get.elm.recycle(lty, j)
     
     # Panel function (by default lines.xts) always uses POSIXct for plotting internally
     # No need to special case lines: this formulation emulates lines.xts
     panel(.index(x), x[,j], col = col.t, pch = pch.t, type = type.t, 
-          lwd = lwd.t, cex = cex.t)
+          lwd = lwd.t, cex = cex.t, lty = lty.t)
   }
-  list(col = col, pch = pch, cex = cex, lwd = lwd, type = type)
+  list(col = col, pch = pch, cex = cex, lwd = lwd, type = type, lty = lty)
 }
 
 do_add.shading <- function(blocks, y){
@@ -407,14 +410,15 @@ do_add.event <- function(events, y){
   }
 }
 
-do_add.legend <- function(legend.names, legend.loc, col, lwd, pch, cex, type, ...){
+do_add.legend <- function(legend.names, legend.loc, col, lwd, pch, cex, type, lty, ...){
   do.call(legend, list(
     x = legend.loc, 
     legend = legend.names, 
     col = col, 
     lwd = lwd, 
     pch = if(type != "l") pch else NULL, 
-    cex = cex, ...))
+    cex = cex, 
+    lty = lty, ...))
 }
 
 do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks, 
