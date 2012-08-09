@@ -12,7 +12,10 @@ Plotting methods for xts objects.
             major.format=TRUE, bar.col.up = 'white',
             bar.col.dn ='red', candle.col='black',
             xy.labels = FALSE, xy.lines = NULL, 
-            ylim = 'auto', panel = lines, events, blocks, nc, nr, ...)
+            ylim = 'auto', panel = lines, 
+            auto.legend = FALSE, legend.names = colnames(x), 
+            legend.loc = "topleft", legend.pars = NULL, 
+            events, blocks, nc, nr, ...)
 }
 \arguments{
   \item{x}{an \code{xts} object}
@@ -32,6 +35,10 @@ Plotting methods for xts objects.
   \item{xy.lines}{connect points in scatterplot?}
   \item{ylim}{How to handle \code{ylim} for plots. If \code{'fixed'} all panels share \code{ylim = range(x)}; if \code{'auto'} panels sharing a y axis have the same limits. If a numeric matrix, rows are recycled panel-wise as \code{ylim}.}
   \item{panel}{A panel function for plotting; by default, \code{lines.xts}. Currently, is passed \code{col}, \code{pch}, \code{type}, \code{lwd}, \code{cex} by default so be prepared to handle these arguments, perhaps by receiving them via \code{...} and ignoring. If \code{panel != lines}, that is, if the user supplies a panel function, the first two arguments passed will be \code{as.POSIXct(index(z))} and \code{coredata(z)} where \code{z} is the series being plotted in that panel; as a result, note that any plotting inside \code{panel} requires \code{POSIXct}, regardless of the index class of \code{x}. Note further that \code{panel} is called for each series individually, even if they share a screen.}
+  \item{auto.legend}{Should a legend be added automatically?}
+  \item{legend.names}{Names of series to be passed to the legend writing code. Should be one name per series plotted.}
+  \item{legend.loc}{Location of legend: will be recycled panelwise.}
+  \item{legend.pars}{Additional arguments, passed as a list, to be passed to \code{legend}. Will not recycle}
   \item{events}{A list with mandatory elements \code{time} and \code{label} and optional 
   elements \code{col} and \code{lty} giving the events to be highlighted. See examples.}
   \item{blocks}{A list with mandatory elements \code{start.time} and \code{end.time} and 

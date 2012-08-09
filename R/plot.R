@@ -23,6 +23,7 @@
       auto.grid = TRUE, major.ticks = 'auto', minor.ticks = TRUE, major.format = TRUE, 
       bar.col.up = 'white', bar.col.dn ='red', candle.col='black',
       xy.labels = FALSE, xy.lines = NULL, ylim = 'auto', panel = lines,
+      auto.legend = FALSE, legend.names = colnames(x), legend.loc = "topleft", legend.pars = NULL,
       events, blocks, nc, nr, ...) {
   
   # Restore old par() options from what I change in here
@@ -117,6 +118,8 @@
     
     x.split <- split.xts.by.cols(x, screens)
     
+    if(auto.legend) legend.names <- split(legend.names, screens)
+    
     # For now, loop over screens one by one constructing relevant elements
     for(i in seq_along(levels((screens)))){
       x.plot <- x.split[[i]]
@@ -142,8 +145,13 @@
             events = events, blocks = blocks,
             yax.loc = yax.loc, ylim = get.elm.recycle(ylim, i))
       
-      do_add.lines(x.plot, panel = panel, col = col.panel, lwd = lwd.panel, 
+      legend.pars.add <- do_add.lines(x.plot, panel = panel, col = col.panel, lwd = lwd.panel, 
                    pch = pch.panel, type = type.panel, cex = cex.panel)
+
+      if(auto.legend) do.call(do_add.legend, 
+                  c(legend.names = list(legend.names[[i]]), 
+                    legend.loc = get.elm.recycle(legend.loc, i), 
+                    legend.pars.add, legend.pars))
     }
     
   }  
@@ -370,9 +378,10 @@ do_add.lines <- function(x, col, pch, cex, lwd, type, panel, ...){
     
     # Panel function (by default lines.xts) always uses POSIXct for plotting internally
     # No need to special case lines: this formulation emulates lines.xts
-    panel(.index(x), x[,j], col = col.t, pch = pch.t, tpe = type.t, 
+    panel(.index(x), x[,j], col = col.t, pch = pch.t, type = type.t, 
           lwd = lwd.t, cex = cex.t)
   }
+  list(col = col, pch = pch, cex = cex, lwd = lwd, type = type)
 }
 
 do_add.shading <- function(blocks, y){
@@ -398,7 +407,15 @@ do_add.event <- function(events, y){
   }
 }
 
-do_add.legend <- function(){}
+do_add.legend <- function(legend.names, legend.loc, col, lwd, pch, cex, type, ...){
+  legend(
+    x = legend.loc, 
+    legend = legend.names, 
+    col = col, 
+    lwd = lwd, 
+    pch = if(type != "l") pch else NULL, 
+    cex = cex, ...)
+}
 
 do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks, 
                         minor.ticks, major.format, auto.grid, 
