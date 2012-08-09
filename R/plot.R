@@ -408,13 +408,13 @@ do_add.event <- function(events, y){
 }
 
 do_add.legend <- function(legend.names, legend.loc, col, lwd, pch, cex, type, ...){
-  legend(
+  do.call(legend, list(
     x = legend.loc, 
     legend = legend.names, 
     col = col, 
     lwd = lwd, 
     pch = if(type != "l") pch else NULL, 
-    cex = cex, ...)
+    cex = cex, ...))
 }
 
 do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks, 
