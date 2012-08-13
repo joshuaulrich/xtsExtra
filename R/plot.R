@@ -114,8 +114,6 @@
     ylim <- screens[["ylim"]]
     screens <- screens[["screens"]]
     
-    panel <- match.fun(panel)
-    
     x.split <- split.xts.by.cols(x, screens)
     
     if(auto.legend) legend.names <- split(legend.names, screens)
@@ -138,6 +136,8 @@
       log.panel <- get.elm.from.dots("log", dots, screens, i)
       if(is.null(log.panel)) log.panel <- ""
       
+      panel.panel <- match.fun(if(length(panel) > 1L) get.elm.recycle(panel, i) else panel)
+      
       # Note that do_add.grid also sets up axes and what not
       do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
             auto.grid = auto.grid, ylab = ylab.panel, log = log.panel, 
@@ -146,7 +146,7 @@
             events = events, blocks = blocks,
             yax.loc = yax.loc, ylim = get.elm.recycle(ylim, i))
       
-      legend.pars.add <- do_add.lines(x.plot, panel = panel, col = col.panel, lwd = lwd.panel, 
+      legend.pars.add <- do_add.lines(x.plot, panel = panel.panel, col = col.panel, lwd = lwd.panel, 
                    pch = pch.panel, type = type.panel, cex = cex.panel, lty = lty.panel)
 
       if(auto.legend) do.call(do_add.legend, 
