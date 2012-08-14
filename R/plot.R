@@ -332,7 +332,7 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   xy <- list(x = .index(x), y = seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE), length.out = NROW(x)))
   plot(xy$x, xy$y, type = "n", axes=FALSE, xlab = xlab, ylab = '', log = log, ylim = ylim)
   mtext(side = 2 + 2*(ylab.axis == "right") + 1*(ylab.axis == "top"), text = if(ylab.axis == "none") "" else ylab, 
-        line = 3 - 2.5*(ylab.axis == "top"), cex = 0.8)
+        line = 3 - 2.5*(ylab.axis == "top"), cex = par("cex.lab"))
   ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
   
   if(!missing(blocks)){
