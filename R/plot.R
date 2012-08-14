@@ -149,8 +149,8 @@
       legend.pars.add <- do_add.lines(x.plot, panel = panel.panel, col = col.panel, lwd = lwd.panel, 
                    pch = pch.panel, type = type.panel, cex = cex.panel, lty = lty.panel)
 
-      if(auto.legend) do.call(do_add.legend, 
-                  c(legend.names = list(legend.names[[i]]), 
+      if(auto.legend && !is.na(get.elm.recycle(legend.loc,i)))
+        do.call(do_add.legend, c(legend.names = list(legend.names[[i]]), 
                     legend.loc = get.elm.recycle(legend.loc, i), 
                     legend.pars.add, legend.pars))
     }
