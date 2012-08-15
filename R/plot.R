@@ -26,6 +26,9 @@
       auto.legend = FALSE, legend.names = colnames(x), legend.loc = "topleft", 
       legend.pars = NULL, events, blocks, nc, nr, ...) {
   
+  # Set cex.lab early to a reasonable default; this allows user to still override
+  if(length(screens) > 1L || (NCOL(x) > 1L && identical(screens, "auto"))) par(cex.lab = 0.8)
+  
   # Restore old par() options from what I change in here
   old.par <- par(no.readonly = TRUE)
   
@@ -331,9 +334,11 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   if(missing(log))  log  <- ''
   
   xy <- list(x = .index(x), y = seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE), length.out = NROW(x)))
-  plot(xy$x, xy$y, type = "n", axes=FALSE, xlab = xlab, ylab = '', log = log, ylim = ylim)
+  
+  plot(xy$x, xy$y, type = "n", axes = FALSE, xlab = xlab, ylab = '', log = log, ylim = ylim)
+  
   mtext(side = 2 + 2*(ylab.axis == "right") + 1*(ylab.axis == "top"), text = if(ylab.axis == "none") "" else ylab, 
-        line = 3 - 2.5*(ylab.axis == "top"), cex = par("cex.lab"))
+        line = 3 - 2.5*(ylab.axis == "top"), cex = par("cex.lab"), col = par("col.lab"))
   ep <- axTicksByTime(x, major.ticks, format.labels = major.format)
   
   if(!missing(blocks)){
@@ -346,17 +351,19 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   
   
   if(auto.grid) {
-    abline(v=xy$x[ep], col='grey', lty=4)
-    grid(NA,NULL)
+    abline(v = xy$x[ep], col = 'grey', lty = 4)
+    grid(NA, NULL)
   }
   
   if(axes) {
     if(have_x_axis){
-      if(minor.ticks) axis(1, at=xy$x, labels=FALSE, col='#BBBBBB')
-      axis(1, at = xy$x[ep], labels = names(ep), lwd = 1, mgp = c(3,2,0))  
+      if(minor.ticks) axis(1, at = xy$x, labels = FALSE, col = par("col.axis"))
+      axis(1, at = xy$x[ep], labels = names(ep), lwd = 1, 
+           mgp = c(3,2,0), col = par("col.axis"))  
+      # Not sure why I have to force col.axis but it seems I do
     }
     if(have_y_axis){
-      axis(2 + 2*(ylab.axis == "right"))  
+      axis(2 + 2*(ylab.axis == "right"), col = par("col.axis"))  
     }
   }
   
