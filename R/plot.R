@@ -406,8 +406,8 @@ do_add.legend <- function(legend.names, legend.loc, col, lwd, pch, cex, type, lt
     x = legend.loc, 
     legend = legend.names, 
     col = col, 
-    lwd = lwd, 
-    pch = if(type != "l") pch else NULL, 
+    lwd = ifelse(!(type %in% c("n","p")), lwd,  NA), 
+    pch = ifelse(type %in% c("p","b","o"), pch, NA), 
     cex = cex, 
     lty = lty, ...))
 }

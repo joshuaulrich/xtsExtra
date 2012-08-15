@@ -12,9 +12,9 @@ GRAPHICS
          auto-legend: use code from Performance Analytics. Nees to support blocks, events, lines, etc. 
          xlim acting panelwise
          xlim to allow plotting trading hours only
-         ylab.loc = "above" -- put ylabels where titles normally go
     -- Bugs: 
          labels sometimes overlap (see Jul24 example from KR where Russian and LTCM cross)
+         strange abline() bug reported by Samo; see reproducible example in Aug14 email to JMU
     -- Not Sure: 
         x <- as.xts(sample_matrix); plot(cbind(x, x[,1]), layout = matrix(1:6, ncol = 2)) -- is this a bug? ggplot2 is ok with it
         
