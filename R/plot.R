@@ -218,6 +218,11 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
       layout.screens <- matrix(layout.screens, ncol = nc)
   }
   
+  if(is.list(layout.screens)) {
+    layout.args <- layout.screens[-1]
+    layout.screens <- layout.screens[[1]]
+  }
+  
   layout.screens <- as.matrix(layout.screens)
   
   have_x_axis <- logical(length(levels(screens)))
@@ -302,10 +307,17 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   # to layout -- currently undocumented behavior
   # do.call("layout", as.list(layout.screens)) 
   # Currently I add a little bit extra height to those screens with x-axes
-  if(length(layout.screens) > 1L) 
-    layout(layout.screens, heights = 1 + 0.05*NROW(unique(layout.screens)) * 
-      sapply(1:NROW(layout.screens), # More dirty hacking.... still not perfect
-                            function(j) any(have_x_axis[layout.screens[j,]])))
+  if(length(layout.screens) > 1L){
+    if(!exists("layout.args")) {
+      layout(layout.screens, heights = 1 + 0.05*NROW(unique(layout.screens)) * 
+        apply(layout.screens, 1,function(j) any(have_x_axis[j])))
+      # More dirty hacking.... still not perfect
+    } else {
+      do.call(layout, c(list(layout.screens), layout.args))
+    }
+  }
+    
+                            
   
   
   return(list(layout.screens = layout.screens, screens = screens, have_x_axis = have_x_axis, 
