@@ -1,5 +1,6 @@
 \name{plot.xts}
 \alias{plot.xts}
+\alias{default.panel}
 \title{ Plotting xts Objects }
 \description{
 Plotting methods for xts objects.
@@ -34,13 +35,19 @@ Plotting methods for xts objects.
   \item{xy.labels}{label points in scatterplot?}
   \item{xy.lines}{connect points in scatterplot?}
   \item{ylim}{How to handle \code{ylim} for plots. If \code{'fixed'} all panels share \code{ylim = range(x)}; if \code{'auto'} panels sharing a y axis have the same limits. If a numeric matrix, rows are recycled panel-wise as \code{ylim}.}
-  \item{panel}{A panel function for plotting; by default, something analogous to \code{lines.xts}. Currently, is passed \code{col}, \code{pch}, \code{type}, \code{lwd}, \code{cex} as calculated internally, so be prepared to handle these arguments, perhaps by receiving them via \code{...} and ignoring. If \code{panel != 'auto'}, that is, if the user supplies a panel function, the first two arguments passed will be \code{as.POSIXct(index(z))} and \code{z} itself, where \code{z} is the series being plotted in that panel; as a result, note that any plotting inside \code{panel} requires \code{POSIXct}, regardless of the index class of \code{x}. Note further that \code{panel} is called for each panel, so the second argument (\code{z}) passed may well be a multi-column \code{xts} object; see \code{xts::default.panel} for how this is handled by default. If a list of panel functions is passed, they are recycled panelwise.}
+  \item{panel}{A panel function for plotting; by default, something analogous to \code{lines.xts}. Currently, is passed \code{col}, \code{pch}, \code{type}, \code{lwd}, \code{cex} as calculated internally, so be prepared to handle these arguments, perhaps by receiving them via \code{...} and ignoring. 
+  
+  If \code{panel != 'auto'}, that is, if the user supplies a panel function, the first two arguments passed will be \code{as.POSIXct(index(z))} and \code{z} itself, where \code{z} is the series being plotted in that panel; as a result, note that any plotting inside \code{panel} requires \code{POSIXct}, regardless of the index class of \code{x}. 
+  
+  Note further that \code{panel} is called for each panel, so the second argument (\code{z}) passed may well be a multi-column \code{xts} object; see \code{xts::default.panel} for how this is handled by default. If a list of panel functions is passed, they are recycled panelwise.}
   \item{auto.legend}{Should a legend be added automatically?}
   \item{legend.names}{Names of series to be passed to the legend writing code. Should be one name per series plotted.}
   \item{legend.loc}{Location of legend: will be recycled panelwise. If \code{NA}, a legend is ommitted for that panel}
   \item{legend.pars}{Additional arguments, passed as a list, to be passed to \code{legend}. Will not recycle}
   \item{events}{A list with mandatory elements \code{time} and \code{label} and optional 
-  elements \code{col} and \code{lty} giving the events to be highlighted. See examples.}
+  elements \code{col},\code{lty} giving the events to be highlighted. See examples.
+  
+  For further control, list elements \code{pos} and \code{offset} can be passed to place the text as well; even further control is allowed by \code{y.adj} providing the size of a downwards shift in the label.}
   \item{blocks}{A list with mandatory elements \code{start.time} and \code{end.time} and 
   optional element \code{col} giving time-blocks to be highlighted. See examples.}
   \item{nc}{Number of columns to be used if \code{layout} is set to \code{'auto'}.}

@@ -398,12 +398,25 @@ do_add.shading <- function(blocks, y){
 }
 
 do_add.event <- function(events, y){
+  
+  getFromEvents <- function(prop, j, default){
+    if(!is.null(events[[prop]])) get.elm.recycle(events[[prop]],j) else default
+  }
+  
   for(j in seq_along(events[["time"]])){
-    time = as.POSIXct(get.elm.recycle(events[["time"]],j))
-    label = get.elm.recycle(events[["label"]], j)
-    col = if(!is.null(events[["col"]])) get.elm.recycle(events[["col"]],j) else "red"
-    lty = if(!is.null(events[["lty"]])) get.elm.recycle(events[["lty"]],j) else 2
-    text(x = time, y = max(y), label = label, offset = 0.2, pos = 2, srt = 90, col = col)
+    
+    time  <-  as.POSIXct(get.elm.recycle(events[["time"]],j))
+    label <-  get.elm.recycle(events[["label"]], j)
+    
+    col <-  getFromEvents("col", j, "red")
+    lty <-  getFromEvents("lty", j, 2)
+    
+    y.adj  <- getFromEvents("y.adj", j, 0)
+    offset <- getFromEvents("offset", j, 0.2)
+    pos    <- getFromEvents("pos", j, 2)
+    
+    text(x = time, y = max(y) - y.adj, label = label, 
+         offset = offset, pos = pos, srt = 90, col = col)
     abline(v = time, col = col, lty = lty)
   }
 }
