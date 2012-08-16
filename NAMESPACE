@@ -9,6 +9,7 @@ import(zoo)
 
 export("plot.xts")
 export("barplot.xts")
+export("default.panel")
 S3method(plot, xts)
 S3method(barplot, xts)
 
