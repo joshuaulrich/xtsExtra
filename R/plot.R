@@ -120,6 +120,18 @@
     
     x.split <- split.xts.by.cols(x, screens)
     
+    # Set panelwise parameters here 
+    ylab <- dots[["ylab"]] 
+    if(is.null(ylab)) {
+      if(is.null(names(x)))
+        ylab <- ""
+      else
+        ylab <- split(names(x), screens)
+    }
+    
+    log <- dots[["log"]]
+    if(is.null(log)) log <- ""
+    
     if(auto.legend) legend.names <- split(legend.names, screens)
     
     # For now, loop over screens one by one constructing relevant elements
@@ -133,12 +145,8 @@
       type.panel <- get.elm.from.dots("type", dots, screens, i)
       lty.panel  <- get.elm.from.dots("lty",  dots, screens, i)
       
-      # Set these defaults here
-      ylab.panel <- get.elm.from.dots("ylab", dots, screens, i)[[1L]]
-      if(is.null(ylab.panel)) ylab.panel <- if(!is.null(colnames(x.plot)[[1L]])) colnames(x.plot)[[1L]] else ""
-      
-      log.panel <- get.elm.from.dots("log", dots, screens, i)
-      if(is.null(log.panel)) log.panel <- ""
+      log.panel <- get.elm.recycle(log, i)[[1L]]
+      ylab.panel <- get.elm.recycle(ylab, i)[[1L]]
       
       panel.panel <- match.fun(if(length(panel) > 1L) get.elm.recycle(panel, i) else panel)
       
