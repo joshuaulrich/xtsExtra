@@ -22,7 +22,7 @@
       yax.loc = c("none", "out", "in", "flip", "left", "right", "top"), 
       auto.grid = TRUE, major.ticks = 'auto', minor.ticks = TRUE, major.format = TRUE, 
       bar.col.up = 'white', bar.col.dn ='red', candle.col='black',
-      xy.labels = FALSE, xy.lines = NULL, ylim = 'auto', panel = 'auto',
+      xy.labels = FALSE, xy.lines = NULL, ylim = 'auto', panel = default.panel,
       auto.legend = FALSE, legend.names = colnames(x), legend.loc = "topleft", 
       legend.pars = NULL, events, blocks, nc, nr, ...) {
   
@@ -77,12 +77,13 @@
 	  
     if(is.timeBased(xlim)){
       if(length(xlim) != 2L) stop("Need endpoints only for xlim")
-      xlim <- do.call(paste0("as.",indexClass(x))[1], list(xlim))
-      x <- x[(index(x) > xlim[1]) & (index(x) < xlim[2]), , drop = FALSE]
+      xlim <- do.call(paste0("as.",indexClass(x))[1L], list(xlim))
+      x <- x[(index(x) > xlim[1L]) & (index(x) < xlim[2L]), , drop = FALSE]
     }
     if(is.numeric(xlim)){
-      warning("Using xlim as row indices -- provide timeBased xlim if you want to subset that way")
-      x <- x[xlim[1]:xlim[2], drop = FALSE]
+      warning("Using xlim as row indices -- provide timeBased xlim",
+              "if you wish to subset that way")
+      x <- x[xlim[1L]:xlim[2L], drop = FALSE]
     }
     if(is.character(xlim)){  
       x <- x[xlim, , drop = FALSE]
@@ -133,14 +134,13 @@
       lty.panel  <- get.elm.from.dots("lty",  dots, screens, i)
       
       # Set these defaults here
-      ylab.panel <- get.elm.from.dots("ylab", dots, screens, i)
-      if(is.null(ylab.panel)) ylab.panel <- if(!is.null(colnames(x.plot)[[1]])) colnames(x.plot)[[1]] else ""
+      ylab.panel <- get.elm.from.dots("ylab", dots, screens, i)[[1L]]
+      if(is.null(ylab.panel)) ylab.panel <- if(!is.null(colnames(x.plot)[[1L]])) colnames(x.plot)[[1L]] else ""
       
       log.panel <- get.elm.from.dots("log", dots, screens, i)
       if(is.null(log.panel)) log.panel <- ""
       
-      panel.panel <- if(identical(panel, 'auto')) default.panel else 
-        match.fun(if(length(panel) > 1L) get.elm.recycle(panel, i) else panel)
+      panel.panel <- match.fun(if(length(panel) > 1L) get.elm.recycle(panel, i) else panel)
       
       # Note that do_add.grid also sets up axes and what not
       do_add.grid(x.plot, major.ticks, major.format, minor.ticks, 
@@ -171,7 +171,7 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main,
   if(missing(log))  log  <- ''
   if(missing(cex))  cex  <- 0.8
   if(missing(pch))  pch  <- 1L
-  if(missing(col))  col  <- 1
+  if(missing(col))  col  <- 1L
   
   x <- try.xts(x); y <- try.xts(y)
   
@@ -179,7 +179,7 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main,
   
   xy <- coredata(xy.xts)
   
-  xy <- xy.coords(xy[,1], xy[,2])
+  xy <- xy.coords(xy[,1L], xy[,2L])
   
   if(missing(xlim)) xlim <- range(xy$x[is.finite(xy$x)])
   if(missing(ylim)) ylim <- range(xy$y[is.finite(xy$y)])
@@ -197,15 +197,15 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main,
   if(do.lab) text(xy[1:2], cex = cex, labels = if(!is.logical(xy.labels)) 
     xy.labels else index2char(index(xy.xts)), col = col)
   
-  if(xy.lines) segments(xy[[1]][-NROW(xy[[1]])],xy[[2]][-NROW(xy[[2]])], 
-                     xy[[1]][-1],xy[[2]][-1], col = col)
+  if(xy.lines) segments(xy[[1L]][-NROW(xy[[1L]])],xy[[2L]][-NROW(xy[[2L]])], 
+                     xy[[1L]][-1L],xy[[2L]][-1L], col = col)
 
   return(invisible(xy.xts))
 }
 
 do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   # By default one screen per panel
-  screens <- factor(if(identical(screens,"auto")) 1:NCOL(x) else 
+  screens <- factor(if(identical(screens,"auto")) seq_len(NCOL(x)) else 
     rep(screens, length.out = NCOL(x)))
   
   if(identical(layout.screens, "auto")){
@@ -219,8 +219,8 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   }
   
   if(is.list(layout.screens)) {
-    layout.args <- layout.screens[-1]
-    layout.screens <- layout.screens[[1]]
+    layout.args <- layout.screens[-1L]
+    layout.screens <- layout.screens[[1L]]
   }
   
   layout.screens <- as.matrix(layout.screens)
@@ -230,7 +230,8 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
     if(i == NROW(layout.screens)){
       have_x_axis[layout.screens[i,]] <- TRUE
     } else {
-      if(!identical(as.logical(diff(layout.screens[i,])), as.logical(diff(layout.screens[i+1,])))){
+      if(!identical(as.logical(diff(layout.screens[i, ])), 
+                    as.logical(diff(layout.screens[i + 1L,])))){
         have_x_axis[layout.screens[i,]] <- TRUE  
       }
     }
@@ -238,10 +239,11 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   
   have_y_axis <- logical(length(levels(screens)))
   for(i in seq_len(NCOL(layout.screens))){
-    if(i == 1){
+    if(i == 1L){
       have_y_axis[layout.screens[,i]] <- TRUE
     } else {
-      if(!identical(as.logical(diff(layout.screens[,i-1])), as.logical(diff(layout.screens[,i])))){
+      if(!identical(as.logical(diff(layout.screens[ ,i - 1L])), 
+                    as.logical(diff(layout.screens[ ,i])))){
         have_y_axis[layout.screens[,i]] <- TRUE  
       }
     }
@@ -266,14 +268,15 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
     if(NCOL(layout.screens) != 2L) stop("yax.loc not consistent with layout -- too many columns.")
     # If labels are set to out we need them for outer panels only
     # If labels are set to in we need them for inner panels only
-    ylab.axis[,1] <- if(yax.loc == "out") "left" else "right"
-    ylab.axis[,2] <- if(yax.loc == "out") "right" else "left"
+    ylab.axis[,1L] <- if(yax.loc == "out") "left" else "right"
+    ylab.axis[,2L] <- if(yax.loc == "out") "right" else "left"
     have_y_axis[] <- TRUE # Axes for all if TRUE
   }
   
   # If labels are set to flip we do a little bit of work to arrange them
   if(yax.loc == "flip") {
-    for(i in seq_len(NCOL(ylab.axis))) ylab.axis[,i] <- rep(c("left","right"), length.out = NROW(ylab.axis))
+    for(i in seq_len(NCOL(ylab.axis))) 
+      ylab.axis[,i] <- rep(c("left","right"), length.out = NROW(ylab.axis))
     have_y_axis[] <- TRUE
   }
   
@@ -310,16 +313,13 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   if(length(layout.screens) > 1L){
     if(!exists("layout.args")) {
       layout(layout.screens, heights = 1 + 0.05*NROW(unique(layout.screens)) * 
-        apply(layout.screens, 1,function(j) any(have_x_axis[j])))
+        apply(layout.screens, 1L ,function(j) any(have_x_axis[j])))
       # More dirty hacking.... still not perfect
     } else {
       do.call(layout, c(list(layout.screens), layout.args))
     }
   }
     
-                            
-  
-  
   return(list(layout.screens = layout.screens, screens = screens, have_x_axis = have_x_axis, 
               have_y_axis = have_y_axis, ylab.axis = ylab.axis, ylim = ylim))
 }
@@ -361,21 +361,20 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
     do_add.event(events, ylim)
   }
   
-  
   if(auto.grid) {
-    abline(v = xy$x[ep], col = 'grey', lty = 4)
+    abline(v = xy$x[ep], col = 'grey', lty = 4L)
     grid(NA, NULL)
   }
   
   if(axes) {
     if(have_x_axis){
-      if(minor.ticks) axis(1, at = xy$x, labels = FALSE, col = par("col.axis"))
-      axis(1, at = xy$x[ep], labels = names(ep), lwd = 1, 
-           mgp = c(3,2,0), col = par("col.axis"))  
+      if(minor.ticks) axis(1L, at = xy$x, labels = FALSE, col = par("col.axis"))
+      axis(1L, at = xy$x[ep], labels = names(ep), lwd = 1L, 
+           mgp = c(3, 2, 0), col = par("col.axis"))  
       # Not sure why I have to force col.axis but it seems I do
     }
     if(have_y_axis){
-      axis(2 + 2*(ylab.axis == "right"), col = par("col.axis"))  
+      axis(2L + 2L*(ylab.axis == "right"), col = par("col.axis"))  
     }
   }
   
@@ -384,12 +383,12 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
 
 do_add.panel <- function(x, col, pch, cex, lwd, type, panel, lty, ...){
   
-  if(is.null(col))  col <- 1:NCOL(x)
-  if(is.null(pch))  pch <- 1
-  if(is.null(cex))  cex <- 1
-  if(is.null(lwd))  lwd <- 1
+  if(is.null(col))  col <- seq_len(NCOL(x))
+  if(is.null(pch))  pch <- 1L
+  if(is.null(cex))  cex <- 1L
+  if(is.null(lwd))  lwd <- 1L
   if(is.null(type)) type <- "l"
-  if(is.null(lty))  lty <- 1
+  if(is.null(lty))  lty <- 1L
   
   panel(.index(x), x, col = col, pch = pch, type = type, 
           lwd = lwd, cex = cex, lty = lty)
@@ -506,7 +505,7 @@ get.elm.from.dots <- function(par, dots, screens, n){
   par[[if(j) j else length(par)]]  
 }
 
-default.panel <- function(index, x, col, pch, cex, lwd, type = type, lty){
+default.panel <- function(index, x, col, pch, cex, lwd, type, lty){
   # This unexported function exists only to provide a 
   # default panel function within plot.xts 
   for(j in seq_len(NCOL(x))){

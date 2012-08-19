@@ -13,7 +13,7 @@ Plotting methods for xts objects.
             major.format=TRUE, bar.col.up = 'white',
             bar.col.dn ='red', candle.col='black',
             xy.labels = FALSE, xy.lines = NULL, 
-            ylim = 'auto', panel = 'auto', 
+            ylim = 'auto', panel = default.panel, 
             auto.legend = FALSE, legend.names = colnames(x), 
             legend.loc = "topleft", legend.pars = NULL, 
             events, blocks, nc, nr, ...)
@@ -37,7 +37,7 @@ Plotting methods for xts objects.
   \item{ylim}{How to handle \code{ylim} for plots. If \code{'fixed'} all panels share \code{ylim = range(x)}; if \code{'auto'} panels sharing a y axis have the same limits. If a numeric matrix, rows are recycled panel-wise as \code{ylim}.}
   \item{panel}{A panel function for plotting; by default, something analogous to \code{lines.xts}. Currently, is passed \code{col}, \code{pch}, \code{type}, \code{lwd}, \code{cex} as calculated internally, so be prepared to handle these arguments, perhaps by receiving them via \code{...} and ignoring. 
   
-  If \code{panel != 'auto'}, that is, if the user supplies a panel function, the first two arguments passed will be \code{as.POSIXct(index(z))} and \code{z} itself, where \code{z} is the series being plotted in that panel; as a result, note that any plotting inside \code{panel} requires \code{POSIXct}, regardless of the index class of \code{x}. 
+  If \code{panel != default.panel}, that is, if the user supplies a panel function, the first two arguments passed will be \code{as.POSIXct(index(z))} and \code{z} itself, where \code{z} is the series being plotted in that panel; as a result, note that any plotting inside \code{panel} requires \code{POSIXct}, regardless of the index class of \code{x}. User supplied panel functions will often wish to make use of \code{default.panel}.
   
   Note further that \code{panel} is called for each panel, so the second argument (\code{z}) passed may well be a multi-column \code{xts} object; see \code{xts::default.panel} for how this is handled by default. If a list of panel functions is passed, they are recycled panelwise.}
   \item{auto.legend}{Should a legend be added automatically?}
