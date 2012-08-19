@@ -377,8 +377,8 @@ do_add.grid <- function(x, major.ticks, major.format, minor.ticks, axes,
   if(axes) {
     if(have_x_axis){
       if(minor.ticks) axis(1L, at = xy$x, labels = FALSE, col = par("col.axis"))
-      axis(1L, at = xy$x[ep], labels = names(ep), lwd = 1L, 
-           mgp = c(3, 2, 0), col = par("col.axis"))  
+      axis(1L, at = xy$x[ep], labels = names(ep), lwd = 1L, col = par("col.axis"),
+           mgp = if(any(grepl("\n",names(ep), fixed = TRUE))) c(3, 2, 0) else c(3,1,0))  
       # Not sure why I have to force col.axis but it seems I do
     }
     if(have_y_axis){

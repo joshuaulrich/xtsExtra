@@ -134,7 +134,6 @@ plot(sample_xts[,c(1:4, 3:4)], layout = matrix(c(1,1,1,1,2,2,3,4,5,6), ncol = 2,
 
 plot(sample_xts[,c(1:4, 3:4)], layout = matrix(c(1,1,1,1,2,2,3,4,5,6), ncol = 2, byrow = TRUE), yax.loc = "top")
 
-
 # Type = "p" allows for transparent handling of the pch= argument
 x <- xts(1:5, Sys.Date() + 1:5)
 plot(x, type = "p")
@@ -155,9 +154,9 @@ plot(merge(x,x), type = "p", col = list(1:5, 1:3), pch = list(1:5, 1:3), cex = l
 # Using the events argument
 plot(sample_xts[,1], events = list(time = c("2007-03-15", "2007-05-01"), label = "bad days"))
 
-plot(sample_xts[,1], events = list(time = c("2007-03-15","2007-05-01"), label = "bad days"), blocks = list(start.time = c("2007-03-05", "2007-04-15"), end.time = c("2007-03-20","2007-05-30"), col = c("lightblue", "lightgreen")))
+plot(sample_xts[,1], events = list(time = c("2007-03-15","2007-05-01"), label = "bad days"), blocks = list(start.time = c("2007-03-05", "2007-04-15"), end.time = c("2007-03-20","2007-05-30"), col = c("lightblue1", "lightgreen")))
 
-plot(sample_xts, layout.screens = matrix(c(1,1,2,3,4,4), ncol = 2, byrow = TRUE), events = list(time = c("2007-03-15","2007-05-01"), label = "bad days"), blocks = list(start.time = c("2007-03-05", "2007-04-15"), end.time = c("2007-03-20","2007-05-30"), col = c("lightblue", "lightgreen")))
+plot(sample_xts, layout.screens = matrix(c(1,1,2,3,4,4), ncol = 2, byrow = TRUE), events = list(time = c("2007-03-15","2007-05-01"), label = "bad days"), blocks = list(start.time = c("2007-03-05", "2007-04-15"), end.time = c("2007-03-20","2007-05-30"), col = c("lightblue1", "lightgreen")))
 
 # Makes a scatterplot if we pass two series
 plot(sample_xts[,1],sample_xts[,2])
