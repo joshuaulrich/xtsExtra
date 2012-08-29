@@ -7,7 +7,7 @@ Plotting methods for xts objects.
 }
 \usage{
 \method{plot}{xts}(x, y = NULL, 
-            screens = 'auto', layout.screens = 'auto',
+            screens = 'auto', layout.screens = 'auto', ...,
             yax.loc = c("none","out","in","flip", "left", "right", "top"),
             auto.grid=TRUE, major.ticks='auto', minor.ticks=TRUE, 
             major.format=TRUE, bar.col.up = 'white',
@@ -16,7 +16,7 @@ Plotting methods for xts objects.
             ylim = 'auto', panel = default.panel, 
             auto.legend = FALSE, legend.names = colnames(x), 
             legend.loc = "topleft", legend.pars = NULL, 
-            events, blocks, nc, nr, ...)
+            events, blocks, nc, nr)
 }
 \arguments{
   \item{x}{an \code{xts} object}
@@ -56,7 +56,7 @@ Plotting methods for xts objects.
 }
 \details{
 Mainly used to draw time-series plots with sensible x-axis labels, it
-can also plot basic OHLC series using \code{type='candles'} or \code{type='bars'} [\code{'bars'} does not seem to be currently supported].
+can also plot basic OHLC series using \code{type='candles'} or \code{type='bars'}.
 
 Care has been taken to make plotting arguments passed by \code{...} behave smartly by classifying them as 'global', 'screen-wise', or 'column-wise' arguments and treating them as such. A partial listing includes:
 \itemize{

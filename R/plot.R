@@ -18,13 +18,13 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-`plot.xts` <- function(x, y = NULL, screens = 'auto', layout.screens = 'auto',
+`plot.xts` <- function(x, y = NULL, screens = 'auto', layout.screens = 'auto', ..., 
       yax.loc = c("none", "out", "in", "flip", "left", "right", "top"), 
       auto.grid = TRUE, major.ticks = 'auto', minor.ticks = TRUE, major.format = TRUE, 
       bar.col.up = 'white', bar.col.dn ='red', candle.col='black',
       xy.labels = FALSE, xy.lines = NULL, ylim = 'auto', panel = default.panel,
       auto.legend = FALSE, legend.names = colnames(x), legend.loc = "topleft", 
-      legend.pars = NULL, events, blocks, nc, nr, ...) {
+      legend.pars = NULL, events, blocks, nc, nr) {
   
   # Set cex.lab early to a reasonable default; this allows user to still override
   if(length(screens) > 1L || (NCOL(x) > 1L && identical(screens, "auto"))) par(cex.lab = 0.8)
