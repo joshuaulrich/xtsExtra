@@ -189,8 +189,8 @@ do_scatterplot <- function(x, y, xy.labels, xy.lines, xlab, ylab, main,
   
   xy <- xy.coords(xy[,1L], xy[,2L])
   
-  if(missing(xlim)) xlim <- range(xy$x[is.finite(xy$x)])
-  if(missing(ylim)) ylim <- range(xy$y[is.finite(xy$y)])
+  if(missing(xlim)) xlim <- range(xy$x[is.finite(xy$x)], na.rm = TRUE)
+  if(missing(ylim)) ylim <- range(xy$y[is.finite(xy$y)], na.rm = TRUE)
 
   do.lab <- if(is.logical(xy.labels)) xy.labels else TRUE
 
@@ -300,14 +300,14 @@ do_layout <- function(x, screens, layout.screens, yax.loc, nc, nr, ylim){
   if(length(levels(screens)) == 1L && yax.loc != "none") par(oma = c(1,1,4,1))
   
   if(identical(ylim,'fixed')){
-    ylim <- list(range(x))
+    ylim <- list(range(x, na.rm = TRUE))
   } else if(identical(ylim, 'auto')){
     if(yax.loc == "none") {
       ylim <- lapply((1:NROW(layout.screens))[!duplicated(layout.screens)], function(y) {
-        do.call(range,split.xts.by.cols(x, screens)[layout.screens[y,]])
-      })
+        do.call(range,
+                list(split.xts.by.cols(x, screens)[layout.screens[y,]], na.rm = TRUE))})
     } else {
-      ylim <- lapply(split.xts.by.cols(x, screens), range)
+      ylim <- lapply(split.xts.by.cols(x, screens), function(x) range(x, na.rm = TRUE))
     }
   } else{
     if(!is.matrix(ylim)) dim(ylim) <- c(1L, NROW(ylim))
@@ -463,7 +463,7 @@ do_plot.ohlc <- function(x, bar.col.up, bar.col.dn, candle.col, major.ticks,
     assign(".QUANTMOD_MESSAGE", FALSE, envir = .GlobalEnv)
   }
   
-  if(identical(ylim, 'auto') || identical(ylim, 'fixed')) ylim <- range(x)
+  if(identical(ylim, 'auto') || identical(ylim, 'fixed')) ylim <- range(x, na.rm = TRUE)
   
   # Extract OHLC Columns and order them
   x <- x[,xts:::has.OHLC(x, TRUE)] 
