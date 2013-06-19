@@ -1,25 +1,25 @@
-TODO list for GSOC 2012 / xtsExtra
+TODO list for GSOC 2012-2013 / xtsExtra
 
-MULTITYPE OBJECTS 
+MULTITYPE OBJECTS
   -- Most everything
-  
+
 ANALYTICS
   -- regularize()
-  
+
 GRAPHICS
   -- plot.xts
-    -- Features: 
-         auto-legend: use code from Performance Analytics. 
+    -- Features:
+         auto-legend: use code from Performance Analytics.
            Needs to support blocks, events, lines, etc. more intelligently
          xlim acting panelwise
          xlim to allow plotting trading hours only (or equal time steps like chartSeries)
          axis flexibility (e.g., PBurns' pp.timeplot() )
-    -- Bugs: 
+    -- Bugs:
          labels sometimes overlap (see Jul24 example from KR where Russian and LTCM cross)
          strange abline() bug reported by Samo; see reproducible example in Aug14 email to JMU
-    -- Not Sure: 
+    -- Not Sure:
         x <- as.xts(sample_matrix); plot(cbind(x, x[,1]), layout = matrix(1:6, ncol = 2)) -- is this a bug? ggplot2 is ok with it
-    -- Long term: 
+    -- Long term:
         Do layout without layout so we can move back and forth among screens?
         Write demo or vignette
         Data transforms with BGP & PCC
@@ -27,7 +27,7 @@ GRAPHICS
     -- Features:
         Rewrite as panel function to plot.xts? (As part of work with PCarl and BPeterson)
     -- Bugs:
-        space argument for unstacked plots 
+        space argument for unstacked plots
         x axis spacing for irregular xts
     -- Long term:
         "River plots"
