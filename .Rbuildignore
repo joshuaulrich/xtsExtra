@@ -18,3 +18,5 @@ man/arima\.xts\.Rd
 man/indexClass\.Rd
 man/stl\.xts\.Rd
 man/xtsdf\.Rd
+^.*\.Rproj$
+^\.Rproj\.user$
