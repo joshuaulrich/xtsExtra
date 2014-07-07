@@ -18,11 +18,12 @@ plot2_xts(R, minor.ticks=FALSE)
 plot2_xts(R, byColumn=TRUE)
 title("Edhec Returns")
 
+charts.TimeSeries(R)
+
 x <- current.chob()
 # Get the structure of the environments
 ls.str(x)
 ls.str(x$Env)
-
 
 ##### scratch area #####
 # Should we have a theme object that sets all of the basic parameters such
