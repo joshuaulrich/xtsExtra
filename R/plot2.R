@@ -89,7 +89,10 @@ new.chob <- function(frame=1, xlim=c(1,10), ylim=list(structure(c(1,10), fixed=F
 current.chob <- function(){ invisible(get(".xts_chob", .plotxtsEnv)) }
 
 # obviously need a better function name here
-plot2_xts <- function(R, byColumn=FALSE, ...){
+#' @param xts object of returns
+#' @param byColumn 
+#' @param layout a layout specification created with \code{\link{chartLayout}}
+plot2_xts <- function(R, panels=NULL, byColumn=FALSE, layout=NULL, ...){
   # this function is modeled after quantmod::chart_Series
   # initialize a new chart object
   cs <- new.chob()
@@ -97,6 +100,8 @@ plot2_xts <- function(R, byColumn=FALSE, ...){
   # Env$R will hold the original returns object passed in
   cs$Env$R <- R
   cs$Env$byColumn <- byColumn
+  cs$Env$layout <- layout
+  
   
   cs$set_xlim(c(1, NROW(cs$Env$R)))
   cs$set_ylim(list(structure(range(na.omit(cs$Env$R)),fixed=FALSE)))
@@ -108,10 +113,12 @@ plot2_xts <- function(R, byColumn=FALSE, ...){
   # Default plot behavior
   # create a local environment to add the ... 
   
-  
+  # the main plot will be added as an expression to Env$panels
   if(isTRUE(byColumn)){
     cnames <- colnames(R)
     for(i in 1:NCOL(R)){
+      # create a local environment to add the args for chart.TimeSeries and
+      # add as an expression 
       lenv <- new.env()
       lenv$args <- formals(chart.TimeSeries)
       lenv$args <- modify.args(lenv$args, R=R[,i], dots=TRUE)
@@ -130,6 +137,7 @@ plot2_xts <- function(R, byColumn=FALSE, ...){
       cs$add(expression(do.call(chart.TimeSeries, args)), env=c(lenv, cs$Env), expr=TRUE)
     }
   } else {
+    # create a local environment to add the args for chart.TimeSeries
     lenv <- new.env()
     lenv$args <- formals(chart.TimeSeries)
     lenv$args <- modify.args(lenv$args, R=R, dots=TRUE)
@@ -148,8 +156,8 @@ print.plotxts <- function(x, ...) plot.plotxts(x,...)
 plot.plotxts <- function(x, ...){
   
   # Restore old par() options from what I change in here
-  # old.par <- par()
-  # on.exit(par(old.par))
+  old.par <- par(c("mar", "oma"))
+  on.exit(par(old.par))
   
   # plot.new()
   
@@ -162,34 +170,37 @@ plot.plotxts <- function(x, ...){
   pad1 <- x$Env$pad1
   pad3 <- x$Env$pad3
   
-  par.list <- list(list(mar=c(pad1, 4, 2, 3)),
+  par.list <- list(list(mar=c(pad1, 4, pad3, 3), oma=c(3.5, 0, 4, 0)),
                    list(mar=c(pad1, 4, pad3, 3)),
-                   list(mar=c(5, 4, pad3, 3)))
+                   list(mar=c(pad1, 4, pad3, 3)))
   
-  # Evaluate the expression in the Env$panels list
+  # Set the layout based on the number of panels or layout object
   npanels <- length(x$Env$panels)
+  equal.heights <- ifelse(isTRUE(x$Env$byColumn), TRUE, FALSE)
+  if(is.null(x$Env$layout)){
+    cl <- updateLayout(npanels, equal.heights)
+  } else {
+    # The user has passed in something for layout
+    if(!inherits(x$Env$layout, "chart.layout")){
+      cl <- updateLayout(npanels, equal.heights)
+    } else {
+      cl <- x$Env$layout
+    }
+  }
+  do.call(layout, cl)
   
   if(npanels > 1) {
-    do.call('par',par.list[[1]]) 
+    do.call(par, par.list[[1]]) 
   } else {
-    par(mar=c(5,4,4,2))
-  }
-  
-  # set up the layout (should we also check if a layout has been passed in?)
-  if(npanels > 1){
-    # layout(matrix(1:x,x,1,byrow=TRUE), widths=1, heights=c(3,rep(1,x-2),1.60))
-    # this works for the default plotting case, but needs to be flexible so 
-    # we can deal with the default multiples as well as panels
-    layout(matrix(1:npanels, npanels, 1, byrow=TRUE), widths=1, heights=1)
+    # Use the default 
+    par(mar=c(5,4,4,2)+0.1)
   }
   
   # Loop through the list in panels and evaluate each expression in its 
   # respective environment
   for(i in 1:npanels){
-    if(npanels >= 1){
-      if(i == 1){
-        do.call('par', par.list[[1]]) 
-      } else if(i == npanels){
+    if(npanels > 1){
+      if(i == npanels){
         do.call('par', par.list[[3]])
       } else {
         do.call('par', par.list[[2]])
@@ -205,35 +216,62 @@ plot.plotxts <- function(x, ...){
   }
   
   # add the x-axis at the very end here
+  # We should functionalize this and provide for different options to plot
+  # the x-axis as in quantmod or as in chart.TimeSeries
   ep <- xtsExtra:::axTicksByTime(x$Env$R)
   cex.axis <- 0.8
-  label.height <- cex.axis *(.5 + apply(t(names(ep)),1, function(X) max(strheight(X, units="in")/par('cin')[2]) ))
+  label.height <- cex.axis * (0.5 + apply(t(names(ep)), 1, function(X) max(strheight(X, units="in") / par('cin')[2])))
   xaxis.labels <- names(ep)
-  axis(1, at=ep, labels=xaxis.labels, las=1, lwd=1, mgp=c(3,label.height,0))
-  layout(1)
+  axis(1, at=ep, labels=xaxis.labels, las=1, lwd=1, mgp=c(3, label.height, 0))
+  
+  # reset the layout
+  layout(matrix(1))
 }
 
-# This is an ugly hack to get the basic prototype working
-# if(isTRUE(x$Env$byColumn)){
-#   layout(matrix(seq.int(from=1, to=NCOL(R), by=1L)), widths=1, heights=1)
-#   .formals$xaxis <- FALSE
-#   .formals$main <- ""
-#   .formals$ylim <- x$Env$ylim[[1]]
-#   for(i in 1:NCOL(R)){
-#     if(i == 1){
-#       # 0 margin on the bottom
-#       par(mar=c(pad1, 4, 4, 2))
-#     } else if(i == NCOL(R)){
-#       par(mar=c(5, 4, pad3, 2))
-#     } else {
-#       # 0 margin on the top and bottom
-#       par(mar=c(pad1, 4, pad3, 2))
-#     }
-#     .formals <- modify.args(.formals, R=R[,i], dots=TRUE)
-#     do.call(chart.TimeSeries, .formals)
-#   }
-# } else {
-#   .formals <- modify.args(.formals, R=R, dots=TRUE)
-#   do.call(chart.TimeSeries, .formals)
-# }
+# layout functions modeled after quantmod
+chartLayout <- function(mat, widths, heights){
+  structure(list(mat=mat,
+                 widths=widths,
+                 heights=heights),
+            class="chart.layout")
+}
+
+updateLayout <- function(x, equal.heights=FALSE){
+  # x : number of panels
+  if(x==1) {
+    mat <- matrix(1)
+    wd  <- 1
+    ht  <- 1
+  } else {
+    mat <- matrix(1:x, x, 1, byrow=TRUE)
+    wd  <- 1
+    if(equal.heights){
+      ht <- 1
+    } else {
+      # ht  <- c(3,rep(1,x-2),1.60)
+      ht  <- c(3,rep(1,x-2),1)
+    }
+  }
+  chartLayout(mat, wd, ht)
+}
+
+addDrawdowns <- function(geometric=TRUE, ...){
+  lenv <- new.env()
+  lenv$plot_drawdowns <- function(x, geometric, ...) {
+    xdata <- x$Env$R
+    drawdowns <- PerformanceAnalytics:::Drawdowns(xdata, geometric)
+    chart.TimeSeries(drawdowns, ..., xaxis=FALSE, main="")
+  }
+  mapply(function(name,value) { assign(name,value,envir=lenv) }, 
+        names(list(geometric=geometric, ...)),
+              list(geometric=geometric, ...))
+  exp <- parse(text=gsub("list","plot_drawdowns",
+               as.expression(substitute(list(x=current.chob(),
+                                             geometric=geometric, ...)))),
+               srcfile=NULL)
+  plot_object <- current.chob()
+  plot_object$add(exp, env=c(lenv, plot_object$Env), expr=TRUE)
+  plot_object
+}
+
 
