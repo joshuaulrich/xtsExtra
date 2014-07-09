@@ -1,277 +1,335 @@
 
-
 # Environment for our xts chart objects
 .plotxtsEnv <- new.env()
 
-new.chob <- function(frame=1, xlim=c(1,10), ylim=list(structure(c(1,10), fixed=FALSE))){
-  # This function is modeled after quantmod::new.replot
-  Env <- new.env()
-  
-  # Not exactly sure what frame is doing or if I need it
-  Env$frame <- frame
-  # Env$asp <- asp
-  
-  # xlim should always remain constant and be used for each subsequent plot
-  Env$xlim <- xlim
-  
-  # ylim is a list where
-  # ylim[[1]] --> data[[1]], ..., ylim[[n]] --> data[[n]]
-  Env$ylim <- ylim
-  
-  
-  Env$pad1 <- 0.25 # bottom padding per frame
-  Env$pad3 <- 0.25 # top padding per frame 
-  
-  ##### setters #####
-  # set_frame <- function(frame,clip=TRUE) {
-  #   Env$frame <<- frame
-  #   #set_window(clip) # change actual window
-  # }
-  # set_frame <- function(frame) { Env$frame <<- frame }
-  # set_asp <- function(asp) { Env$asp <<- asp }
-  set_xlim <- function(xlim) { Env$xlim <<- xlim }
-  set_ylim <- function(ylim) { Env$ylim <<- ylim }
-  set_pad <- function(pad) { Env$pad1 <<- pad[1]; Env$pad3 <<- pad[2] }
-  
-  ##### getters #####
-  # get_frame <- function(frame) { Env$frame }
-  # get_asp   <- function(asp) { Env$asp }
-  get_xlim  <- function(xlim) { Env$xlim }
-  get_ylim  <- function(ylim) { Env$ylim }
-  get_pad   <- function() c(Env$pad1,Env$pad3)
-  
-  # panels is a list where each element (i.e. slot) is what we want to evaluate
-  Env$panels <- list()
-  
-  # add an expression to Env$panels (i.e. similar to Env$actions in quantmod)
-  add <- function(x, env=Env, expr=FALSE, panel=NULL, ...) {
-    if(!expr) {
-      x <- match.call()$x
-    }
-    # each element in the Env$panels list is an object with "frame" and "env"
-    # as environments
-    a <- structure(x, env=env, ...)
-    if(is.null(panel)){
-      Env$panels[[length(Env$panels)+1]] <<- a
-    } else {
-      Env$panels[[panel]] <<- a
-    }
-  }
-  
-  # create a new environment that contains Env as one of its elements
-  plotxts_env <- new.env()
-  class(plotxts_env) <- c("plotxts", "environment")  
-  plotxts_env$Env <- Env
-  
-  # add the setters to the plotxts_env environment
-  # plotxts_env$set_frame <- set_frame
-  # plotxts_env$set_asp <- set_asp
-  plotxts_env$set_xlim <- set_xlim
-  plotxts_env$set_ylim <- set_ylim
-  plotxts_env$set_pad <- set_pad
-  
-  # add the getters to the plotxts_env environment
-  # plotxts_env$get_frame <- get_frame
-  # plotxts_env$get_asp <- get_asp
-  plotxts_env$get_xlim <- get_xlim
-  plotxts_env$get_ylim <- get_ylim
-  plotxts_env$get_pad <- get_pad
-  
-  plotxts_env$add <- add
-  #plotxts_env$add_frame <- add_frame
-  #plotxts_env$update_frames <- update_frames
-  #plotxts_env$add_frame <- add_frame
-  #plotxts_env$next_frame <- next_frame
-  return(plotxts_env)
+current.chob <- function() invisible(get(".xts_chob",.plotxtsEnv))
+
+# based on quantmod R/chart_Series.R
+
+# chart_pars {{{
+chart_pars <- function() {
+  list(cex=0.6, mar=c(3,1,0,1))
+} # }}}
+
+chart.lines <- function(x, colorset=1:12){
+  for(i in 1:NCOL(x))
+      lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=3,lty=1)
 }
 
-# get the current chart object
-current.chob <- function(){ invisible(get(".xts_chob", .plotxtsEnv)) }
+# chart_Series {{{
+#  Updated: 2010-01-15
+#
+#  chart_Series now uses a new graphical extension
+#  called 'replot'.  This enables the accumulation
+#  of 'actions', in the form of (unevaluated) R 
+#  expressions, to be stored within a replot object.
+#  This object is an R closure, which contains
+#  all the methods which are needed to perform
+#  graphical operations.
+#
+#  Ideally all behavior is consistent with the
+#  original quantmod:::chartSeries, except the
+#  undesireable ones.
+# 
+# chart_Series <- function(x, 
+#                          name=deparse(substitute(x)), 
+#                          type="candlesticks", 
+#                          subset="", 
+#                          TA="",
+#                          pars=chart_pars(), theme=chart_theme(),
+#                          clev=0,
+#                          ...)
 
-# obviously need a better function name here
-#' @param xts object of returns
-#' @param byColumn 
-#' @param layout a layout specification created with \code{\link{chartLayout}}
-plot2_xts <- function(R, panels=NULL, byColumn=FALSE, layout=NULL, ...){
-  # this function is modeled after quantmod::chart_Series
-  # initialize a new chart object
-  cs <- new.chob()
+xtsExtraTheme <- function(){
+  theme <-list(col=list(bg="#FFFFFF",
+                        label.bg="#F0F0F0",
+                        grid="#F0F0F0",
+                        grid2="#F5F5F5",
+                        ticks="#999999",
+                        labels="#333333",
+                        line.col="darkorange",
+                        dn.col="red",
+                        up.col=NA, 
+                        dn.border="#333333", 
+                        up.border="#333333"),
+               shading=1,
+               format.labels=TRUE,
+               coarse.time=TRUE,
+               rylab=TRUE,
+               lylab=TRUE,
+               grid.ticks.lwd=1,
+               grid.ticks.on="months")
+  theme
+}
+
+plot2_xts <- function(x, 
+                      name=deparse(substitute(x)), 
+                      subset="", 
+                      clev=0,
+                      pars=chart_pars(), theme=xtsExtraTheme(),
+                      ...){
+  cs <- new.replot_xts()
+  #cex <- pars$cex
+  #mar <- pars$mar
+  line.col <- theme$col$line.col
+  up.col <- theme$col$up.col
+  dn.col <- theme$col$dn.col
+  up.border <- theme$col$up.border
+  dn.border <- theme$col$dn.border
+  format.labels <- theme$format.labels
+  if(is.null(theme$grid.ticks.on)) {
+    xs <- x[subset]
+    major.grid <- c(years=nyears(xs),
+                    months=nmonths(xs),
+                    days=ndays(xs))
+    grid.ticks.on <- names(major.grid)[rev(which(major.grid < 30))[1]]
+  } else grid.ticks.on <- theme$grid.ticks.on
+  label.bg <- theme$col$label.bg
   
-  # Env$R will hold the original returns object passed in
-  cs$Env$R <- R
-  cs$Env$byColumn <- byColumn
-  cs$Env$layout <- layout
-  
-  
-  cs$set_xlim(c(1, NROW(cs$Env$R)))
-  cs$set_ylim(list(structure(range(na.omit(cs$Env$R)),fixed=FALSE)))
-  
-  # We should also do stuff here to get a common x-axis to use for each panel
-  # or chart to work with specifying multiples
-  # cs$set_xaxis()
-  
-  # Default plot behavior
-  # create a local environment to add the ... 
-  
-  # the main plot will be added as an expression to Env$panels
-  if(isTRUE(byColumn)){
-    cnames <- colnames(R)
-    for(i in 1:NCOL(R)){
-      # create a local environment to add the args for chart.TimeSeries and
-      # add as an expression 
-      lenv <- new.env()
-      lenv$args <- formals(chart.TimeSeries)
-      lenv$args <- modify.args(lenv$args, R=R[,i], dots=TRUE)
-      lenv$args <- modify.args(lenv$args, arglist=list(...), dots=TRUE)
-      lenv$args$xaxis <- FALSE
-      lenv$args$ylim <- cs$Env$ylim[[1]]
-      lenv$args$main <- ""
-      lenv$args$ylab <- cnames[i]
-      # Plot the y axis on the right for even panels
-      if(i %% 2 == 0){
-        lenv$args$yaxis.right <- TRUE
-      } else {
-        lenv$args$yaxis.right <- FALSE
-      }
-      lenv$args$`...` <- NULL
-      cs$add(expression(do.call(chart.TimeSeries, args)), env=c(lenv, cs$Env), expr=TRUE)
+  # define a subset function
+  cs$subset <- function(x) {
+    if(FALSE) {set_ylim <- get_ylim <- set_xlim <- Env <-function(){} }  # appease R parser?
+    if(missing(x)) {
+      x <- "" #1:NROW(Env$xdata)
     }
-  } else {
-    # create a local environment to add the args for chart.TimeSeries
-    lenv <- new.env()
-    lenv$args <- formals(chart.TimeSeries)
-    lenv$args <- modify.args(lenv$args, R=R, dots=TRUE)
-    lenv$args <- modify.args(lenv$args, arglist=list(...), dots=TRUE)
-    lenv$args$xaxis <- FALSE
-    lenv$args$`...` <- NULL
-    cs$add(expression(do.call(chart.TimeSeries, args)), env=c(lenv, cs$Env), expr=TRUE)
+    Env$xsubset <<- x
+    set_xlim(c(1,NROW(Env$xdata[Env$xsubset])))
+    ylim <- get_ylim()
+    for(y in seq(2,length(ylim),by=2)) {
+      if(!attr(ylim[[y]],'fixed'))
+        ylim[[y]] <- structure(c(Inf,-Inf),fixed=FALSE)
+    }
+    lapply(Env$actions,
+           function(x) {
+             frame <- abs(attr(x, "frame"))
+             fixed <- attr(ylim[[frame]],'fixed')
+             #fixed <- attr(x, "fixed")
+             if(frame %% 2 == 0 && !fixed) {
+               lenv <- attr(x,"env")
+               if(is.list(lenv)) lenv <- lenv[[1]]
+               min.tmp <- min(ylim[[frame]][1],range(na.omit(lenv$xdata[Env$xsubset]))[1],na.rm=TRUE)
+               max.tmp <- max(ylim[[frame]][2],range(na.omit(lenv$xdata[Env$xsubset]))[2],na.rm=TRUE)
+               ylim[[frame]] <<- structure(c(min.tmp,max.tmp),fixed=fixed)
+             }
+           })
+    # reset all ylim values, by looking for range(env[[1]]$xdata)
+    # xdata should be either coming from Env or if lenv, lenv
+    set_ylim(ylim)
   }
+  environment(cs$subset) <- environment(cs$get_asp)
+  if(is.character(x))
+    stop("'x' must be a time-series object")
+  
+  # If we detect an OHLC object, we should call quantmod::chart_Series
+  #if(is.OHLC(x)) {
+  #  cs$Env$xdata <- OHLC(x)
+  #  if(has.Vo(x))
+  #    cs$Env$vo <- Vo(x)
+  #} else 
+  
+  cs$Env$xdata <- x
+  #subset <- match(.index(x[subset]), .index(x))
+  cs$Env$xsubset <- subset
+  cs$Env$cex <- pars$cex
+  cs$Env$mar <- pars$mar
+  cs$set_asp(3)
+  cs$set_xlim(c(1,NROW(cs$Env$xdata[subset])))
+  cs$set_ylim(list(structure(range(na.omit(cs$Env$xdata[subset])),fixed=FALSE)))
+  cs$set_frame(1,FALSE)
+  cs$Env$clev = min(clev+0.01,1) # (0,1]
+  cs$Env$theme$bbands <- theme$bbands
+  cs$Env$theme$shading <- theme$shading
+  cs$Env$theme$line.col <- theme$col$line.col
+  cs$Env$theme$up.col <- up.col
+  cs$Env$theme$dn.col <- dn.col
+  cs$Env$theme$up.border <- up.border
+  cs$Env$theme$dn.border <- dn.border
+  cs$Env$theme$rylab <- theme$rylab
+  cs$Env$theme$lylab <- theme$lylab
+  cs$Env$theme$bg <- theme$col$bg
+  cs$Env$theme$grid <- theme$col$grid
+  cs$Env$theme$grid2 <- theme$col$grid2
+  cs$Env$theme$labels <- "#333333"
+  cs$Env$theme$label.bg <- label.bg
+  cs$Env$format.labels <- format.labels
+  cs$Env$ticks.on <- grid.ticks.on
+  cs$Env$grid.ticks.lwd <- theme$grid.ticks.lwd
+  #cs$Env$type <- type
+  
+  # axis_ticks function to label lower frequency ranges/grid lines
+  cs$Env$axis_ticks <- function(xdata,xsubset) {
+    ticks <- diff(axTicksByTime2(xdata[xsubset],labels=FALSE))/2 + 
+      last(axTicksByTime2(xdata[xsubset],labels=TRUE),-1)
+    if(!theme$coarse.time || length(ticks) == 1)
+      return(unname(ticks))
+    if(min(diff(ticks)) < max(strwidth(names(ticks)))) {
+      ticks <- unname(ticks)
+    }
+    ticks
+  }
+  # need to add if(upper.x.label) to allow for finer control
+  cs$add(expression(atbt <- axTicksByTime2(xdata[xsubset]),
+                    segments(atbt, #axTicksByTime2(xdata[xsubset]),
+                             get_ylim()[[2]][1],
+                             atbt, #axTicksByTime2(xdata[xsubset]),
+                             get_ylim()[[2]][2], col=theme$grid, lwd=grid.ticks.lwd),
+                    axt <- axis_ticks(xdata,xsubset),
+                    text(as.numeric(axt),
+                         par('usr')[3]-0.2*min(strheight(axt)),
+                         names(axt),xpd=TRUE,cex=0.9,pos=3)),
+         clip=FALSE,expr=TRUE)
+  cs$set_frame(-1)
+  # background of main window
+  #cs$add(expression(rect(par("usr")[1],
+  #                       par("usr")[3],
+  #                       par("usr")[2],
+  #                       par("usr")[4],border=NA,col=theme$bg)),expr=TRUE)
+  cs$add_frame(0,ylim=c(0,1),asp=0.2)
+  cs$set_frame(1)
+  
+  # add observation level ticks on x-axis if < 400 obs.
+  cs$add(expression(if(NROW(xdata[xsubset])<400) 
+  {axis(1,at=1:NROW(xdata[xsubset]),labels=FALSE,col=theme$grid2,tcl=0.3)}),expr=TRUE)
+  
+  # add "month" or "month.abb"
+  cs$add(expression(axt <- axTicksByTime(xdata[xsubset],format.labels=format.labels),
+                    axis(1,at=axt, #axTicksByTime(xdata[xsubset]),
+                         labels=names(axt), #axTicksByTime(xdata[xsubset],format.labels=format.labels)),
+                         las=1,lwd.ticks=1,mgp=c(3,1.5,0),tcl=-0.4,cex.axis=.9)),
+         expr=TRUE)
+  cs$Env$name <- name
+  text.exp <- c(expression(text(1-1/3,0.5,name,font=2,col='#444444',offset=0,cex=1.1,pos=4)),
+                expression(text(NROW(xdata[xsubset]),0.5,
+                                paste(start(xdata[xsubset]),end(xdata[xsubset]),sep=" / "),
+                                col=1,adj=c(0,0),pos=2)))
+  cs$add(text.exp, env=cs$Env, expr=TRUE)
+  cs$set_frame(2)
+  
+  cs$Env$axis_labels <- function(xdata,xsubset,scale=5) {
+    axTicksByValue(na.omit(xdata[xsubset]))
+  }
+  cs$Env$make_pretty_labels <- function(ylim) {
+    p <- pretty(ylim,10)
+    p[p > ylim[1] & p < ylim[2]]
+  }
+  #cs$add(assign("five",rnorm(10)))  # this gets re-evaled each update, though only to test
+  #cs$add(expression(assign("alabels", axTicksByValue(na.omit(xdata[xsubset])))),expr=TRUE)
+  #cs$add(expression(assign("alabels", pretty(range(xdata[xsubset],na.rm=TRUE)))),expr=TRUE)
+  #cs$add(expression(assign("alabels", pretty(get_ylim(get_frame())[[2]],10))),expr=TRUE)
+  cs$add(expression(assign("alabels", make_pretty_labels(get_ylim(get_frame())[[2]]))),expr=TRUE)
+  
+  # add $1 grid lines if appropriate
+  #cs$set_frame(-2)
+  
+  # add minor y-grid lines
+  #cs$add(expression(if(diff(range(xdata[xsubset],na.rm=TRUE)) < 50)
+  #  segments(1,seq(min(xdata[xsubset]%/%1,na.rm=TRUE),
+  #                 max(xdata[xsubset]%/%1,na.rm=TRUE),1),
+  #           length(xsubset),
+  #           seq(min(xdata[xsubset]%/%1,na.rm=TRUE),
+  #               max(xdata[xsubset]%/%1,na.rm=TRUE),1),
+  #           col=theme$grid2, lty="dotted")), expr=TRUE)
+  
+  cs$set_frame(2)
+  # add main y-grid lines
+  cs$add(expression(segments(1,alabels,NROW(xdata[xsubset]),alabels, col=theme$grid)),expr=TRUE)
+  
+  # left axis labels
+  if(theme$lylab) {
+    cs$add(expression(text(1-1/3-max(strwidth(alabels)),
+                           alabels, #axis_labels(xdata,xsubset), 
+                           noquote(format(alabels,justify="right")), 
+                           col=theme$labels,offset=0,cex=0.9,pos=4,xpd=TRUE)),expr=TRUE)
+  }
+  
+  # right axis labels
+  if(theme$rylab) {
+    cs$add(expression(text(NROW(xdata[xsubset])+1/3,
+                           alabels, 
+                           noquote(format(alabels,justify="right")),
+                           col=theme$labels,offset=0,cex=0.9,pos=4,xpd=TRUE)),expr=TRUE)
+  }
+  
+  # add main series
+  cs$set_frame(2)
+  cs$add(expression(chart.lines(xdata[xsubset])),expr=TRUE)
+  assign(".xts_chob", cs, .plotxtsEnv)
+  
+  # handle TA="add_Vo()" as we would interactively FIXME: allow TA=NULL to work
+  #if(!is.null(TA) && nchar(TA) > 0) {
+  #  TA <- parse(text=TA, srcfile=NULL)
+  #  for( ta in 1:length(TA)) {
+  #    if(length(TA[ta][[1]][-1]) > 0) {
+  #      cs <- eval(TA[ta])
+  #    } else {
+  #      cs <- eval(TA[ta])
+  #    }
+  #  }
+  #}
   
   assign(".xts_chob", cs, .plotxtsEnv)
   cs
-}
-
-# print/plot
-print.plotxts <- function(x, ...) plot.plotxts(x,...)
-plot.plotxts <- function(x, ...){
-  
-  # Restore old par() options from what I change in here
-  old.par <- par(c("mar", "oma"))
-  on.exit(par(old.par))
-  
-  # plot.new()
-  
-  # Here we assign x to the .plotxtsEnv
-  # x should have all of the data we need for plotting, layouts, etc
-  assign(".xts_chob", x, .plotxtsEnv)
-  
-  # .formals <- x$Env$.formals
-  # R <- x$Env$R
-  pad1 <- x$Env$pad1
-  pad3 <- x$Env$pad3
-  
-  par.list <- list(list(mar=c(pad1, 4, pad3, 3), oma=c(3.5, 0, 4, 0)),
-                   list(mar=c(pad1, 4, pad3, 3)),
-                   list(mar=c(pad1, 4, pad3, 3)))
-  
-  # Set the layout based on the number of panels or layout object
-  npanels <- length(x$Env$panels)
-  equal.heights <- ifelse(isTRUE(x$Env$byColumn), TRUE, FALSE)
-  if(is.null(x$Env$layout)){
-    cl <- updateLayout(npanels, equal.heights)
-  } else {
-    # The user has passed in something for layout
-    if(!inherits(x$Env$layout, "chart.layout")){
-      cl <- updateLayout(npanels, equal.heights)
-    } else {
-      cl <- x$Env$layout
-    }
-  }
-  do.call(layout, cl)
-  
-  if(npanels > 1) {
-    do.call(par, par.list[[1]]) 
-  } else {
-    # Use the default 
-    par(mar=c(5,4,4,2)+0.1)
-  }
-  
-  # Loop through the list in panels and evaluate each expression in its 
-  # respective environment
-  for(i in 1:npanels){
-    if(npanels > 1){
-      if(i == npanels){
-        do.call('par', par.list[[3]])
-      } else {
-        do.call('par', par.list[[2]])
-      }
-    }
-    aob <- x$Env$panels[[i]]
-    env <- attr(aob, "env")
-    if(is.list(env)) {
-      # if env is c(lenv, Env), convert to list
-      env <- unlist(lapply(env, function(x) eapply(x, eval)), recursive=FALSE)
-    }
-    eval(aob, env)
-  }
-  
-  # add the x-axis at the very end here
-  # We should functionalize this and provide for different options to plot
-  # the x-axis as in quantmod or as in chart.TimeSeries
-  ep <- xtsExtra:::axTicksByTime(x$Env$R)
-  cex.axis <- 0.8
-  label.height <- cex.axis * (0.5 + apply(t(names(ep)), 1, function(X) max(strheight(X, units="in") / par('cin')[2])))
-  xaxis.labels <- names(ep)
-  axis(1, at=ep, labels=xaxis.labels, las=1, lwd=1, mgp=c(3, label.height, 0))
-  
-  # reset the layout
-  layout(matrix(1))
-}
-
-# layout functions modeled after quantmod
-chartLayout <- function(mat, widths, heights){
-  structure(list(mat=mat,
-                 widths=widths,
-                 heights=heights),
-            class="chart.layout")
-}
-
-updateLayout <- function(x, equal.heights=FALSE){
-  # x : number of panels
-  if(x==1) {
-    mat <- matrix(1)
-    wd  <- 1
-    ht  <- 1
-  } else {
-    mat <- matrix(1:x, x, 1, byrow=TRUE)
-    wd  <- 1
-    if(equal.heights){
-      ht <- 1
-    } else {
-      # ht  <- c(3,rep(1,x-2),1.60)
-      ht  <- c(3,rep(1,x-2),1)
-    }
-  }
-  chartLayout(mat, wd, ht)
-}
+} #}}}
 
 addDrawdowns <- function(geometric=TRUE, ...){
+  # added in wilder=TRUE to handle missingness behavior in original TTR::RSI call
   lenv <- new.env()
   lenv$plot_drawdowns <- function(x, geometric, ...) {
-    xdata <- x$Env$R
-    drawdowns <- PerformanceAnalytics:::Drawdowns(xdata, geometric)
-    chart.TimeSeries(drawdowns, ..., xaxis=FALSE, main="")
+    xdata <- x$Env$xdata
+    xsubset <- x$Env$xsubset
+    drawdowns <- PerformanceAnalytics:::Drawdowns(xdata, geometric)[xsubset]
+    x.pos <- 1:NROW(drawdowns)
+    #theme <- x$Env$theme$rsi
+    # vertical grid lines
+    #segments(axTicksByTime2(xdata[xsubset]),
+    #         par("usr")[3], #min(-10,range(na.omit(macd))[1]), 
+    #         axTicksByTime2(xdata[xsubset]),
+    #         par("usr")[4], #max(10,range(na.omit(macd))[2]), col=x$Env$theme$grid)
+    #         col=x$Env$theme$grid)
+    chart.lines(drawdowns) 
   }
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
-        names(list(geometric=geometric, ...)),
-              list(geometric=geometric, ...))
+        names(list(geometric=geometric,...)),
+              list(geometric=geometric,...))
   exp <- parse(text=gsub("list","plot_drawdowns",
                as.expression(substitute(list(x=current.chob(),
-                                             geometric=geometric, ...)))),
+                                             geometric=geometric,...)))),
                srcfile=NULL)
+
   plot_object <- current.chob()
-  plot_object$add(exp, env=c(lenv, plot_object$Env), expr=TRUE)
+  xsubset <- plot_object$Env$xsubset
+  drawdowns <- PerformanceAnalytics:::Drawdowns(plot_object$Env$xdata, geometric=geometric)
+  print(drawdowns)
+  print(range(drawdowns))
+  plot_object$add_frame(ylim=c(0,1),asp=0.2)
+  plot_object$next_frame()
+  lenv$xdata <- drawdowns #structure(drawdowns,.Dimnames=list(NULL, "drawdowns"))
+  #text.exp <- expression(text(c(1,
+  #                              1+strwidth(paste("RSI(",n,"):",sep=""))),
+  #                     0.3,
+  #                     c(paste("RSI(",n,"):",sep=""),
+  #                       round(last(xdata[xsubset]),5)),
+  #                     col=c(1,theme$rsi$col$rsi),adj=c(0,0),cex=0.9,offset=0,pos=4))
+  #plot_object$add(expression(rect(par("usr")[1],0,par("usr")[2],1,col=theme$grid,border="black")),expr=TRUE)
+  #plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+
+  #plot_object$add_frame(ylim=c(0,100),asp=1,fixed=TRUE)
+  plot_object$add_frame(ylim=range(drawdowns),asp=1,fixed=TRUE)
+  plot_object$next_frame()
+
+  # add grid lines
+  #lenv$grid_lines <- function(xdata,x) { c(RSIdn,RSIup) }
+  # add grid lines
+  #exp <- c(expression(segments(1, grid_lines(xdata,xsubset),
+  #                             NROW(xdata[xsubset]), grid_lines(xdata,xsubset), col=theme$grid)),exp,
+  # add axis labels/boxes
+  #         expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
+  #                    noquote(format(grid_lines(xdata,xsubset),justify="right")),
+  #                    col=theme$labels,offset=0,pos=4,cex=0.9)),
+  #         expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
+  #                    noquote(format(grid_lines(xdata,xsubset),justify="right")),
+  #                    col=theme$labels,offset=0,pos=4,cex=0.9)))
+  plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE)
   plot_object
 }
-
 
