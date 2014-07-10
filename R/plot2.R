@@ -13,7 +13,7 @@ chart_pars <- function() {
 
 chart.lines <- function(x, colorset=1:12){
   for(i in 1:NCOL(x))
-      lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=3,lty=1)
+    lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=3,lty=1)
 }
 
 # chart_Series {{{
@@ -43,7 +43,7 @@ chart.lines <- function(x, colorset=1:12){
 xtsExtraTheme <- function(){
   theme <-list(col=list(bg="#FFFFFF",
                         label.bg="#F0F0F0",
-                        grid="#F0F0F0",
+                        grid="darkgray", #grid="#F0F0F0",
                         grid2="#F5F5F5",
                         ticks="#999999",
                         labels="#333333",
@@ -63,6 +63,7 @@ xtsExtraTheme <- function(){
 }
 
 plot2_xts <- function(x, 
+                      panel="",
                       name=deparse(substitute(x)), 
                       subset="", 
                       clev=0,
@@ -117,6 +118,8 @@ plot2_xts <- function(x,
     set_ylim(ylim)
   }
   environment(cs$subset) <- environment(cs$get_asp)
+  
+  # Do some checks on x
   if(is.character(x))
     stop("'x' must be a time-series object")
   
@@ -133,8 +136,13 @@ plot2_xts <- function(x,
   cs$Env$cex <- pars$cex
   cs$Env$mar <- pars$mar
   cs$set_asp(3)
+  
+  # xlim and ylim are set based on cs$Env$xdata[subset]. How do we handle other
+  # transformations (e.g. cumulative returns, correlations, etc.) as the
+  # main panel
   cs$set_xlim(c(1,NROW(cs$Env$xdata[subset])))
   cs$set_ylim(list(structure(range(na.omit(cs$Env$xdata[subset])),fixed=FALSE)))
+  
   cs$set_frame(1,FALSE)
   cs$Env$clev = min(clev+0.01,1) # (0,1]
   cs$Env$theme$bbands <- theme$bbands
@@ -167,6 +175,7 @@ plot2_xts <- function(x,
     }
     ticks
   }
+  
   # need to add if(upper.x.label) to allow for finer control
   cs$add(expression(atbt <- axTicksByTime2(xdata[xsubset]),
                     segments(atbt, #axTicksByTime2(xdata[xsubset]),
@@ -178,7 +187,7 @@ plot2_xts <- function(x,
                          par('usr')[3]-0.2*min(strheight(axt)),
                          names(axt),xpd=TRUE,cex=0.9,pos=3)),
          clip=FALSE,expr=TRUE)
-  cs$set_frame(-1)
+  #cs$set_frame(-1)
   # background of main window
   #cs$add(expression(rect(par("usr")[1],
   #                       par("usr")[3],
@@ -255,16 +264,18 @@ plot2_xts <- function(x,
   cs$add(expression(chart.lines(xdata[xsubset])),expr=TRUE)
   assign(".xts_chob", cs, .plotxtsEnv)
   
-  # handle TA="add_Vo()" as we would interactively FIXME: allow TA=NULL to work
-  #if(!is.null(TA) && nchar(TA) > 0) {
-  #  TA <- parse(text=TA, srcfile=NULL)
-  #  for( ta in 1:length(TA)) {
-  #    if(length(TA[ta][[1]][-1]) > 0) {
-  #      cs <- eval(TA[ta])
+  # Plot the panels or default to a simple line chart
+  #if(!is.null(panel) && nchar(panel) > 0) {
+  #  panel <- parse(text=panel, srcfile=NULL)
+  #  for( p in 1:length(panel)) {
+  #    if(length(panel[p][[1]][-1]) > 0) {
+  #      cs <- eval(panel[p])
   #    } else {
-  #      cs <- eval(TA[ta])
+  #      cs <- eval(panel[p])
   #    }
   #  }
+  #} else {
+  #  cs$add(expression(chart.lines(xdata[xsubset])),expr=TRUE)
   #}
   
   assign(".xts_chob", cs, .plotxtsEnv)
@@ -272,63 +283,44 @@ plot2_xts <- function(x,
 } #}}}
 
 addDrawdowns <- function(geometric=TRUE, ...){
-  # added in wilder=TRUE to handle missingness behavior in original TTR::RSI call
   lenv <- new.env()
   lenv$plot_drawdowns <- function(x, geometric, ...) {
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
     drawdowns <- PerformanceAnalytics:::Drawdowns(xdata, geometric)[xsubset]
-    x.pos <- 1:NROW(drawdowns)
-    #theme <- x$Env$theme$rsi
-    # vertical grid lines
-    #segments(axTicksByTime2(xdata[xsubset]),
-    #         par("usr")[3], #min(-10,range(na.omit(macd))[1]), 
-    #         axTicksByTime2(xdata[xsubset]),
-    #         par("usr")[4], #max(10,range(na.omit(macd))[2]), col=x$Env$theme$grid)
-    #         col=x$Env$theme$grid)
     chart.lines(drawdowns) 
   }
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
-        names(list(geometric=geometric,...)),
-              list(geometric=geometric,...))
+         names(list(geometric=geometric,...)),
+         list(geometric=geometric,...))
   exp <- parse(text=gsub("list","plot_drawdowns",
-               as.expression(substitute(list(x=current.chob(),
-                                             geometric=geometric,...)))),
+                         as.expression(substitute(list(x=current.chob(),
+                                                       geometric=geometric,...)))),
                srcfile=NULL)
-
+  
   plot_object <- current.chob()
   xsubset <- plot_object$Env$xsubset
   drawdowns <- PerformanceAnalytics:::Drawdowns(plot_object$Env$xdata, geometric=geometric)
-  print(drawdowns)
-  print(range(drawdowns))
+  lenv$xdata <- drawdowns
+  lenv$xsubset <- subset
+  
+  # add the frame for drawdowns info
   plot_object$add_frame(ylim=c(0,1),asp=0.2)
   plot_object$next_frame()
-  lenv$xdata <- drawdowns #structure(drawdowns,.Dimnames=list(NULL, "drawdowns"))
-  #text.exp <- expression(text(c(1,
-  #                              1+strwidth(paste("RSI(",n,"):",sep=""))),
-  #                     0.3,
-  #                     c(paste("RSI(",n,"):",sep=""),
-  #                       round(last(xdata[xsubset]),5)),
-  #                     col=c(1,theme$rsi$col$rsi),adj=c(0,0),cex=0.9,offset=0,pos=4))
-  #plot_object$add(expression(rect(par("usr")[1],0,par("usr")[2],1,col=theme$grid,border="black")),expr=TRUE)
-  #plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
-
-  #plot_object$add_frame(ylim=c(0,100),asp=1,fixed=TRUE)
+  text.exp <- expression(text(c(1, 1+strwidth("Drawdowns")),
+                              0.3,
+                              c("Drawdowns", ""),
+                              col=c(1,"gray"),adj=c(0,0),cex=0.9,offset=0,pos=4))
+  plot_object$add(expression(rect(par("usr")[1],0,par("usr")[2],1,col=theme$grid,border="black")),expr=TRUE)
+  plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+  
+  # add frame for the actual drawdowns data
   plot_object$add_frame(ylim=range(drawdowns),asp=1,fixed=TRUE)
   plot_object$next_frame()
-
-  # add grid lines
-  #lenv$grid_lines <- function(xdata,x) { c(RSIdn,RSIup) }
-  # add grid lines
-  #exp <- c(expression(segments(1, grid_lines(xdata,xsubset),
-  #                             NROW(xdata[xsubset]), grid_lines(xdata,xsubset), col=theme$grid)),exp,
-  # add axis labels/boxes
-  #         expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
-  #                    noquote(format(grid_lines(xdata,xsubset),justify="right")),
-  #                    col=theme$labels,offset=0,pos=4,cex=0.9)),
-  #         expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
-  #                    noquote(format(grid_lines(xdata,xsubset),justify="right")),
-  #                    col=theme$labels,offset=0,pos=4,cex=0.9)))
+  
+  # need to add gridlines and y-axis labels for this panel
+  # using axis is easier, but does not have same formatting as other axes
+  # exp <- c(exp, expression(axis(side = 2, at = pretty(range(xdata)))))
   plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE)
   plot_object
 }
