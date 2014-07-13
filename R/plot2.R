@@ -12,8 +12,12 @@ chart_pars <- function() {
 } # }}}
 
 chart.lines <- function(x, colorset=1:12, type="l"){
+  if(type == "h"){
+    lines(1:NROW(x),x[,1],lwd=2,col=colorset[1],lend=3,lty=1, type="h")
+  } else {
   for(i in 1:NCOL(x))
-    lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=3,lty=1, type=type)
+    lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=3,lty=1, type="l")
+  }
 }
 
 # chart_Series {{{
@@ -394,17 +398,15 @@ addDrawdowns <- function(geometric=TRUE, col=1, ...){
   plot_object$add_frame(ylim=range(na.omit(drawdowns)),asp=1,fixed=TRUE)
   plot_object$next_frame()
   
-  # using axis is easier, but does not have same formatting as other axes
-  # exp <- c(exp, expression(axis(side = 2, at = pretty(range(xdata)))))
-  # add grid lines, using custom function for MACD gridlines
-  
   lenv$grid_lines <- function(xdata,xsubset) {
     ylim <- range(xdata[xsubset])
     p <- pretty(ylim, 10)
     p[p > ylim[1] & p < ylim[2]]
   }
+  # add y-axis gridlines and labels
   exp <- c(expression(segments(1,grid_lines(xdata,xsubset),NROW(xdata[xsubset]),grid_lines(xdata,xsubset),
-                               col=theme$grid)), exp,  # NOTE 'exp' was defined earlier to be plot_macd
+                               col=theme$grid)), 
+           exp,  # NOTE 'exp' was defined earlier
            # add axis labels/boxes
            expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
                            noquote(format(grid_lines(xdata,xsubset),justify="right")),
@@ -419,10 +421,10 @@ addDrawdowns <- function(geometric=TRUE, col=1, ...){
 # based on quantmod::add_TA
 add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
                       yaxis=list(NULL,NULL),
-                      col=1, taType=NULL, ...) { 
+                      col=1, type="l", ...) { 
   lenv <- new.env()
   lenv$name <- name
-  lenv$plot_ta <- function(x, ta, on, taType, col=col,...) {
+  lenv$plot_ta <- function(x, ta, on, type, col,...) {
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
     if(all(is.na(on))) {
@@ -447,20 +449,20 @@ add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
                              .index(x$Env$xdata[x$Env$xsubset]), tzone=indexTZ(x$Env$xdata)),ta)[subset.range]
       ta.x <- as.numeric(na.approx(ta.adj[,1], rule=2) )
       ta.y <- ta.adj[,-1]
-      chart.lines(ta.y)
+      chart.lines(ta.y, colorset=col, type=type)
     }
   }
   lenv$xdata <- x
   # map all passed args (if any) to 'lenv' environment
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
          names(list(x=x,order=order,on=on,legend=legend,
-                    taType=taType,col=col,...)),
+                    type=type,col=col,...)),
          list(x=x,order=order,on=on,legend=legend,
-              taType=taType,col=col,...))
+              type=type,col=col,...))
   exp <- parse(text=gsub("list","plot_ta",
                          as.expression(substitute(list(x=current.chob(),
                                                        ta=get("x"),on=on,
-                                                       taType=taType,col=col,...)))),
+                                                       type=type,col=col,...)))),
                srcfile=NULL)
   plot_object <- current.chob()
   xdata <- plot_object$Env$xdata
