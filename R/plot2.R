@@ -11,9 +11,9 @@ chart_pars <- function() {
   list(cex=0.6, mar=c(3,2,0,2))
 } # }}}
 
-chart.lines <- function(x, colorset=1:12){
+chart.lines <- function(x, colorset=1:12, type="l"){
   for(i in 1:NCOL(x))
-    lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=3,lty=1)
+    lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=3,lty=1, type=type)
 }
 
 # chart_Series {{{
@@ -63,8 +63,10 @@ xtsExtraTheme <- function(){
 }
 
 plot2_xts <- function(x, 
-                      panel="",
+                      mainPanel=NULL,
+                      panels=NULL,
                       byColumn=FALSE,
+                      type="l",
                       name=deparse(substitute(x)), 
                       subset="", 
                       clev=0,
@@ -146,7 +148,7 @@ plot2_xts <- function(x,
   cs$Env$format.labels <- format.labels
   cs$Env$ticks.on <- grid.ticks.on
   cs$Env$grid.ticks.lwd <- theme$grid.ticks.lwd
-  #cs$Env$type <- type
+  cs$Env$type <- type
   
   # Do some checks on x
   if(is.character(x))
@@ -160,24 +162,43 @@ plot2_xts <- function(x,
   #} else 
   
   # Raw returns data passed into function
-  cs$Env$R <- x
-  cs$Env$column_names <- colnames(R)
-  
-  # Compute xdata based on the first panel
-  # xdata <- PerformanceAnalytics:::Drawdowns(R)
   cs$Env$xdata <- x
-  #subset <- match(.index(x[subset]), .index(x))
   cs$Env$xsubset <- subset
+  cs$Env$column_names <- colnames(x)
+  cs$Env$nobs <- NROW(cs$Env$xdata)
   
+  # Compute transformation if specified by panel argument
+  # cs$Env$R <- PerformanceAnalytics:::Drawdowns(x)
+  # rough prototype for calling a function for the main "panel"
+  if(!is.null(mainPanel)){
+    FUN <- match.fun(mainPanel$name)
+    args <- mainPanel$args
+    .formals <- formals(FUN)
+    .formals <- modify.args(formals=.formals, arglist=args, dots=TRUE)
+    if("R" %in% names(.formals)) .formals <- modify.args(formals=.formals, arglist=NULL, R=R, dots=TRUE)
+    .formals$... <- NULL
+    R <- try(do.call(FUN, .formals), silent=TRUE)
+    if(inherits(R, "try-error")) { 
+      message(paste("mainPanel function failed with message", R))
+      cs$Env$R <- x
+    } else {
+      cs$Env$R <- R
+    }
+  } else {
+    cs$Env$R <- R
+  }
   
   # xlim and ylim are set based on cs$Env$xdata[subset]. How do we handle other
   # transformations (e.g. cumulative returns, correlations, etc.) as the
   # main panel?
+  # Set xlim based on the raw returns data passed into function
   cs$set_xlim(c(1,NROW(cs$Env$xdata[subset])))
-  cs$set_ylim(list(structure(range(na.omit(cs$Env$xdata[subset])),fixed=FALSE)))
+  
+  # Set ylim based on the transformed data
+  cs$set_ylim(list(structure(range(na.omit(cs$Env$R[subset])),fixed=TRUE)))
+  
   
   cs$set_frame(1,FALSE)
-  
   # axis_ticks function to label lower frequency ranges/grid lines
   cs$Env$axis_ticks <- function(xdata,xsubset) {
     ticks <- diff(axTicksByTime2(xdata[xsubset],labels=FALSE))/2 + 
@@ -203,13 +224,6 @@ plot2_xts <- function(x,
                          names(axt),xpd=TRUE,cex=0.9,pos=3)),
          clip=FALSE,expr=TRUE)
   
-  #cs$set_frame(-1)
-  # background of main window
-  #cs$add(expression(rect(par("usr")[1],
-  #                       par("usr")[3],
-  #                       par("usr")[2],
-  #                       par("usr")[4],border=NA,col=theme$bg)),expr=TRUE)
-  
   # Add frame for the chart "header" to display the name and start/end dates
   cs$add_frame(0,ylim=c(0,1),asp=0.2)
   cs$set_frame(1)
@@ -232,65 +246,43 @@ plot2_xts <- function(x,
                                 paste(start(xdata[xsubset]),end(xdata[xsubset]),sep=" / "),
                                 col=1,adj=c(0,0),pos=2)))
   cs$add(text.exp, env=cs$Env, expr=TRUE)
-  cs$set_frame(2)
   
-  # y-axis labels
-  cs$Env$axis_labels <- function(xdata,xsubset,scale=5) {
-    axTicksByValue(na.omit(xdata[xsubset]))
-  }
-  cs$Env$make_pretty_labels <- function(ylim) {
-    p <- pretty(ylim,10)
+  cs$set_frame(2)
+  # define function for y-axis labels
+  cs$Env$grid_lines <- function(xdata, xsubset) {
+    ylim <- range(xdata[xsubset])
+    p <- pretty(ylim, 10)
     p[p > ylim[1] & p < ylim[2]]
   }
-  #cs$add(assign("five",rnorm(10)))  # this gets re-evaled each update, though only to test
-  #cs$add(expression(assign("alabels", axTicksByValue(na.omit(xdata[xsubset])))),expr=TRUE)
-  #cs$add(expression(assign("alabels", pretty(range(xdata[xsubset],na.rm=TRUE)))),expr=TRUE)
-  #cs$add(expression(assign("alabels", pretty(get_ylim(get_frame())[[2]],10))),expr=TRUE)
-  cs$add(expression(assign("alabels", make_pretty_labels(get_ylim(get_frame())[[2]]))),expr=TRUE)
   
-  # add $1 grid lines if appropriate
-  #cs$set_frame(-2)
-  
-  # add minor y-grid lines
-  #cs$add(expression(if(diff(range(xdata[xsubset],na.rm=TRUE)) < 50)
-  #  segments(1,seq(min(xdata[xsubset]%/%1,na.rm=TRUE),
-  #                 max(xdata[xsubset]%/%1,na.rm=TRUE),1),
-  #           length(xsubset),
-  #           seq(min(xdata[xsubset]%/%1,na.rm=TRUE),
-  #               max(xdata[xsubset]%/%1,na.rm=TRUE),1),
-  #           col=theme$grid2, lty="dotted")), expr=TRUE)
-  
-  cs$set_frame(2)
-  # add main y-grid lines
-  cs$add(expression(segments(1,alabels,NROW(xdata[xsubset]),alabels, col=theme$grid)),expr=TRUE)
-  
-  # left axis labels
-  if(theme$lylab) {
-    cs$add(expression(text(1-1/3-max(strwidth(alabels)),
-                           alabels, #axis_labels(xdata,xsubset), 
-                           noquote(format(alabels,justify="right")), 
-                           col=theme$labels,offset=0,cex=0.9,pos=4,xpd=TRUE)),expr=TRUE)
-  }
-  
-  # right axis labels
-  if(theme$rylab) {
-    cs$add(expression(text(NROW(xdata[xsubset])+1/3,
-                           alabels, 
-                           noquote(format(alabels,justify="right")),
-                           col=theme$labels,offset=0,cex=0.9,pos=4,xpd=TRUE)),expr=TRUE)
-  }
+  # add y-axis grid lines and labels
+  exp <- c(
+    # y-axis grid lines
+    expression(segments(1, grid_lines(R,xsubset), NROW(xdata[xsubset]), grid_lines(R,xsubset),
+                        col=theme$grid)),
+    # left y-axis labels
+    expression(text(1-1/3-max(strwidth(grid_lines(R,xsubset))), grid_lines(R,xsubset),
+                    noquote(format(grid_lines(R,xsubset), justify="right")),
+                    col=theme$labels, offset=0, pos=4, cex=0.9, xpd=TRUE)),
+    # right y-axis labels
+    expression(text(NROW(R[xsubset])+1/3, grid_lines(R,xsubset),
+                    noquote(format(grid_lines(R,xsubset), justify="right")),
+                    col=theme$labels, offset=0, pos=4, cex=0.9, xpd=TRUE))
+  )
+  cs$add(exp, env=cs$Env, expr=TRUE)
   
   # add main series
   cs$set_frame(2)
   if(isTRUE(byColumn)){
     # Add expression for the main plot
-    cs$add(expression(chart.lines(xdata[,1][xsubset])),expr=TRUE)
+    cs$add(expression(chart.lines(R[,1][xsubset], type=type)),expr=TRUE)
     for(i in 2:NCOL(x)){
       # create a local environment
       lenv <- new.env()
-      lenv$xdata <- cs$Env$xdata[,i][subset]
-      lenv$name <- colnames(cs$Env$xdata)[i]
-      lenv$ylim <- range(cs$Env$xdata[subset])
+      lenv$xdata <- cs$Env$R[,i][subset]
+      lenv$name <- cs$Env$colum_names[i]
+      lenv$ylim <- range(cs$Env$R[subset])
+      lenv$type <- cs$Env$type
       
       # Add a small frame for the time series info
       cs$add_frame(ylim=c(0,1),asp=0.2)
@@ -302,10 +294,11 @@ plot2_xts <- function(x,
       cs$add(text.exp, env=c(lenv,cs$Env), expr=TRUE)
       
       # Add the frame for the sub-plots
-      cs$add_frame(ylim=range(cs$Env$xdata[cs$Env$xsubset]), asp=NCOL(cs$Env$xdata), fixed=TRUE)
+      # Set the ylim based on the (potentially) transformed data in cs$Env$R
+      cs$add_frame(ylim=range(cs$Env$R[cs$Env$xsubset]), asp=NCOL(cs$Env$xdata), fixed=TRUE)
       cs$next_frame()
       
-      exp <- expression(chart.lines(xdata[xsubset]))
+      exp <- expression(chart.lines(xdata[xsubset], type=type))
       
       # define function to plot the y-axis grid lines
       lenv$y_grid_lines <- function(ylim) { 
@@ -322,10 +315,10 @@ plot2_xts <- function(x,
         # y-axis labels/boxes
         expression(text(1-1/3-max(strwidth(y_grid_lines(ylim))), y_grid_lines(ylim),
                         noquote(format(y_grid_lines(ylim),justify="right")),
-                        col=theme$labels,offset=0,pos=4,cex=0.9)),
+                        col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
         expression(text(NROW(xdata[xsubset])+1/3, y_grid_lines(ylim),
                         noquote(format(y_grid_lines(ylim),justify="right")),
-                        col=theme$labels,offset=0,pos=4,cex=0.9)),
+                        col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
         # x-axis grid lines
         expression(atbt <- axTicksByTime2(xdata[xsubset]),
                    segments(atbt, #axTicksByTime2(xdata[xsubset]),
@@ -335,7 +328,7 @@ plot2_xts <- function(x,
       cs$add(exp,env=c(lenv, cs$Env),expr=TRUE,no.update=TRUE)
     }
   } else {
-    cs$add(expression(chart.lines(xdata[xsubset])),expr=TRUE)
+    cs$add(expression(chart.lines(R[xsubset])),expr=TRUE)
   }
   assign(".xts_chob", cs, .plotxtsEnv)
   
@@ -415,10 +408,10 @@ addDrawdowns <- function(geometric=TRUE, col=1, ...){
            # add axis labels/boxes
            expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
                            noquote(format(grid_lines(xdata,xsubset),justify="right")),
-                           col=theme$labels,offset=0,pos=4,cex=0.9)),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
            expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
                            noquote(format(grid_lines(xdata,xsubset),justify="right")),
-                           col=theme$labels,offset=0,pos=4,cex=0.9)))
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
   plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
   plot_object
 }
@@ -454,8 +447,7 @@ add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
                              .index(x$Env$xdata[x$Env$xsubset]), tzone=indexTZ(x$Env$xdata)),ta)[subset.range]
       ta.x <- as.numeric(na.approx(ta.adj[,1], rule=2) )
       ta.y <- ta.adj[,-1]
-      for(i in 1:NCOL(ta.y))
-        lines(ta.x, as.numeric(ta.y[,i]), col=col,...)
+      chart.lines(ta.y)
     }
   }
   lenv$xdata <- x
@@ -488,9 +480,9 @@ add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
   if(is.na(on)) {
     plot_object$add_frame(ylim=c(0,1),asp=0.2)
     plot_object$next_frame()
-    text.exp <- expression(text(x=c(1,1+strwidth(name)),
+    text.exp <- expression(text(x=1,
                                 y=0.3,
-                                labels=c(name,round(last(xdata[xsubset]),5)),
+                                labels=name,
                                 col=c(1,col),adj=c(0,0),cex=0.9,offset=0,pos=4))
     plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
     
@@ -505,16 +497,16 @@ add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
              # add axis labels/boxes
              expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
                              noquote(format(grid_lines(xdata,xsubset),justify="right")),
-                             col=theme$labels,offset=0,pos=4,cex=0.9)),
+                             col=theme$labels,offset=0,pos=4,cex=0.9,xpd=TRUE)),
              expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
                              noquote(format(grid_lines(xdata,xsubset),justify="right")),
-                             col=theme$labels,offset=0,pos=4,cex=0.9)))
+                             col=theme$labels,offset=0,pos=4,cex=0.9,xpd=TRUE)))
     plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=no.update)
   } else { 
     for(i in 1:length(on)) {
       plot_object$set_frame(2*on[i]) # this is defaulting to using headers, should it be optionable?
       lenv$grid_lines <- function(xdata,xsubset) { 
-        pretty(xdata[xsubset])
+        pretty(range(xdata[xsubset]))
       }
       exp <- c(exp,
                # LHS
@@ -524,7 +516,7 @@ add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
                # RHS
                expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
                                noquote(format(grid_lines(xdata,xsubset),justify="right")),
-                               col=theme$labels,offset=0,pos=4,cex=0.9)))
+                               col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
       #}
       plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=no.update)
     }
