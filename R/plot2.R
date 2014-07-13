@@ -8,7 +8,7 @@ current.chob <- function() invisible(get(".xts_chob",.plotxtsEnv))
 
 # chart_pars {{{
 chart_pars <- function() {
-  list(cex=0.6, mar=c(3,1,0,1))
+  list(cex=0.6, mar=c(3,2,0,2))
 } # }}}
 
 chart.lines <- function(x, colorset=1:12){
@@ -121,7 +121,11 @@ plot2_xts <- function(x,
   environment(cs$subset) <- environment(cs$get_asp)
   
   # add theme and charting parameters to Env
-  cs$set_asp(3)
+  if(byColumn){
+    cs$set_asp(NCOL(x))
+  } else {
+    cs$set_asp(3)
+  }
   cs$Env$cex <- pars$cex
   cs$Env$mar <- pars$mar
   cs$Env$clev = min(clev+0.01,1) # (0,1]
@@ -157,6 +161,7 @@ plot2_xts <- function(x,
   
   # Raw returns data passed into function
   cs$Env$R <- x
+  cs$Env$column_names <- colnames(R)
   
   # Compute xdata based on the first panel
   # xdata <- PerformanceAnalytics:::Drawdowns(R)
@@ -278,13 +283,17 @@ plot2_xts <- function(x,
   # add main series
   cs$set_frame(2)
   if(isTRUE(byColumn)){
+    # Add expression for the main plot
     cs$add(expression(chart.lines(xdata[,1][xsubset])),expr=TRUE)
     for(i in 2:NCOL(x)){
+      # create a local environment
       lenv <- new.env()
       lenv$xdata <- cs$Env$xdata[,i][subset]
       lenv$name <- colnames(cs$Env$xdata)[i]
+      lenv$ylim <- range(cs$Env$xdata[subset])
       
-      cs$add_frame(ylim=c(0,1),asp=0.25)
+      # Add a small frame for the time series info
+      cs$add_frame(ylim=c(0,1),asp=0.2)
       cs$next_frame()
       text.exp <- expression(text(x=c(1,1+strwidth(name)),
                                   y=0.3,
@@ -292,23 +301,37 @@ plot2_xts <- function(x,
                                   col=c(1,1),adj=c(0,0),cex=0.9,offset=0,pos=4))
       cs$add(text.exp, env=c(lenv,cs$Env), expr=TRUE)
       
-      cs$add_frame(ylim=range(cs$Env$xdata[cs$Env$xsubset]),asp=NCOL(cs$Env$xdata), fixed=TRUE)
+      # Add the frame for the sub-plots
+      cs$add_frame(ylim=range(cs$Env$xdata[cs$Env$xsubset]), asp=NCOL(cs$Env$xdata), fixed=TRUE)
       cs$next_frame()
       
       exp <- expression(chart.lines(xdata[xsubset]))
       
-      lenv$grid_lines <- function(xdata,xsubset) { 
-        pretty(range(xdata[xsubset]))
+      # define function to plot the y-axis grid lines
+      lenv$y_grid_lines <- function(ylim) { 
+        #pretty(range(xdata[xsubset]))
+        p <- pretty(ylim,10)
+        p[p > ylim[1] & p < ylim[2]]
       }
-      exp <- c(expression(segments(1,grid_lines(xdata,xsubset),NROW(xdata[xsubset]),grid_lines(xdata,xsubset),
-                                   col=theme$grid)), exp,  # NOTE 'exp' was defined earlier to be plot_macd
-               # add axis labels/boxes
-               expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
-                               noquote(format(grid_lines(xdata,xsubset),justify="right")),
-                               col=theme$labels,offset=0,pos=4,cex=0.9)),
-               expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
-                               noquote(format(grid_lines(xdata,xsubset),justify="right")),
-                               col=theme$labels,offset=0,pos=4,cex=0.9)))
+      
+      exp <- c(expression(
+        # y-axis grid lines
+        segments(1,y_grid_lines(ylim),NROW(xdata[xsubset]), y_grid_lines(ylim),
+                 col=theme$grid)), # add y-axis grid lines
+        exp,  # NOTE 'exp' was defined earlier
+        # y-axis labels/boxes
+        expression(text(1-1/3-max(strwidth(y_grid_lines(ylim))), y_grid_lines(ylim),
+                        noquote(format(y_grid_lines(ylim),justify="right")),
+                        col=theme$labels,offset=0,pos=4,cex=0.9)),
+        expression(text(NROW(xdata[xsubset])+1/3, y_grid_lines(ylim),
+                        noquote(format(y_grid_lines(ylim),justify="right")),
+                        col=theme$labels,offset=0,pos=4,cex=0.9)),
+        # x-axis grid lines
+        expression(atbt <- axTicksByTime2(xdata[xsubset]),
+                   segments(atbt, #axTicksByTime2(xdata[xsubset]),
+                            ylim[1],
+                            atbt, #axTicksByTime2(xdata[xsubset]),
+                            ylim[2], col=theme$grid)))
       cs$add(exp,env=c(lenv, cs$Env),expr=TRUE,no.update=TRUE)
     }
   } else {
@@ -339,7 +362,13 @@ addDrawdowns <- function(geometric=TRUE, col=1, ...){
   lenv$name <- "Drawdowns"
   lenv$plot_drawdowns <- function(x, geometric, ...) {
     xdata <- x$Env$xdata
-    #xsubset <- x$Env$xsubset
+    xsubset <- x$Env$xsubset
+    # Add x-axis grid lines
+    segments(axTicksByTime2(xdata[xsubset]),
+             par("usr")[3],
+             axTicksByTime2(xdata[xsubset]),
+             par("usr")[4],
+             col=x$Env$theme$grid)
     drawdowns <- PerformanceAnalytics:::Drawdowns(xdata, geometric)
     chart.lines(drawdowns) 
   }
@@ -376,8 +405,10 @@ addDrawdowns <- function(geometric=TRUE, col=1, ...){
   # exp <- c(exp, expression(axis(side = 2, at = pretty(range(xdata)))))
   # add grid lines, using custom function for MACD gridlines
   
-  lenv$grid_lines <- function(xdata,xsubset) { 
-    pretty(range(xdata[xsubset]))
+  lenv$grid_lines <- function(xdata,xsubset) {
+    ylim <- range(xdata[xsubset])
+    p <- pretty(ylim, 10)
+    p[p > ylim[1] & p < ylim[2]]
   }
   exp <- c(expression(segments(1,grid_lines(xdata,xsubset),NROW(xdata[xsubset]),grid_lines(xdata,xsubset),
                                col=theme$grid)), exp,  # NOTE 'exp' was defined earlier to be plot_macd
@@ -392,111 +423,113 @@ addDrawdowns <- function(geometric=TRUE, col=1, ...){
   plot_object
 }
 
-# add_TA <- function(x, order=NULL, on=NA, legend="auto",
-#                    yaxis=list(NULL,NULL),
-#                    col=1, taType=NULL, ...) { 
-#   lenv <- new.env()
-#   lenv$name <- deparse(substitute(x))
-#   lenv$plot_ta <- function(x, ta, on, taType, col=col,...) {
-#     xdata <- x$Env$xdata
-#     xsubset <- x$Env$xsubset
-#     if(all(is.na(on))) {
-#       segments(axTicksByTime2(xdata[xsubset]),
-#                par("usr")[3],
-#                axTicksByTime2(xdata[xsubset]),
-#                par("usr")[4],
-#                col=x$Env$theme$grid)
-#     }
-#     if(is.logical(ta)) {
-#       ta <- merge(ta, xdata, join="right",retside=c(TRUE,FALSE))[xsubset]
-#       shade <- shading(as.logical(ta,drop=FALSE))
-#       if(length(shade$start) > 0) # all FALSE cause zero-length results
-#         rect(shade$start-1/3, par("usr")[3] ,shade$end+1/3, par("usr")[4], col=col,...) 
-#     } else {
-#       # we can add points that are not necessarily at the points
-#       # on the main series
-#       subset.range <- paste(start(x$Env$xdata[x$Env$xsubset]),
-#                             end(x$Env$xdata[x$Env$xsubset]),sep="/")
-#       ta.adj <- merge(n=.xts(1:NROW(x$Env$xdata[x$Env$xsubset]),
-#                              .index(x$Env$xdata[x$Env$xsubset]), tzone=indexTZ(x$Env$xdata)),ta)[subset.range]
-#       ta.x <- as.numeric(na.approx(ta.adj[,1], rule=2) )
-#       ta.y <- ta.adj[,-1]
-#       for(i in 1:NCOL(ta.y))
-#         lines(ta.x, as.numeric(ta.y[,i]), col=col,...)
-#     }
-#   }
-#   lenv$xdata <- x
-#   # map all passed args (if any) to 'lenv' environment
-#   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
-#         names(list(x=x,order=order,on=on,legend=legend,
-#                    taType=taType,col=col,...)),
-#               list(x=x,order=order,on=on,legend=legend,
-#                    taType=taType,col=col,...))
-#   exp <- parse(text=gsub("list","plot_ta",
-#                as.expression(substitute(list(x=current.chob(),
-#                              ta=get("x"),on=on,
-#                              taType=taType,col=col,...)))),
-#                srcfile=NULL)
-#   plot_object <- current.chob()
-#   xdata <- plot_object$Env$xdata
-#   xsubset <- plot_object$Env$xsubset
-#   if(is.logical(x)) no.update <- TRUE else no.update <- FALSE
-#   #  this merge isn't going to work if x isn't in xdata range. Something like:
-#   #    na.approx(merge(n=.xts(1:NROW(xdata),.index(xdata)),ta)[,1])
-#   #  should allow for any time not in the original to be merged in.
-#   #  probably need to subset xdata _before_ merging, else subset will be wrong
-#   #
-#   #tav <- merge(x, xdata, join="right",retside=c(TRUE,FALSE))
-#   #lenv$xdata <- tav
-#   #tav <- tav[xsubset]
-#   lenv$col <- col
-#   lenv$xdata <- merge(x,xdata,retside=c(TRUE,FALSE))
-# 
-#   if(is.na(on)) {
-#     plot_object$add_frame(ylim=c(0,1),asp=0.15)
-#     plot_object$next_frame()
-#     text.exp <- expression(text(x=c(1,1+strwidth(name)),
-#                                 y=0.3,
-#                                 labels=c(name,round(last(xdata[xsubset]),5)),
-#                                 col=c(1,col),adj=c(0,0),cex=0.9,offset=0,pos=4))
-#     plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
-# 
-#     plot_object$add_frame(ylim=range(na.omit(xdata)),asp=1)  # need to have a value set for ylim
-#     plot_object$next_frame()
-#   # add grid lines, using custom function for MACD gridlines
-#   lenv$grid_lines <- function(xdata,xsubset) { 
-#     pretty(xdata[xsubset])
-#   }
-#   exp <- c(expression(segments(1,grid_lines(xdata,xsubset),NROW(xdata[xsubset]),grid_lines(xdata,xsubset),
-#                                col=theme$grid)), exp,  # NOTE 'exp' was defined earlier to be plot_macd
-#   # add axis labels/boxes
-#            expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
-#                       noquote(format(grid_lines(xdata,xsubset),justify="right")),
-#                       col=theme$labels,offset=0,pos=4,cex=0.9)),
-#            expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
-#                       noquote(format(grid_lines(xdata,xsubset),justify="right")),
-#                       col=theme$labels,offset=0,pos=4,cex=0.9)))
-#   plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=no.update)
-#   } else { 
-#     for(i in 1:length(on)) {
-#       plot_object$set_frame(2*on[i]) # this is defaulting to using headers, should it be optionable?
-#       lenv$grid_lines <- function(xdata,xsubset) { 
-#         pretty(xdata[xsubset])
-#       }
-#       exp <- c(exp,
-#            # LHS
-#            #expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
-#            #           noquote(format(grid_lines(xdata,xsubset),justify="right")),
-#            #           col=theme$labels,offset=0,pos=4,cex=0.9)),
-#            # RHS
-#            expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
-#                       noquote(format(grid_lines(xdata,xsubset),justify="right")),
-#                       col=theme$labels,offset=0,pos=4,cex=0.9)))
-#       #}
-#       plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=no.update)
-#     }
-#   }
-#   plot_object
-# } #}}}
+# based on quantmod::add_TA
+add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
+                      yaxis=list(NULL,NULL),
+                      col=1, taType=NULL, ...) { 
+  lenv <- new.env()
+  lenv$name <- name
+  lenv$plot_ta <- function(x, ta, on, taType, col=col,...) {
+    xdata <- x$Env$xdata
+    xsubset <- x$Env$xsubset
+    if(all(is.na(on))) {
+      # x-axis grid lines based on Env$xdata and Env$xsubset
+      segments(axTicksByTime2(xdata[xsubset]),
+               par("usr")[3],
+               axTicksByTime2(xdata[xsubset]),
+               par("usr")[4],
+               col=x$Env$theme$grid)
+    }
+    if(is.logical(ta)) {
+      ta <- merge(ta, xdata, join="right",retside=c(TRUE,FALSE))[xsubset]
+      shade <- shading(as.logical(ta,drop=FALSE))
+      if(length(shade$start) > 0) # all FALSE cause zero-length results
+        rect(shade$start-1/3, par("usr")[3] ,shade$end+1/3, par("usr")[4], col=col,...) 
+    } else {
+      # we can add points that are not necessarily at the points
+      # on the main series
+      subset.range <- paste(start(x$Env$xdata[x$Env$xsubset]),
+                            end(x$Env$xdata[x$Env$xsubset]),sep="/")
+      ta.adj <- merge(n=.xts(1:NROW(x$Env$xdata[x$Env$xsubset]),
+                             .index(x$Env$xdata[x$Env$xsubset]), tzone=indexTZ(x$Env$xdata)),ta)[subset.range]
+      ta.x <- as.numeric(na.approx(ta.adj[,1], rule=2) )
+      ta.y <- ta.adj[,-1]
+      for(i in 1:NCOL(ta.y))
+        lines(ta.x, as.numeric(ta.y[,i]), col=col,...)
+    }
+  }
+  lenv$xdata <- x
+  # map all passed args (if any) to 'lenv' environment
+  mapply(function(name,value) { assign(name,value,envir=lenv) }, 
+         names(list(x=x,order=order,on=on,legend=legend,
+                    taType=taType,col=col,...)),
+         list(x=x,order=order,on=on,legend=legend,
+              taType=taType,col=col,...))
+  exp <- parse(text=gsub("list","plot_ta",
+                         as.expression(substitute(list(x=current.chob(),
+                                                       ta=get("x"),on=on,
+                                                       taType=taType,col=col,...)))),
+               srcfile=NULL)
+  plot_object <- current.chob()
+  xdata <- plot_object$Env$xdata
+  xsubset <- plot_object$Env$xsubset
+  if(is.logical(x)) no.update <- TRUE else no.update <- FALSE
+  #  this merge isn't going to work if x isn't in xdata range. Something like:
+  #    na.approx(merge(n=.xts(1:NROW(xdata),.index(xdata)),ta)[,1])
+  #  should allow for any time not in the original to be merged in.
+  #  probably need to subset xdata _before_ merging, else subset will be wrong
+  #
+  #tav <- merge(x, xdata, join="right",retside=c(TRUE,FALSE))
+  #lenv$xdata <- tav
+  #tav <- tav[xsubset]
+  lenv$col <- col
+  lenv$xdata <- merge(x,xdata,retside=c(TRUE,FALSE))
+  
+  if(is.na(on)) {
+    plot_object$add_frame(ylim=c(0,1),asp=0.2)
+    plot_object$next_frame()
+    text.exp <- expression(text(x=c(1,1+strwidth(name)),
+                                y=0.3,
+                                labels=c(name,round(last(xdata[xsubset]),5)),
+                                col=c(1,col),adj=c(0,0),cex=0.9,offset=0,pos=4))
+    plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+    
+    plot_object$add_frame(ylim=range(na.omit(xdata)),asp=1)  # need to have a value set for ylim
+    plot_object$next_frame()
+    # add grid lines, using custom function for MACD gridlines
+    lenv$grid_lines <- function(xdata,xsubset) { 
+      pretty(range(xdata[xsubset]))
+    }
+    exp <- c(expression(segments(1,grid_lines(xdata,xsubset),NROW(xdata[xsubset]),grid_lines(xdata,xsubset),
+                                 col=theme$grid)), exp,  # NOTE 'exp' was defined earlier to be plot_macd
+             # add axis labels/boxes
+             expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
+                             noquote(format(grid_lines(xdata,xsubset),justify="right")),
+                             col=theme$labels,offset=0,pos=4,cex=0.9)),
+             expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
+                             noquote(format(grid_lines(xdata,xsubset),justify="right")),
+                             col=theme$labels,offset=0,pos=4,cex=0.9)))
+    plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=no.update)
+  } else { 
+    for(i in 1:length(on)) {
+      plot_object$set_frame(2*on[i]) # this is defaulting to using headers, should it be optionable?
+      lenv$grid_lines <- function(xdata,xsubset) { 
+        pretty(xdata[xsubset])
+      }
+      exp <- c(exp,
+               # LHS
+               #expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
+               #           noquote(format(grid_lines(xdata,xsubset),justify="right")),
+               #           col=theme$labels,offset=0,pos=4,cex=0.9)),
+               # RHS
+               expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
+                               noquote(format(grid_lines(xdata,xsubset),justify="right")),
+                               col=theme$labels,offset=0,pos=4,cex=0.9)))
+      #}
+      plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=no.update)
+    }
+  }
+  plot_object
+} #}}}
 
 
