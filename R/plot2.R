@@ -2,7 +2,7 @@
 # Environment for our xts chart objects
 .plotxtsEnv <- new.env()
 
-current.chob <- function() invisible(get(".xts_chob",.plotxtsEnv))
+current.xts_chob <- function() invisible(get(".xts_chob",.plotxtsEnv))
 
 # based on quantmod R/chart_Series.R
 
@@ -13,10 +13,12 @@ chart_pars <- function() {
 
 chart.lines <- function(x, colorset=1:12, type="l"){
   if(type == "h"){
-    lines(1:NROW(x),x[,1],lwd=2,col=colorset[1],lend=3,lty=1, type="h")
+    colors <- ifelse(x[,1] < 0, "darkred", "darkgreen")
+    lines(1:NROW(x),x[,1],lwd=2,col=colors,lend=1,lty=1,type="h")
   } else {
-  for(i in 1:NCOL(x))
-    lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=3,lty=1, type="l")
+    for(i in 1:NCOL(x)){
+      lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=1,lty=1,type="l")
+    }
   }
 }
 
@@ -172,7 +174,6 @@ plot2_xts <- function(x,
   cs$Env$nobs <- NROW(cs$Env$xdata)
   
   # Compute transformation if specified by panel argument
-  # cs$Env$R <- PerformanceAnalytics:::Drawdowns(x)
   # rough prototype for calling a function for the main "panel"
   if(!is.null(mainPanel)){
     FUN <- match.fun(mainPanel$name)
@@ -199,6 +200,8 @@ plot2_xts <- function(x,
   cs$set_xlim(c(1,NROW(cs$Env$xdata[subset])))
   
   # Set ylim based on the transformed data
+  # chart_Series uses fixed=FALSE and add_* uses fixed=TRUE, not sure why or
+  # which is best.
   cs$set_ylim(list(structure(range(na.omit(cs$Env$R[subset])),fixed=TRUE)))
   
   
@@ -278,23 +281,33 @@ plot2_xts <- function(x,
   # add main series
   cs$set_frame(2)
   if(isTRUE(byColumn)){
+    # We need to plot the first "panel" here because the plot area is
+    # set up based on the code above
+    lenv <- new.env()
+    lenv$xdata <- cs$Env$R[,1][subset]
+    lenv$name <- cs$Env$colum_names[1]
+    #lenv$ymax <- range(cs$Env$R[subset])[2]
+    lenv$type <- cs$Env$type
+    exp <- expression(chart.lines(xdata, type=type))
+    #exp <- c(exp, expression(text(1, ymax, adj=c(0,0), pos=4, cex=0.9, offset=0, labels=name)))
     # Add expression for the main plot
-    cs$add(expression(chart.lines(R[,1][xsubset], type=type)),expr=TRUE)
+    cs$add(exp, env=c(lenv,cs$Env), expr=TRUE)
+    
     for(i in 2:NCOL(x)){
       # create a local environment
       lenv <- new.env()
       lenv$xdata <- cs$Env$R[,i][subset]
-      lenv$name <- cs$Env$colum_names[i]
+      lenv$name <- cs$Env$column_names[i]
       lenv$ylim <- range(cs$Env$R[subset])
       lenv$type <- cs$Env$type
       
       # Add a small frame for the time series info
       cs$add_frame(ylim=c(0,1),asp=0.2)
       cs$next_frame()
-      text.exp <- expression(text(x=c(1,1+strwidth(name)),
-                                  y=0.3,
-                                  labels=c(name,""),
-                                  col=c(1,1),adj=c(0,0),cex=0.9,offset=0,pos=4))
+      text.exp <- expression(text(x=1,
+                                  y=0.5,
+                                  labels=name,
+                                  adj=c(0,0),cex=0.9,offset=0,pos=4))
       cs$add(text.exp, env=c(lenv,cs$Env), expr=TRUE)
       
       # Add the frame for the sub-plots
@@ -311,10 +324,10 @@ plot2_xts <- function(x,
         p[p > ylim[1] & p < ylim[2]]
       }
       
-      exp <- c(expression(
+      exp <- c(
         # y-axis grid lines
-        segments(1,y_grid_lines(ylim),NROW(xdata[xsubset]), y_grid_lines(ylim),
-                 col=theme$grid)), # add y-axis grid lines
+        expression(segments(1,y_grid_lines(ylim),NROW(xdata[xsubset]), y_grid_lines(ylim),
+                            col=theme$grid)), # add y-axis grid lines
         exp,  # NOTE 'exp' was defined earlier
         # y-axis labels/boxes
         expression(text(1-1/3-max(strwidth(y_grid_lines(ylim))), y_grid_lines(ylim),
@@ -332,7 +345,7 @@ plot2_xts <- function(x,
       cs$add(exp,env=c(lenv, cs$Env),expr=TRUE,no.update=TRUE)
     }
   } else {
-    cs$add(expression(chart.lines(R[xsubset])),expr=TRUE)
+    cs$add(expression(chart.lines(R[xsubset], type=type)),expr=TRUE)
   }
   assign(".xts_chob", cs, .plotxtsEnv)
   
@@ -373,11 +386,11 @@ addDrawdowns <- function(geometric=TRUE, col=1, ...){
          names(list(geometric=geometric,...)),
          list(geometric=geometric,...))
   exp <- parse(text=gsub("list","plot_drawdowns",
-                         as.expression(substitute(list(x=current.chob(),
+                         as.expression(substitute(list(x=current.xts_chob(),
                                                        geometric=geometric,...)))),
                srcfile=NULL)
   
-  plot_object <- current.chob()
+  plot_object <- current.xts_chob()
   xdata <- plot_object$Env$xdata
   #xsubset <- plot_object$Env$xsubset
   
@@ -419,9 +432,9 @@ addDrawdowns <- function(geometric=TRUE, col=1, ...){
 }
 
 # based on quantmod::add_TA
-add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
-                      yaxis=list(NULL,NULL),
-                      col=1, type="l", ...) { 
+addLines <- function(x, name="", order=NULL, on=NA, legend="auto",
+                     yaxis=list(NULL,NULL),
+                     col=1, type="l", ...) { 
   lenv <- new.env()
   lenv$name <- name
   lenv$plot_ta <- function(x, ta, on, type, col,...) {
@@ -449,6 +462,7 @@ add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
                              .index(x$Env$xdata[x$Env$xsubset]), tzone=indexTZ(x$Env$xdata)),ta)[subset.range]
       ta.x <- as.numeric(na.approx(ta.adj[,1], rule=2) )
       ta.y <- ta.adj[,-1]
+      print(head(ta.y))
       chart.lines(ta.y, colorset=col, type=type)
     }
   }
@@ -460,11 +474,11 @@ add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
          list(x=x,order=order,on=on,legend=legend,
               type=type,col=col,...))
   exp <- parse(text=gsub("list","plot_ta",
-                         as.expression(substitute(list(x=current.chob(),
+                         as.expression(substitute(list(x=current.xts_chob(),
                                                        ta=get("x"),on=on,
                                                        type=type,col=col,...)))),
                srcfile=NULL)
-  plot_object <- current.chob()
+  plot_object <- current.xts_chob()
   xdata <- plot_object$Env$xdata
   xsubset <- plot_object$Env$xsubset
   if(is.logical(x)) no.update <- TRUE else no.update <- FALSE
@@ -526,4 +540,128 @@ add_Lines <- function(x, name="", order=NULL, on=NA, legend="auto",
   plot_object
 } #}}}
 
+addReturns <- function(){
+  # This just plots the raw returns data
+  lenv <- new.env()
+  lenv$name <- "Returns"
+  lenv$plot_returns <- function(x) {
+    xdata <- x$Env$xdata
+    xsubset <- x$Env$xsubset
+    # Add x-axis grid lines
+    segments(axTicksByTime2(xdata[xsubset]),
+             par("usr")[3],
+             axTicksByTime2(xdata[xsubset]),
+             par("usr")[4],
+             col=x$Env$theme$grid)
+    chart.lines(xdata[xsubset])
+  }
+  #mapply(function(name,value) { assign(name,value,envir=lenv) }, 
+  #       names(list(geometric=geometric,...)),
+  #       list(geometric=geometric,...))
+  exp <- parse(text=gsub("list","plot_returns",
+                         as.expression(substitute(list(x=current.xts_chob())))),
+               srcfile=NULL)
+  
+  plot_object <- current.xts_chob()
+  xdata <- plot_object$Env$xdata
+  #xsubset <- plot_object$Env$xsubset
+  
+  lenv$xdata <- xdata
+  lenv$col <- col
+  
+  # add the frame for time series info
+  plot_object$add_frame(ylim=c(0,1),asp=0.25)
+  plot_object$next_frame()
+  text.exp <- expression(text(x=1,
+                              y=0.3,
+                              labels=name,
+                              col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
+  plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+  
+  # add frame for the actual data
+  plot_object$add_frame(ylim=range(na.omit(xdata)),asp=1,fixed=TRUE)
+  plot_object$next_frame()
+  
+  lenv$grid_lines <- function(xdata,xsubset) {
+    ylim <- range(xdata[xsubset])
+    p <- pretty(ylim, 10)
+    p[p > ylim[1] & p < ylim[2]]
+  }
+  # add y-axis gridlines and labels
+  exp <- c(expression(segments(1,grid_lines(xdata,xsubset),NROW(xdata[xsubset]),grid_lines(xdata,xsubset),
+                               col=theme$grid)), 
+           exp,  # NOTE 'exp' was defined earlier
+           # add axis labels/boxes
+           expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
+                           noquote(format(grid_lines(xdata,xsubset),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
+           expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
+                           noquote(format(grid_lines(xdata,xsubset),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
+  plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
+  plot_object
+}
 
+addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, ...){
+  lenv <- new.env()
+  lenv$name <- paste("Rolling", FUN)
+  lenv$plot_performance <- function(x, width, FUN, fill, ...) {
+    xdata <- x$Env$xdata
+    xsubset <- x$Env$xsubset
+    # Add x-axis grid lines
+    segments(axTicksByTime2(xdata[xsubset]),
+             par("usr")[3],
+             axTicksByTime2(xdata[xsubset]),
+             par("usr")[4],
+             col=x$Env$theme$grid)
+    rolling_performance <- RollingPerformance(R=xdata, width=width, FUN=FUN, fill=fill, ...=...)
+    chart.lines(rolling_performance) 
+  }
+  mapply(function(name,value) { assign(name,value,envir=lenv) }, 
+         names(list(width=width, FUN=FUN, fill=fill, ...)),
+         list(width=width, FUN=FUN, fill=fill, ...))
+  exp <- parse(text=gsub("list","plot_performance",
+                         as.expression(substitute(list(x=current.xts_chob(),
+                                                       width=width, FUN=FUN, fill=fill, ...)))),
+               srcfile=NULL)
+  
+  plot_object <- current.xts_chob()
+  xdata <- plot_object$Env$xdata
+  #xsubset <- plot_object$Env$xsubset
+  
+  rolling_performance <- RollingPerformance(R=plot_object$Env$xdata, width=width, FUN=FUN, ...=..., fill=fill)
+  lenv$xdata <- rolling_performance
+  lenv$col <- col
+  
+  # add the frame for drawdowns info
+  plot_object$add_frame(ylim=c(0,1),asp=0.25)
+  plot_object$next_frame()
+  text.exp <- expression(text(x=1,
+                              y=0.3,
+                              labels=name,
+                              adj=c(0,0),cex=0.9,offset=0,pos=4))
+  plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+  
+  # add frame for the actual drawdowns data
+  plot_object$add_frame(ylim=range(na.omit(rolling_performance)),asp=1,fixed=TRUE)
+  plot_object$next_frame()
+  
+  lenv$grid_lines <- function(xdata,xsubset) {
+    ylim <- range(na.omit(xdata[xsubset]))
+    p <- pretty(ylim, 10)
+    p[p > ylim[1] & p < ylim[2]]
+  }
+  # add y-axis gridlines and labels
+  exp <- c(expression(segments(1,grid_lines(xdata,xsubset),NROW(xdata[xsubset]),grid_lines(xdata,xsubset),
+                               col=theme$grid)), 
+           exp,  # NOTE 'exp' was defined earlier
+           # add axis labels/boxes
+           expression(text(1-1/3-max(strwidth(grid_lines(xdata,xsubset))),grid_lines(xdata,xsubset),
+                           noquote(format(grid_lines(xdata,xsubset),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
+           expression(text(NROW(xdata[xsubset])+1/3,grid_lines(xdata,xsubset),
+                           noquote(format(grid_lines(xdata,xsubset),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
+  plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
+  plot_object
+}

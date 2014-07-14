@@ -275,10 +275,10 @@ scale.ranges <- function(frame, asp, ranges)
 
 ##### accessor functions
 
-re_Chart <- function() current.chob()
-chart_asp <- function() current.chob()$get_asp()
-chart_ylim <- function() current.chob()$get_ylim()
-chart_xlim <- function() current.chob()$get_xlim()
+re_Chart <- function() current.xts_chob()
+chart_asp <- function() current.xts_chob()$get_asp()
+chart_ylim <- function() current.xts_chob()$get_ylim()
+chart_xlim <- function() current.xts_chob()$get_xlim()
 
 actions <- function(obj) obj$Env$actions
-chart_actions <- function() actions(current.chob())
+chart_actions <- function() actions(current.xts_chob())
