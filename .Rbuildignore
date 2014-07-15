@@ -20,3 +20,5 @@ man/stl\.xts\.Rd
 man/xtsdf\.Rd
 ^.*\.Rproj$
 ^\.Rproj\.user$
+
+sandbox
