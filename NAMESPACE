@@ -13,6 +13,16 @@ export("default.panel")
 S3method(plot, xts)
 S3method(barplot, xts)
 
+export("plot2_xts")
+export("chart_pars")
+export("xtsExtraTheme")
+export("addDrawdowns")
+export("addLines")
+export("addReturns")
+export("addRollingPerformance")
+S3method(print, replot_xts)
+S3method(plot, replot_xts)
+
 ## Analytics -- All blocked out for now
 
 #export("acf")

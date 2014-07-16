@@ -1,72 +1,47 @@
 library(xtsExtra)
 library(PerformanceAnalytics)
-
+source("sandbox/paFUN.R")
 
 data(edhec)
-R <- edhec[,1:2]
+R <- edhec[,1:4]
 
-chart.TimeSeries(R)
+# basic plot with defaults
 plot2_xts(R)
 
-charts.TimeSeries(R) 
-# charts.TimeSeries messes up par("mar") so I need to call dev.off()
-dev.off()
-# the titles are gett
+# assign to a variable and then print it results in a plot
+x <- plot2_xts(R)
+class(x)
+x
+
+# small multiples, line plot of each column
 plot2_xts(R, byColumn=TRUE)
 
-chart.Bar(R[,1])
+# bar chart of returns
 plot2_xts(R[,1], type="h")
 
-charts.Bar(R)
-# charts.TimeSeries messes up par("mar") so I need to call dev.off() to reset
-dev.off()
+# bar chart of returns
+# NOTE: only plots the first column of returns data
+plot2_xts(R, type="h")
+
+# small multiples, bar chart of each column
 plot2_xts(R, byColumn=TRUE, type="h")
 
-# Replicates charts.PerformanceSummary
+# Replicate charts.PerformanceSummary
 plot2_xts(R, mainPanel=list(name="CumReturns"))
-addReturns()
+addReturns(type="h")
 addDrawdowns()
 
-plot2_xts(R)
+# layout safe
+# layout(matrix(1:4, 2, 2))
+# for(i in 1:4) {plot(plot2_xts(R[,i], type="h"))}
+# layout(matrix(1))
+
+# Rolling performance
+plot2_xts(R, mainPanel=list(name="CumReturns"))
 addRollingPerformance()
 addRollingPerformance(FUN="StdDev.annualized")
 addRollingPerformance(FUN="SharpeRatio.annualized")
 
-
-# The main title gets messed up when adding panels
-# plot2_xts(R)
-# x <- current.chob()
-# ls.str(x)
-# ls.str(x$Env)
-# 
-# addDrawdowns()
-# addDrawdowns()
-# x <- current.chob()
-# ls.str(x)
-# ls.str(x$Env)
-# 
-# 
-# chart.TimeSeries(R, auto.grid=FALSE)
-# plot2_xts(R, auto.grid=FALSE)
-# 
-# 
-# charts.TimeSeries(R)
-# plot2_xts(R, byColumn=TRUE)
-# title("Edhec Returns")
-# 
-# cl <- chartLayout(matrix(1:5), 1, c(2,2,1,1,1))
-# plot2_xts(R, byColumn=TRUE, layout=cl)
-# title("Edhec Returns")
-# 
-# x <- current.chob()
-# Get the structure of the environments
-# ls.str(x)
-# ls.str(x$Env)
-
-# getSymbols("YHOO", src="yahoo")
-# chart_Series(YHOO)
-# add_RSI()
-# add_MACD()
 
 ##### scratch area #####
 # Should we have a theme object, as in quantmod, that sets all of the basic 
@@ -80,12 +55,6 @@ addRollingPerformance(FUN="SharpeRatio.annualized")
 # panels
 # chart specifications
 # - specifications for common charts (e.g. charts.PerformanceSummary)
-
-# what is he doing with frame and asp in chart_Series?
-# what are the following variables used for
-# frame
-# asp
-# clip
 
 # http://www.lemnica.com/esotericR/Introducing-Closures/
 
