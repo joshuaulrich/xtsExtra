@@ -8,6 +8,9 @@ R <- edhec[,1:4]
 # basic plot with defaults
 plot2_xts(R)
 
+plot2_xts(R, mainPanel=list(name="CumReturns"),
+          panels=c("addReturns(type='h')", "addDrawdowns()"))
+
 # assign to a variable and then print it results in a plot
 x <- plot2_xts(R)
 class(x)
@@ -15,6 +18,12 @@ x
 
 # small multiples, line plot of each column
 plot2_xts(R, byColumn=TRUE)
+
+layout(matrix(1:2))
+plot2_xts(R, byColumn=2)
+layout(matrix(1))
+
+plot2_xts(R[,1])
 
 # bar chart of returns
 plot2_xts(R[,1], type="h")
@@ -31,10 +40,24 @@ plot2_xts(R, mainPanel=list(name="CumReturns"))
 addReturns(type="h")
 addDrawdowns()
 
+# Replicate charts.Performance Summary in a 2x2 layout
+# y-axis range here can be deceiving
+layout(matrix(1:4, 2, 2))
+for(i in 1:ncol(R)){
+  p <- plot2_xts(R[,i], mainPanel=list(name="CumReturns"),
+                 panels=c("addReturns(type='h')", "addDrawdowns()"),
+                 name=colnames(R)[i])
+  print(p)
+}
+layout(matrix(1))
+
+# make chart specifications simple functions that return expressions to
+# evaluate just like panels
+
 # layout safe
-# layout(matrix(1:4, 2, 2))
-# for(i in 1:4) {plot(plot2_xts(R[,i], type="h"))}
-# layout(matrix(1))
+layout(matrix(1:4, 2, 2))
+for(i in 1:4) {plot(plot2_xts(R[,i], type="h"))}
+layout(matrix(1))
 
 # Rolling performance
 plot2_xts(R, mainPanel=list(name="CumReturns"))

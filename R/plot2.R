@@ -201,7 +201,7 @@ plot2_xts <- function(x,
     args <- mainPanel$args
     .formals <- formals(FUN)
     .formals <- modify.args(formals=.formals, arglist=args, dots=TRUE)
-    if("R" %in% names(.formals)) .formals <- modify.args(formals=.formals, arglist=NULL, R=R, dots=TRUE)
+    if("R" %in% names(.formals)) .formals <- modify.args(formals=.formals, arglist=NULL, R=x, dots=TRUE)
     .formals$... <- NULL
     R <- try(do.call(FUN, .formals), silent=TRUE)
     if(inherits(R, "try-error")) { 
@@ -368,24 +368,22 @@ plot2_xts <- function(x,
     }
   } else {
     cs$add(expression(chart.lines(R[xsubset], type=type)),expr=TRUE)
+    assign(".xts_chob", cs, .plotxtsEnv)
   }
-  assign(".xts_chob", cs, .plotxtsEnv)
   
   # Plot the panels or default to a simple line chart
-  #if(!is.null(panel) && nchar(panel) > 0) {
-  #  panel <- parse(text=panel, srcfile=NULL)
-  #  for( p in 1:length(panel)) {
-  #    if(length(panel[p][[1]][-1]) > 0) {
-  #      cs <- eval(panel[p])
-  #    } else {
-  #      cs <- eval(panel[p])
-  #    }
-  #  }
-  #} else {
-  #  cs$add(expression(chart.lines(xdata[xsubset])),expr=TRUE)
-  #}
-  # assign(".xts_chob", cs, .plotxtsEnv)
-  
+  if(!is.null(panels) && nchar(panels) > 0) {
+    panels <- parse(text=panels, srcfile=NULL)
+    for( p in 1:length(panels)) {
+      if(length(panels[p][[1]][-1]) > 0) {
+        cs <- eval(panels[p])
+      } else {
+        cs <- eval(panels[p])
+      }
+    }
+  }
+
+  assign(".xts_chob", cs, .plotxtsEnv)
   cs
 } #}}}
 
