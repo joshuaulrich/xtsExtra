@@ -8,9 +8,6 @@ R <- edhec[,1:4]
 # basic plot with defaults
 plot2_xts(R)
 
-plot2_xts(R, mainPanel=list(name="CumReturns"),
-          panels=c("addReturns(type='h')", "addDrawdowns()"))
-
 # assign to a variable and then print it results in a plot
 x <- plot2_xts(R)
 class(x)
@@ -20,7 +17,7 @@ x
 plot2_xts(R, byColumn=TRUE)
 
 layout(matrix(1:2))
-plot2_xts(R, byColumn=2)
+plot2_xts(R, byColumn=2, type="h")
 layout(matrix(1))
 
 plot2_xts(R[,1])
@@ -40,6 +37,15 @@ plot2_xts(R, mainPanel=list(name="CumReturns"))
 addReturns(type="h")
 addDrawdowns()
 
+
+plot2_xts(R, mainPanel=list(name="CumReturns"),
+          panels=c("addReturns(type='h')", "addDrawdowns()"))
+
+layout(matrix(1:4, 2, 2))
+plot2_xts(R, byColumn=1, mainPanel=list(name="CumReturns"),
+          panels=c("addReturns(type='h')", "addDrawdowns()"))
+layout(matrix(1))
+
 # Replicate charts.Performance Summary in a 2x2 layout
 # y-axis range here can be deceiving
 layout(matrix(1:4, 2, 2))
@@ -51,12 +57,15 @@ for(i in 1:ncol(R)){
 }
 layout(matrix(1))
 
-# make chart specifications simple functions that return expressions to
-# evaluate just like panels
-
-# layout safe
+# layout safe: loop over returns
 layout(matrix(1:4, 2, 2))
 for(i in 1:4) {plot(plot2_xts(R[,i], type="h"))}
+layout(matrix(1))
+
+# layout safe: easier to specify byColumn=1
+# NOTE: y-axis matches even with multiple pages (i.e. graphics devices)
+layout(matrix(1:4, 2, 2))
+plot2_xts(R, byColumn=1, type="h")
 layout(matrix(1))
 
 # Rolling performance
