@@ -1,5 +1,6 @@
 library(xtsExtra)
 library(PerformanceAnalytics)
+library(quantmod)
 source("sandbox/paFUN.R")
 
 data(edhec)
