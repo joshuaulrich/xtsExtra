@@ -76,7 +76,7 @@ plot2_xts <- function(x,
                       panels=NULL,
                       byColumn=FALSE,
                       type="l",
-                      name=deparse(substitute(x)), 
+                      main=deparse(substitute(x)), 
                       subset="", 
                       clev=0,
                       pars=chart_pars(), theme=xtsExtraTheme(),
@@ -106,7 +106,7 @@ plot2_xts <- function(x,
     for(i in 1:length(chunks)){
       tmp <- chunks[[i]]
       p <- plot2_xts(x=x[,tmp], FUN=FUN, panels=panels, 
-                     byColumn=byColumn, type=type, name=name, subset=subset, 
+                     byColumn=byColumn, type=type, main=main, subset=subset, 
                      clev=clev, pars=pars, theme=theme, ylim=ylim, ...=...)
       if(i < length(chunks))
         print(p)
@@ -285,11 +285,11 @@ plot2_xts <- function(x,
                          las=1,lwd.ticks=1,mgp=c(3,1.5,0),tcl=-0.4,cex.axis=.9)),
          expr=TRUE)
   
-  # add name and start/end dates
+  # add main and start/end dates
   if((isTRUE(byColumn)) | (byColumn == 1) | (NCOL(x) == 1))
-    cs$Env$name <- cs$Env$column_names[1] else cs$Env$name <- name
+    cs$Env$main <- cs$Env$column_names[1] else cs$Env$main <- main
   
-  text.exp <- c(expression(text(1-1/3,0.5,name,font=2,col='#444444',offset=0,cex=1.1,pos=4)),
+  text.exp <- c(expression(text(1-1/3,0.5,main,font=2,col='#444444',offset=0,cex=1.1,pos=4)),
                 expression(text(NROW(xdata[xsubset]),0.5,
                                 paste(start(xdata[xsubset]),end(xdata[xsubset]),sep=" / "),
                                 col=1,adj=c(0,0),pos=2)))
@@ -336,12 +336,12 @@ plot2_xts <- function(x,
     # set up based on the code above
     lenv <- new.env()
     lenv$xdata <- cs$Env$R[,1][subset]
-    lenv$name <- cs$Env$colum_names[1]
+    lenv$main <- cs$Env$colum_names[1]
     #lenv$ymax <- range(cs$Env$R[subset])[2]
     lenv$type <- cs$Env$type
     exp <- expression(chart.lines(xdata, type=type, colorset=theme$colorset, 
                                   up.col=theme$up.col, dn.col=theme$dn.col))
-    #exp <- c(exp, expression(text(1, ymax, adj=c(0,0), pos=4, cex=0.9, offset=0, labels=name)))
+    #exp <- c(exp, expression(text(1, ymax, adj=c(0,0), pos=4, cex=0.9, offset=0, labels=main)))
     # Add expression for the main plot
     cs$add(exp, env=c(lenv,cs$Env), expr=TRUE)
     
@@ -350,7 +350,7 @@ plot2_xts <- function(x,
         # create a local environment
         lenv <- new.env()
         lenv$xdata <- cs$Env$R[,i][subset]
-        lenv$name <- cs$Env$column_names[i]
+        lenv$main <- cs$Env$column_names[i]
         lenv$ylim <- cs$Env$constant_ylim
         lenv$type <- cs$Env$type
         
@@ -359,7 +359,7 @@ plot2_xts <- function(x,
         cs$next_frame()
         text.exp <- expression(text(x=1,
                                     y=0.5,
-                                    labels=name,
+                                    labels=main,
                                     adj=c(0,0),cex=0.9,offset=0,pos=4))
         cs$add(text.exp, env=c(lenv,cs$Env), expr=TRUE)
         
@@ -433,7 +433,7 @@ plot2_xts <- function(x,
 
 addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
   lenv <- new.env()
-  lenv$name <- "Drawdowns"
+  lenv$main <- "Drawdowns"
   lenv$plot_drawdowns <- function(x, geometric, ...) {
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
@@ -465,7 +465,7 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
   # add the frame for drawdowns info
   plot_object$add_frame(ylim=c(0,1),asp=0.25)
   plot_object$next_frame()
-  text.exp <- expression(text(x=1, y=0.3, labels=name,
+  text.exp <- expression(text(x=1, y=0.3, labels=main,
                               col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
   plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
   
@@ -498,11 +498,11 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
 }
 
 # based on quantmod::add_TA
-addLines <- function(x, name="", order=NULL, on=NA, legend="auto",
+addLines <- function(x, main="", order=NULL, on=NA, legend="auto",
                      yaxis=list(NULL,NULL),
                      col=1, type="l", ...) { 
   lenv <- new.env()
-  lenv$name <- name
+  lenv$main <- main
   lenv$plot_ta <- function(x, ta, on, type, col,...) {
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
@@ -563,7 +563,7 @@ addLines <- function(x, name="", order=NULL, on=NA, legend="auto",
     plot_object$next_frame()
     text.exp <- expression(text(x=1,
                                 y=0.3,
-                                labels=name,
+                                labels=main,
                                 col=c(1,col),adj=c(0,0),cex=0.9,offset=0,pos=4))
     plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
     
@@ -605,10 +605,10 @@ addLines <- function(x, name="", order=NULL, on=NA, legend="auto",
   plot_object
 } #}}}
 
-addReturns <- function(type="h", name=NULL, ylim=NULL){
+addReturns <- function(type="h", main=NULL, ylim=NULL){
   # This just plots the raw returns data
   lenv <- new.env()
-  if(is.null(name)) lenv$name <- "Returns" else lenv$name <- name
+  if(is.null(main)) lenv$main <- "Returns" else lenv$main <- main
   lenv$plot_returns <- function(x, type) {
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
@@ -646,7 +646,7 @@ addReturns <- function(type="h", name=NULL, ylim=NULL){
   # add the frame for time series info
   plot_object$add_frame(ylim=c(0,1),asp=0.25)
   plot_object$next_frame()
-  text.exp <- expression(text(x=1, y=0.3, labels=name,
+  text.exp <- expression(text(x=1, y=0.3, labels=main,
                               col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
   plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
   
@@ -680,7 +680,7 @@ addReturns <- function(type="h", name=NULL, ylim=NULL){
 
 addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, ylim=NULL, ...){
   lenv <- new.env()
-  lenv$name <- paste("Rolling", FUN)
+  lenv$main <- paste("Rolling", FUN)
   lenv$plot_performance <- function(x, width, FUN, fill, ...) {
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
@@ -715,7 +715,7 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
   # add the frame for drawdowns info
   plot_object$add_frame(ylim=c(0,1),asp=0.25)
   plot_object$next_frame()
-  text.exp <- expression(text(x=1, y=0.3, labels=name,
+  text.exp <- expression(text(x=1, y=0.3, labels=main,
                               adj=c(0,0),cex=0.9,offset=0,pos=4))
   plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
   
