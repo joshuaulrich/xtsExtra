@@ -34,16 +34,16 @@ plot2_xts(R, type="h")
 plot2_xts(R, byColumn=TRUE, type="h")
 
 # Replicate charts.PerformanceSummary
-plot2_xts(R, mainPanel=list(name="CumReturns"))
+plot2_xts(R, FUN="CumReturns")
 addReturns(type="h")
 addDrawdowns()
 
 
-plot2_xts(R, mainPanel=list(name="CumReturns"),
+plot2_xts(R, FUN="CumReturns",
           panels=c("addReturns(type='h')", "addDrawdowns()"))
 
 layout(matrix(1:4, 2, 2))
-plot2_xts(R, byColumn=1, mainPanel=list(name="CumReturns"),
+plot2_xts(R, byColumn=1, FUN="CumReturns",
           panels=c("addReturns(type='h')", "addDrawdowns()"))
 layout(matrix(1))
 
@@ -51,7 +51,7 @@ layout(matrix(1))
 # y-axis range here can be deceiving
 layout(matrix(1:4, 2, 2))
 for(i in 1:ncol(R)){
-  p <- plot2_xts(R[,i], mainPanel=list(name="CumReturns"),
+  p <- plot2_xts(R[,i], FUN="CumReturns",
                  panels=c("addReturns(type='h')", "addDrawdowns()"),
                  name=colnames(R)[i])
   print(p)
@@ -70,7 +70,8 @@ plot2_xts(R, byColumn=1, type="h")
 layout(matrix(1))
 
 # Rolling performance
-plot2_xts(R, mainPanel=list(name="CumReturns"))
+plot2_xts(R, FUN="CumReturns", geometric=FALSE)
+plot2_xts(R, FUN="CumReturns", geometric=TRUE, wealth.index=TRUE)
 addRollingPerformance()
 addRollingPerformance(FUN="StdDev.annualized")
 addRollingPerformance(FUN="SharpeRatio.annualized")

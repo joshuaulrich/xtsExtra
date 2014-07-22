@@ -72,7 +72,7 @@ xtsExtraTheme <- function(){
 }
 
 plot2_xts <- function(x, 
-                      mainPanel=NULL,
+                      FUN=NULL,
                       panels=NULL,
                       byColumn=FALSE,
                       type="l",
@@ -99,13 +99,13 @@ plot2_xts <- function(x,
       # we will plot the returns by column, but not the panels
       byColumn <- TRUE
       panels <- NULL
-      mainPanel <- NULL
+      FUN <- NULL
       ylim <- range(na.omit(x[subset]))
     }
     
     for(i in 1:length(chunks)){
       tmp <- chunks[[i]]
-      p <- plot2_xts(x=x[,tmp], mainPanel=mainPanel, panels=panels, 
+      p <- plot2_xts(x=x[,tmp], FUN=FUN, panels=panels, 
                      byColumn=byColumn, type=type, name=name, subset=subset, 
                      clev=clev, pars=pars, theme=theme, ylim=ylim, ...=...)
       if(i < length(chunks))
@@ -213,16 +213,15 @@ plot2_xts <- function(x,
   
   # Compute transformation if specified by panel argument
   # rough prototype for calling a function for the main "panel"
-  if(!is.null(mainPanel)){
-    FUN <- match.fun(mainPanel$name)
-    args <- mainPanel$args
-    .formals <- formals(FUN)
-    .formals <- modify.args(formals=.formals, arglist=args, dots=TRUE)
+  if(!is.null(FUN)){
+    fun <- match.fun(FUN)
+    .formals <- formals(fun)
+    .formals <- modify.args(formals=.formals, arglist=list(...), dots=TRUE)
     if("R" %in% names(.formals)) .formals <- modify.args(formals=.formals, arglist=NULL, R=x, dots=TRUE)
     .formals$... <- NULL
-    R <- try(do.call(FUN, .formals), silent=TRUE)
+    R <- try(do.call(fun, .formals), silent=TRUE)
     if(inherits(R, "try-error")) { 
-      message(paste("mainPanel function failed with message", R))
+      message(paste("FUN function failed with message", R))
       cs$Env$R <- x
     } else {
       cs$Env$R <- R
