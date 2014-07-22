@@ -74,7 +74,7 @@ xtsExtraTheme <- function(){
 plot2_xts <- function(x, 
                       FUN=NULL,
                       panels=NULL,
-                      byColumn=FALSE,
+                      multi.panel=FALSE,
                       type="l",
                       main=deparse(substitute(x)), 
                       subset="", 
@@ -83,21 +83,21 @@ plot2_xts <- function(x,
                       ylim=NULL,
                       ...){
   
-  # Small multiples with multiple pages behavior occurs when byColumn is
-  # an integer. (i.e. bycolumn=2 means to iterate over the data in a step
+  # Small multiples with multiple pages behavior occurs when multi.panel is
+  # an integer. (i.e. multi.panel=2 means to iterate over the data in a step
   # size of 2 and plot 2 panels on each page
   # Make recursive calls and return
-  if(is.numeric(byColumn)){
-    byColumn <- min(NCOL(x), byColumn)
+  if(is.numeric(multi.panel)){
+    multi.panel <- min(NCOL(x), multi.panel)
     idx <- seq.int(1L, NCOL(x), 1L)
-    chunks <- split(idx, ceiling(seq_along(idx)/byColumn))
+    chunks <- split(idx, ceiling(seq_along(idx)/multi.panel))
     
     if(!is.null(panels) && nchar(panels) > 0){
       # we will plot the panels, but not plot the returns by column
-      byColumn <- FALSE
+      multi.panel <- FALSE
     } else {
       # we will plot the returns by column, but not the panels
-      byColumn <- TRUE
+      multi.panel <- TRUE
       panels <- NULL
       FUN <- NULL
       ylim <- range(na.omit(x[subset]))
@@ -106,7 +106,7 @@ plot2_xts <- function(x,
     for(i in 1:length(chunks)){
       tmp <- chunks[[i]]
       p <- plot2_xts(x=x[,tmp], FUN=FUN, panels=panels, 
-                     byColumn=byColumn, type=type, main=main, subset=subset, 
+                     multi.panel=multi.panel, type=type, main=main, subset=subset, 
                      clev=clev, pars=pars, theme=theme, ylim=ylim, ...=...)
       if(i < length(chunks))
         print(p)
@@ -166,7 +166,7 @@ plot2_xts <- function(x,
   environment(cs$subset) <- environment(cs$get_asp)
   
   # add theme and charting parameters to Env
-  if(byColumn){
+  if(multi.panel){
     cs$set_asp(NCOL(x))
   } else {
     cs$set_asp(3)
@@ -286,7 +286,7 @@ plot2_xts <- function(x,
          expr=TRUE)
   
   # add main and start/end dates
-  if((isTRUE(byColumn)) | (byColumn == 1) | (NCOL(x) == 1))
+  if((isTRUE(multi.panel)) | (multi.panel == 1) | (NCOL(x) == 1))
     cs$Env$main <- cs$Env$column_names[1] else cs$Env$main <- main
   
   text.exp <- c(expression(text(1-1/3,0.5,main,font=2,col='#444444',offset=0,cex=1.1,pos=4)),
@@ -331,7 +331,7 @@ plot2_xts <- function(x,
   
   # add main series
   cs$set_frame(2)
-  if(isTRUE(byColumn)){
+  if(isTRUE(multi.panel)){
     # We need to plot the first "panel" here because the plot area is
     # set up based on the code above
     lenv <- new.env()

@@ -15,10 +15,10 @@ class(x)
 x
 
 # small multiples, line plot of each column
-plot2_xts(R, byColumn=TRUE)
+plot2_xts(R, multi.panel=TRUE)
 
 layout(matrix(1:2))
-plot2_xts(R, byColumn=2, type="h")
+plot2_xts(R, multi.panel=2, type="h")
 layout(matrix(1))
 
 plot2_xts(R[,1])
@@ -31,7 +31,7 @@ plot2_xts(R[,1], type="h")
 plot2_xts(R, type="h")
 
 # small multiples, bar chart of each column
-plot2_xts(R, byColumn=TRUE, type="h")
+plot2_xts(R, multi.panel=TRUE, type="h")
 
 # Replicate charts.PerformanceSummary
 plot2_xts(R, FUN="CumReturns")
@@ -43,7 +43,7 @@ plot2_xts(R, FUN="CumReturns",
           panels=c("addReturns(type='h')", "addDrawdowns()"))
 
 layout(matrix(1:4, 2, 2))
-plot2_xts(R, byColumn=1, FUN="CumReturns",
+plot2_xts(R, multi.panel=1, FUN="CumReturns",
           panels=c("addReturns(type='h')", "addDrawdowns()"))
 layout(matrix(1))
 
@@ -63,10 +63,10 @@ layout(matrix(1:4, 2, 2))
 for(i in 1:4) {plot(plot2_xts(R[,i], type="h"))}
 layout(matrix(1))
 
-# layout safe: easier to specify byColumn=1
+# layout safe: easier to specify multi.panel=1
 # NOTE: y-axis matches even with multiple pages (i.e. graphics devices)
 layout(matrix(1:4, 2, 2))
-plot2_xts(R, byColumn=1, type="h")
+plot2_xts(R, multi.panel=1, type="h")
 layout(matrix(1))
 
 # Rolling performance
