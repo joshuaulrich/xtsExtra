@@ -16,6 +16,7 @@ x
 
 # small multiples, line plot of each column
 plot2_xts(R, multi.panel=TRUE)
+plot2_xts(R, multi.panel=TRUE, y.axis.same=FALSE)
 
 layout(matrix(1:2))
 plot2_xts(R, multi.panel=2, type="h")

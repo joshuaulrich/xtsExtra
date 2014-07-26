@@ -81,6 +81,7 @@ plot2_xts <- function(x,
                       clev=0,
                       pars=chart_pars(), theme=xtsExtraTheme(),
                       ylim=NULL,
+                      y.axis.same=TRUE,
                       ...){
   
   # Small multiples with multiple pages behavior occurs when multi.panel is
@@ -100,7 +101,11 @@ plot2_xts <- function(x,
       multi.panel <- TRUE
       panels <- NULL
       FUN <- NULL
-      ylim <- range(na.omit(x[subset]))
+      if(y.axis.same){
+        ylim <- range(na.omit(x[subset]))
+      } else {
+        ylim <- NULL
+      }
     }
     
     for(i in 1:length(chunks)){
@@ -237,9 +242,21 @@ plot2_xts <- function(x,
   # chart_Series uses fixed=FALSE and add_* uses fixed=TRUE, not sure why or
   # which is best.
   if(is.null(ylim)){
-    cs$set_ylim(list(structure(range(na.omit(cs$Env$R[subset])),fixed=TRUE)))
+    if(isTRUE(multi.panel)){
+      if(y.axis.same){
+        # set the ylim for the first panel based on all the data
+        cs$set_ylim(list(structure(range(na.omit(cs$Env$R[subset])),fixed=TRUE)))
+      } else {
+        # set the ylim for the first panel based on the first column
+        cs$set_ylim(list(structure(range(na.omit(cs$Env$R[,1][subset])),fixed=TRUE))) 
+      }
+    } else {
+      # set the ylim based on all the data if this is not a multi.panel plot
+      cs$set_ylim(list(structure(range(na.omit(cs$Env$R[subset])),fixed=TRUE)))
+    }
     cs$Env$constant_ylim <- range(na.omit(cs$Env$R[subset]))
   } else {
+    # use the ylim arg passed in
     cs$set_ylim(list(structure(ylim, fixed=TRUE)))
     cs$Env$constant_ylim <- ylim
   }
@@ -351,7 +368,11 @@ plot2_xts <- function(x,
         lenv <- new.env()
         lenv$xdata <- cs$Env$R[,i][subset]
         lenv$main <- cs$Env$column_names[i]
-        lenv$ylim <- cs$Env$constant_ylim
+        if(y.axis.same){
+          lenv$ylim <- cs$Env$constant_ylim
+        } else {
+          lenv$ylim <- range(na.omit(cs$Env$R[,i][subset]))
+        }
         lenv$type <- cs$Env$type
         
         # Add a small frame for the time series info
@@ -365,7 +386,7 @@ plot2_xts <- function(x,
         
         # Add the frame for the sub-plots
         # Set the ylim based on the (potentially) transformed data in cs$Env$R
-        cs$add_frame(ylim=cs$Env$constant_ylim, asp=NCOL(cs$Env$xdata), fixed=TRUE)
+        cs$add_frame(ylim=lenv$ylim, asp=NCOL(cs$Env$xdata), fixed=TRUE)
         cs$next_frame()
         
         exp <- expression(chart.lines(xdata[xsubset], type=type, 
