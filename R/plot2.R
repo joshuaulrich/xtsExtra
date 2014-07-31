@@ -18,7 +18,7 @@ chart.lines <- function(x, type="l", colorset=1:10, up.col=NULL, dn.col=NULL){
     colors <- ifelse(x[,1] < 0, dn.col, up.col)
     lines(1:NROW(x),x[,1],lwd=2,col=colors,lend=1,lty=1,type="h")
   } else {
-    for(i in 1:NCOL(x)){
+    for(i in NCOL(x):1){
       lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=1,lty=1,type="l")
     }
   }
