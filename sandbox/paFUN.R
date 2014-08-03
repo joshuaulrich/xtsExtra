@@ -81,7 +81,7 @@ CumReturns <-
     
     return(Return.cumulative)
   }
-
+#addingtest command from performance 
 RollingPerformance <- function (R, width = 12, FUN = "Return.annualized", ..., fill = NA)
 { # @author Peter Carl
   
@@ -129,4 +129,121 @@ RollingPerformance <- function (R, width = 12, FUN = "Return.annualized", ..., f
   }
   colnames(Return.calc) = columnnames
   Return.calc
+}
+##adding another test
+ACFwoo <- function(R, maxlag = NULL, elementcolor = "gray", main = NULL, ...)
+{ # @author David Stoffer and Robert Shumway
+  # @modifiedby Peter Carl
+  
+  # DESCRIPTION:
+  
+  # Inspired by the same charts as chart.ACFplus.R
+  
+  # From the website: http://www.stat.pitt.edu/stoffer/tsa2/Rcode/acf2.R
+  # "...here's an R function that will plot the ACF and PACF of a time series 
+  # at the same time on the SAME SCALE, and it leaves out the zero lag in the 
+  # ACF: acf2.R. If your time series is in x and you want the ACF and PACF of 
+  # x to lag 50, the call to the function is acf2(x,50). The number of lags 
+  # is optional, so acf2(x) will use a default number of lags [√n + 10, where 
+  # n is the number of observations]."
+  
+  # This function uses those same defaults to print just the ACF chart.
+  
+  R = checkData(R)
+  data = checkData(R[,1], method="vector", na.rm = TRUE)
+  
+  columns = ncol(R)
+  rows = nrow(R)
+  columnnames = colnames(R)
+  
+  if(is.null(main))
+    main = columnnames[1]
+  
+  num = length(data)
+  if (is.null(maxlag)) 
+    maxlag = ceiling(10 + sqrt(num))
+  ACF = acf(data, maxlag, plot = FALSE)$acf[-1]
+  Lag = 1:length(ACF)/frequency(data)
+  minA = min(ACF)
+  U = 2/sqrt(num)
+  L = -U
+  minu = min(minA, L) - .01
+  
+  plot(Lag, ACF, type = "h", ylim = c(minu,1), main = main, axes = FALSE, ...)
+  box(col=elementcolor)
+  axis(2, col = elementcolor, cex.axis = 0.8)
+  axis(1, col = elementcolor, cex.axis = 0.8)
+  abline(h=c(0,L,U), lty=c(1,2,2), col=c(1,4,4))
+  
+}
+
+rollingreg= function (Ra, Rb, width = 12, Rf = 0, main = NULL, legend.loc = NULL, event.labels=NULL, ...)
+{ # @author Peter Carl
+  
+  # DESCRIPTION:
+  # A wrapper to create a panel of RollingRegression charts that demonstrates
+  # how the attributes change through time.
+  
+  # Inputs:
+  # Ra: a matrix, data frame, or timeSeries, usually a set of monthly returns.
+  #   The first column is assumed to be the returns of interest, the next
+  #   columns are assumed to be relevant benchmarks for comparison.
+  # Rb: a matrix, data frame, or timeSeries that is a set of returns of the
+  #   same scale and periodicity as R.
+  # Rf: the risk free rate.  Remember to set this to the same periodicity
+  #   as the data being passed in.
+  # attribute: Used to select the regression parameter to use in the chart  May
+  #   be any of:
+  #     Alpha - shows the y-intercept
+  #     Beta - shows the slope of the regression line
+  #     R-Squared - shows the fit of the regression to the data
+  #
+  
+  # Outputs:
+  # A stack of three related timeseries line charts
+  
+  # FUNCTION:
+  
+  columns.a = ncol(Ra)
+  columns.b = ncol(Rb)
+  
+  #     if(columns.a > 1 | columns.b > 1)
+  #         legend.loc = "topleft"
+  #     else
+  #         legend.loc = NULL
+  
+  #    plot.new()
+  
+  op <- par(no.readonly=TRUE)
+  
+  layout(matrix(c(1,2,3)),heights=c(1.3,1,1.3),widths=1)
+  
+  par(mar=c(1,4,4,2))
+  if(is.null(main)){
+    freq = periodicity(Ra)
+    
+    switch(freq$scale,
+           minute = {freq.lab = "minute"},
+           hourly = {freq.lab = "hour"},
+           daily = {freq.lab = "day"},
+           weekly = {freq.lab = "week"},
+           monthly = {freq.lab = "month"},
+           quarterly = {freq.lab = "quarter"},
+           yearly = {freq.lab = "year"}
+    )
+    
+    main = paste("Rolling ",width,"-",freq.lab," Regressions", sep="")
+  }
+  
+  rollingreg(Ra, Rb, width = width, Rf = Rf, attribute = "Alpha", xaxis = FALSE, main = main, ylab = "Alpha", legend.loc=legend.loc, event.labels = event.labels, ...)
+  
+  par(mar=c(1,4,0,2))
+  
+  rollingreg(Ra, Rb, width = width, Rf = Rf, attribute = "Beta", main = "", ylab = "Beta", xaxis = FALSE, event.labels = NULL, ...)
+  
+  par(mar=c(5,4,0,2))
+  
+  rollingreg(Ra, Rb, width = width, Rf = Rf, attribute = "R-Squared", main = "", ylab = "R-Squared", event.labels = NULL, ...)
+  
+  par(op)
 }
