@@ -77,6 +77,9 @@ addRollingPerformance()
 addRollingPerformance(FUN="StdDev.annualized")
 addRollingPerformance(FUN="SharpeRatio.annualized")
 
+x <- xtsExtra:::current.xts_chob()
+x$Env$call_list
+x$Env$call_list[[1]]
 
 ##### scratch area #####
 # Should we have a theme object, as in quantmod, that sets all of the basic 

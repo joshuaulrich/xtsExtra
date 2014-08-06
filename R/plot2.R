@@ -198,6 +198,8 @@ plot2_xts <- function(x,
   cs$Env$ticks.on <- grid.ticks.on
   cs$Env$grid.ticks.lwd <- theme$grid.ticks.lwd
   cs$Env$type <- type
+  cs$Env$call_list <- list()
+  cs$Env$call_list[[1]] <- match.call()
   
   # Do some checks on x
   if(is.character(x))
@@ -477,6 +479,9 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
                srcfile=NULL)
   
   plot_object <- current.xts_chob()
+  ncalls <- length(plot_object$Env$call_list)
+  plot_object$Env$call_list[[ncalls+1]] <- match.call()
+  
   xdata <- plot_object$Env$xdata
   xsubset <- plot_object$Env$xsubset
   
@@ -565,6 +570,8 @@ addLines <- function(x, main="", order=NULL, on=NA, legend="auto",
                                                        type=type,col=col,...)))),
                srcfile=NULL)
   plot_object <- current.xts_chob()
+  ncalls <- length(plot_object$Env$call_list)
+  plot_object$Env$call_list[[ncalls+1]] <- match.call()
   xdata <- plot_object$Env$xdata
   xsubset <- plot_object$Env$xsubset
   if(is.logical(x)) no.update <- TRUE else no.update <- FALSE
@@ -653,6 +660,8 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
                srcfile=NULL)
   
   plot_object <- current.xts_chob()
+  ncalls <- length(plot_object$Env$call_list)
+  plot_object$Env$call_list[[ncalls+1]] <- match.call()
   
   # get the raw returns data
   xdata <- plot_object$Env$xdata
@@ -726,6 +735,9 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
                srcfile=NULL)
   
   plot_object <- current.xts_chob()
+  ncalls <- length(plot_object$Env$call_list)
+  plot_object$Env$call_list[[ncalls+1]] <- match.call()
+  
   xdata <- plot_object$Env$xdata
   xsubset <- plot_object$Env$xsubset
   
