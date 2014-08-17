@@ -81,6 +81,14 @@ x <- xtsExtra:::current.xts_chob()
 x$Env$call_list
 x$Env$call_list[[1]]
 
+plot2_xts(R, FUN="CumReturns")
+plot2_xts(R, FUN="CumReturns", lty=1:4)
+plot2_xts(R, FUN="CumReturns", lty=1:4, lwd=c(3, 1, 1, 1))
+plot2_xts(R, FUN="CumReturns", lwd=c(3, 2, 2, 2), colorset=c(1, rep("gray", 3)))
+
+plot2_xts(R, yaxis.left=TRUE, yaxis.right=FALSE)
+plot2_xts(R, grid.ticks.lwd=1, grid.ticks.lty="solid", grid.col="black")
+
 ##### scratch area #####
 # Should we have a theme object, as in quantmod, that sets all of the basic 
 # parameters such as lty, lwd, las, cex, colorset, element.color, etc?

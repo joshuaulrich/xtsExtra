@@ -11,15 +11,24 @@ chart_pars <- function() {
   list(cex=0.6, mar=c(3,2,0,2))
 } # }}}
 
-chart.lines <- function(x, type="l", colorset=1:10, up.col=NULL, dn.col=NULL){
+chart.lines <- function(x, 
+                        type="l", 
+                        lty=1,
+                        lwd=2,
+                        lend=1,
+                        colorset=1:10, 
+                        up.col=NULL, 
+                        dn.col=NULL){
   if(is.null(up.col)) up.col <- "green"
   if(is.null(dn.col)) dn.col <- "red"
   if(type == "h"){
     colors <- ifelse(x[,1] < 0, dn.col, up.col)
-    lines(1:NROW(x),x[,1],lwd=2,col=colors,lend=1,lty=1,type="h")
+    lines(1:NROW(x),x[,1],lwd=2,col=colors,lend=lend,lty=1,type="h")
   } else {
+    if(length(lty) == 1) lty <- rep(lty, NCOL(x))
+    if(length(lwd) == 1) lwd <- rep(lwd, NCOL(x))
     for(i in NCOL(x):1){
-      lines(1:NROW(x),x[,i],lwd=2,col=colorset[i],lend=1,lty=1,type="l")
+      lines(1:NROW(x), x[,i], type="l", lend=lend, col=colorset[i], lty=lty[i], lwd=lwd[i])
     }
   }
 }
@@ -84,15 +93,18 @@ plot2_xts <- function(x,
                       type="l",
                       lty=1,
                       lwd=2,
+                      lend=1,
                       main=deparse(substitute(x)),  
                       clev=0,
-                      pars=chart_pars(), 
+                      cex=0.6, 
+                      mar=c(3,2,0,2), 
                       ylim=NULL,
                       yaxis.same=TRUE,
                       yaxis.left=TRUE,
                       yaxis.right=TRUE,
                       grid.ticks.on="months",
                       grid.ticks.lwd=1,
+                      grid.ticks.lty=1,
                       grid.col="darkgray",
                       labels.col="#333333",
                       format.labels=TRUE,
@@ -140,6 +152,7 @@ plot2_xts <- function(x,
                      type=type,
                      lty=lty,
                      lwd=lwd,
+                     lend=lend,
                      main=main,  
                      clev=clev,
                      pars=pars, 
@@ -149,6 +162,7 @@ plot2_xts <- function(x,
                      yaxis.right=yaxis.right,
                      grid.ticks.on=grid.ticks.on,
                      grid.ticks.lwd=grid.ticks.lwd,
+                     grid.ticks.lty=grid.ticks.lty,
                      grid.col=grid.col,
                      labels.col=labels.col,
                      format.labels=format.labels,
@@ -220,8 +234,8 @@ plot2_xts <- function(x,
   } else {
     cs$set_asp(3)
   }
-  cs$Env$cex <- pars$cex
-  cs$Env$mar <- pars$mar
+  cs$Env$cex <- cex
+  cs$Env$mar <- mar
   cs$Env$clev = min(clev+0.01,1) # (0,1]
   #cs$Env$theme$bbands <- theme$bbands
   cs$Env$theme$shading <- shading
@@ -240,9 +254,13 @@ plot2_xts <- function(x,
   #cs$Env$theme$label.bg <- label.bg
   cs$Env$theme$coarse.time <- coarse.time
   cs$Env$format.labels <- format.labels
-  cs$Env$ticks.on <- grid.ticks.on
+  cs$Env$grid.ticks.on <- grid.ticks.on
   cs$Env$grid.ticks.lwd <- grid.ticks.lwd
+  cs$Env$grid.ticks.lty <- grid.ticks.lty
   cs$Env$type <- type
+  cs$Env$lty <- lty
+  cs$Env$lwd <- lwd
+  cs$Env$lend <- lend
   cs$Env$call_list <- list()
   cs$Env$call_list[[1]] <- match.call()
   
@@ -327,7 +345,8 @@ plot2_xts <- function(x,
                     segments(atbt, #axTicksByTime2(xdata[xsubset]),
                              get_ylim()[[2]][1],
                              atbt, #axTicksByTime2(xdata[xsubset]),
-                             get_ylim()[[2]][2], col=theme$grid, lwd=grid.ticks.lwd),
+                             get_ylim()[[2]][2], 
+                             col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty),
                     axt <- axis_ticks(xdata,xsubset),
                     text(as.numeric(axt),
                          par('usr')[3]-0.2*min(strheight(axt)),
@@ -374,8 +393,9 @@ plot2_xts <- function(x,
   }
   
   # add y-axis grid lines and labels
-  exp <- expression(segments(1, y_grid_lines(constant_ylim), NROW(xdata[xsubset]), 
-                             y_grid_lines(constant_ylim), col=theme$grid))
+  exp <- expression(segments(1, y_grid_lines(constant_ylim), 
+                             NROW(xdata[xsubset]), y_grid_lines(constant_ylim), 
+                             col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty))
   if(yaxis.left){
     exp <- c(exp, 
              # left y-axis labels
@@ -403,8 +423,14 @@ plot2_xts <- function(x,
     lenv$main <- cs$Env$colum_names[1]
     #lenv$ymax <- range(cs$Env$R[subset])[2]
     lenv$type <- cs$Env$type
-    exp <- expression(chart.lines(xdata, type=type, colorset=theme$colorset, 
-                                  up.col=theme$up.col, dn.col=theme$dn.col))
+    exp <- expression(chart.lines(xdata, 
+                                  type=type, 
+                                  lty=lty,
+                                  lwd=lwd,
+                                  lend=lend,
+                                  colorset=theme$colorset, 
+                                  up.col=theme$up.col, 
+                                  dn.col=theme$dn.col))
     #exp <- c(exp, expression(text(1, ymax, adj=c(0,0), pos=4, cex=0.9, offset=0, labels=main)))
     # Add expression for the main plot
     cs$add(exp, env=c(lenv,cs$Env), expr=TRUE)
@@ -436,7 +462,11 @@ plot2_xts <- function(x,
         cs$add_frame(ylim=lenv$ylim, asp=NCOL(cs$Env$xdata), fixed=TRUE)
         cs$next_frame()
         
-        exp <- expression(chart.lines(xdata[xsubset], type=type, 
+        exp <- expression(chart.lines(xdata[xsubset], 
+                                      type=type, 
+                                      lty=lty,
+                                      lwd=lwd,
+                                      lend=lend,
                                       colorset=theme$colorset, 
                                       up.col=theme$up.col, 
                                       dn.col=theme$dn.col))
@@ -451,14 +481,16 @@ plot2_xts <- function(x,
         # NOTE 'exp' was defined earlier as chart.lines
         exp <- c(exp, 
                  # y-axis grid lines
-                 expression(segments(1,y_grid_lines(ylim),NROW(xdata[xsubset]), 
-                                     y_grid_lines(ylim), col=theme$grid)),
+                 expression(segments(1,y_grid_lines(ylim),
+                                     NROW(xdata[xsubset]), y_grid_lines(ylim), 
+                                     col=theme$grid, lwd=gird.ticks.lwd, lty=grid.ticks.lty)),
                  # x-axis grid lines
                  expression(atbt <- axTicksByTime2(xdata[xsubset]),
                             segments(atbt, #axTicksByTime2(xdata[xsubset]),
                                      ylim[1],
                                      atbt, #axTicksByTime2(xdata[xsubset]),
-                                     ylim[2], col=theme$grid)))
+                                     ylim[2], 
+                                     col=theme$grid, lwd=gird.ticks.lwd, lty=grid.ticks.lty)))
         if(yaxis.left){
           exp <- c(exp, 
                    # y-axis labels/boxes
@@ -476,7 +508,11 @@ plot2_xts <- function(x,
       }
   }
   } else {
-    cs$add(expression(chart.lines(R[xsubset], type=type, 
+    cs$add(expression(chart.lines(R[xsubset], 
+                                  type=type, 
+                                  lty=lty,
+                                  lwd=lwd,
+                                  lend=lend,
                                   colorset=theme$colorset,
                                   up.col=theme$up.col, 
                                   dn.col=theme$dn.col)),expr=TRUE)
