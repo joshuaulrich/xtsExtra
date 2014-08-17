@@ -72,17 +72,34 @@ xtsExtraTheme <- function(){
 }
 
 plot2_xts <- function(x, 
+                      y=NULL,
+                      ...,
+                      subset="",
                       FUN=NULL,
                       panels=NULL,
                       multi.panel=FALSE,
+                      colorset=1:12,
+                      up.col="green",
+                      dn.col="red",
                       type="l",
-                      main=deparse(substitute(x)), 
-                      subset="", 
+                      lty=1,
+                      lwd=2,
+                      main=deparse(substitute(x)),  
                       clev=0,
-                      pars=chart_pars(), theme=xtsExtraTheme(),
+                      pars=chart_pars(), 
                       ylim=NULL,
-                      y.axis.same=TRUE,
-                      ...){
+                      yaxis.same=TRUE,
+                      yaxis.left=TRUE,
+                      yaxis.right=TRUE,
+                      grid.ticks.on="months",
+                      grid.ticks.lwd=1,
+                      grid.col="darkgray",
+                      labels.col="#333333",
+                      format.labels=TRUE,
+                      coarse.time=TRUE,
+                      shading=1,
+                      bg.col="#FFFFFF",
+                      grid2="#F5F5F5"){
   
   # Small multiples with multiple pages behavior occurs when multi.panel is
   # an integer. (i.e. multi.panel=2 means to iterate over the data in a step
@@ -101,7 +118,7 @@ plot2_xts <- function(x,
       multi.panel <- TRUE
       panels <- NULL
       FUN <- NULL
-      if(y.axis.same){
+      if(yaxis.same){
         ylim <- range(na.omit(x[subset]))
       } else {
         ylim <- NULL
@@ -110,9 +127,36 @@ plot2_xts <- function(x,
     
     for(i in 1:length(chunks)){
       tmp <- chunks[[i]]
-      p <- plot2_xts(x=x[,tmp], FUN=FUN, panels=panels, 
-                     multi.panel=multi.panel, type=type, main=main, subset=subset, 
-                     clev=clev, pars=pars, theme=theme, ylim=ylim, ...=...)
+      p <- plot2_xts(x=x[,tmp], 
+                     y=NULL,
+                     ...=...,
+                     subset=subset,
+                     FUN=FUN,
+                     panels=panels,
+                     multi.panel=multi.panel,
+                     colorset=colorset,
+                     up.col=up.col,
+                     dn.col=dn.col,
+                     type=type,
+                     lty=lty,
+                     lwd=lwd,
+                     main=main,  
+                     clev=clev,
+                     pars=pars, 
+                     ylim=ylim,
+                     yaxis.same=yaxis.same,
+                     yaxis.left=yaxis.left,
+                     yaxis.right=yaxis.right,
+                     grid.ticks.on=grid.ticks.on,
+                     grid.ticks.lwd=grid.ticks.lwd,
+                     grid.col=grid.col,
+                     labels.col=labels.col,
+                     format.labels=format.labels,
+                     coarse.time=coarse.time,
+                     shading=shading)
+      #p <- plot2_xts(x=x[,tmp], FUN=FUN, panels=panels, 
+      #               multi.panel=multi.panel, type=type, main=main, subset=subset, 
+      #               clev=clev, pars=pars, theme=theme, ylim=ylim, ...=...)
       if(i < length(chunks))
         print(p)
     }
@@ -123,20 +167,20 @@ plot2_xts <- function(x,
   cs <- new.replot_xts()
   #cex <- pars$cex
   #mar <- pars$mar
-  line.col <- theme$col$line.col
-  up.col <- theme$col$up.col
-  dn.col <- theme$col$dn.col
-  up.border <- theme$col$up.border
-  dn.border <- theme$col$dn.border
-  format.labels <- theme$format.labels
-  if(is.null(theme$grid.ticks.on)) {
+  #line.col <- theme$col$line.col
+  #up.col <- theme$col$up.col
+  #dn.col <- theme$col$dn.col
+  #up.border <- theme$col$up.border
+  #dn.border <- theme$col$dn.border
+  #format.labels <- theme$format.labels
+  if(is.null(grid.ticks.on)) {
     xs <- x[subset]
     major.grid <- c(years=nyears(xs),
                     months=nmonths(xs),
                     days=ndays(xs))
     grid.ticks.on <- names(major.grid)[rev(which(major.grid < 30))[1]]
-  } else grid.ticks.on <- theme$grid.ticks.on
-  label.bg <- theme$col$label.bg
+  } #else grid.ticks.on <- theme$grid.ticks.on
+  #label.bg <- theme$col$label.bg
   
   # define a subset function
   cs$subset <- function(x) {
@@ -179,24 +223,25 @@ plot2_xts <- function(x,
   cs$Env$cex <- pars$cex
   cs$Env$mar <- pars$mar
   cs$Env$clev = min(clev+0.01,1) # (0,1]
-  cs$Env$theme$bbands <- theme$bbands
-  cs$Env$theme$shading <- theme$shading
-  cs$Env$theme$line.col <- theme$col$line.col
+  #cs$Env$theme$bbands <- theme$bbands
+  cs$Env$theme$shading <- shading
+  #cs$Env$theme$line.col <- theme$col$line.col
   cs$Env$theme$up.col <- up.col
   cs$Env$theme$dn.col <- dn.col
-  cs$Env$theme$up.border <- up.border
-  cs$Env$theme$dn.border <- dn.border
-  cs$Env$theme$colorset <- theme$col$colorset
-  cs$Env$theme$rylab <- theme$rylab
-  cs$Env$theme$lylab <- theme$lylab
-  cs$Env$theme$bg <- theme$col$bg
-  cs$Env$theme$grid <- theme$col$grid
-  cs$Env$theme$grid2 <- theme$col$grid2
-  cs$Env$theme$labels <- "#333333"
-  cs$Env$theme$label.bg <- label.bg
+  #cs$Env$theme$up.border <- up.border
+  #cs$Env$theme$dn.border <- dn.border
+  cs$Env$theme$colorset <- colorset
+  cs$Env$theme$rylab <- yaxis.right
+  cs$Env$theme$lylab <- yaxis.left
+  cs$Env$theme$bg <- bg.col
+  cs$Env$theme$grid <- grid.col
+  cs$Env$theme$grid2 <- grid2
+  cs$Env$theme$labels <- labels.col
+  #cs$Env$theme$label.bg <- label.bg
+  cs$Env$theme$coarse.time <- coarse.time
   cs$Env$format.labels <- format.labels
   cs$Env$ticks.on <- grid.ticks.on
-  cs$Env$grid.ticks.lwd <- theme$grid.ticks.lwd
+  cs$Env$grid.ticks.lwd <- grid.ticks.lwd
   cs$Env$type <- type
   cs$Env$call_list <- list()
   cs$Env$call_list[[1]] <- match.call()
@@ -245,7 +290,7 @@ plot2_xts <- function(x,
   # which is best.
   if(is.null(ylim)){
     if(isTRUE(multi.panel)){
-      if(y.axis.same){
+      if(yaxis.same){
         # set the ylim for the first panel based on all the data
         cs$set_ylim(list(structure(range(na.omit(cs$Env$R[subset])),fixed=TRUE)))
       } else {
@@ -268,7 +313,7 @@ plot2_xts <- function(x,
   cs$Env$axis_ticks <- function(xdata,xsubset) {
     ticks <- diff(axTicksByTime2(xdata[xsubset],labels=FALSE))/2 + 
       last(axTicksByTime2(xdata[xsubset],labels=TRUE),-1)
-    if(!theme$coarse.time || length(ticks) == 1)
+    if(!coarse.time || length(ticks) == 1)
       return(unname(ticks))
     if(min(diff(ticks)) < max(strwidth(names(ticks)))) {
       ticks <- unname(ticks)
@@ -331,7 +376,7 @@ plot2_xts <- function(x,
   # add y-axis grid lines and labels
   exp <- expression(segments(1, y_grid_lines(constant_ylim), NROW(xdata[xsubset]), 
                              y_grid_lines(constant_ylim), col=theme$grid))
-  if(theme$lylab){
+  if(yaxis.left){
     exp <- c(exp, 
              # left y-axis labels
              expression(text(1-1/3-max(strwidth(y_grid_lines(constant_ylim))), 
@@ -339,7 +384,7 @@ plot2_xts <- function(x,
                              noquote(format(y_grid_lines(constant_ylim), justify="right")),
                              col=theme$labels, offset=0, pos=4, cex=0.9, xpd=TRUE)))
   }
-  if(theme$rylab){
+  if(yaxis.right){
     exp <- c(exp, 
              # right y-axis labels
              expression(text(NROW(R[xsubset])+1/3, y_grid_lines(constant_ylim),
@@ -370,7 +415,7 @@ plot2_xts <- function(x,
         lenv <- new.env()
         lenv$xdata <- cs$Env$R[,i][subset]
         lenv$main <- cs$Env$column_names[i]
-        if(y.axis.same){
+        if(yaxis.same){
           lenv$ylim <- cs$Env$constant_ylim
         } else {
           lenv$ylim <- range(na.omit(cs$Env$R[,i][subset]))
@@ -414,14 +459,14 @@ plot2_xts <- function(x,
                                      ylim[1],
                                      atbt, #axTicksByTime2(xdata[xsubset]),
                                      ylim[2], col=theme$grid)))
-        if(theme$lylab){
+        if(yaxis.left){
           exp <- c(exp, 
                    # y-axis labels/boxes
                    expression(text(1-1/3-max(strwidth(y_grid_lines(ylim))), y_grid_lines(ylim),
                                    noquote(format(y_grid_lines(ylim),justify="right")),
                                    col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
         }
-        if(theme$rylab){
+        if(yaxis.right){
           exp <- c(exp, 
                    expression(text(NROW(xdata[xsubset])+1/3, y_grid_lines(ylim),
                                    noquote(format(y_grid_lines(ylim),justify="right")),
