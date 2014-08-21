@@ -483,14 +483,14 @@ plot2_xts <- function(x,
                  # y-axis grid lines
                  expression(segments(1,y_grid_lines(ylim),
                                      NROW(xdata[xsubset]), y_grid_lines(ylim), 
-                                     col=theme$grid, lwd=gird.ticks.lwd, lty=grid.ticks.lty)),
+                                     col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)),
                  # x-axis grid lines
                  expression(atbt <- axTicksByTime2(xdata[xsubset]),
                             segments(atbt, #axTicksByTime2(xdata[xsubset]),
                                      ylim[1],
                                      atbt, #axTicksByTime2(xdata[xsubset]),
                                      ylim[2], 
-                                     col=theme$grid, lwd=gird.ticks.lwd, lty=grid.ticks.lty)))
+                                     col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)))
         if(yaxis.left){
           exp <- c(exp, 
                    # y-axis labels/boxes
