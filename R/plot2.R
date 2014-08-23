@@ -307,6 +307,7 @@ plot2_xts <- function(x,
     .formals <- formals(fun)
     .formals <- modify.args(formals=.formals, arglist=list(...), dots=TRUE)
     if("R" %in% names(.formals)) .formals <- modify.args(formals=.formals, arglist=NULL, R=x, dots=TRUE)
+    if("x" %in% names(.formals)) .formals <- modify.args(formals=.formals, arglist=NULL, x=x, dots=TRUE)
     .formals$... <- NULL
     R <- try(do.call(fun, .formals), silent=TRUE)
     if(inherits(R, "try-error")) { 
