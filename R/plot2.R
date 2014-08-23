@@ -129,18 +129,34 @@ plot2_xts <- function(x,
       # we will plot the returns by column, but not the panels
       multi.panel <- TRUE
       panels <- NULL
-      FUN <- NULL
+      
       if(yaxis.same){
-        ylim <- range(na.omit(x[subset]))
-      } else {
-        ylim <- NULL
+        # If we want the same y-axis and a FUN is specified, we need to
+        # apply the transformation first to compute the range for the y-axis
+        if(!is.null(FUN) && nchar(FUN) > 0){
+          fun <- match.fun(FUN)
+          .formals <- formals(fun)
+          .formals <- modify.args(formals=.formals, arglist=list(...), dots=TRUE)
+          if("R" %in% names(.formals)) .formals <- modify.args(formals=.formals, arglist=NULL, R=x, dots=TRUE)
+          .formals$... <- NULL
+          R <- try(do.call(fun, .formals), silent=TRUE)
+          if(inherits(R, "try-error")) { 
+            message(paste("FUN function failed with message", R))
+            ylim <- range(na.omit(x[subset]))
+          } else {
+            ylim <- range(na.omit(R[subset]))
+          }
+        } else {
+           # set the ylim based on the data passed into the x argument
+          ylim <- range(na.omit(x[subset]))
+        }
       }
     }
     
     for(i in 1:length(chunks)){
       tmp <- chunks[[i]]
       p <- plot2_xts(x=x[,tmp], 
-                     y=NULL,
+                     y=y,
                      ...=...,
                      subset=subset,
                      FUN=FUN,
@@ -155,7 +171,8 @@ plot2_xts <- function(x,
                      lend=lend,
                      main=main,  
                      clev=clev,
-                     pars=pars, 
+                     cex=cex, 
+                     mar=mar, 
                      ylim=ylim,
                      yaxis.same=yaxis.same,
                      yaxis.left=yaxis.left,
@@ -167,7 +184,9 @@ plot2_xts <- function(x,
                      labels.col=labels.col,
                      format.labels=format.labels,
                      coarse.time=coarse.time,
-                     shading=shading)
+                     shading=shading,
+                     bg.col=bg.col,
+                     grid2=grid2)
       #p <- plot2_xts(x=x[,tmp], FUN=FUN, panels=panels, 
       #               multi.panel=multi.panel, type=type, main=main, subset=subset, 
       #               clev=clev, pars=pars, theme=theme, ylim=ylim, ...=...)
