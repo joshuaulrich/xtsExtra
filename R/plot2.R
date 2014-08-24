@@ -97,7 +97,10 @@ plot2_xts <- function(x,
                       main=deparse(substitute(x)),  
                       clev=0,
                       cex=0.6, 
+                      cex.axis=0.9,
                       mar=c(3,2,0,2), 
+                      srt=0,
+                      xaxis.las=0,
                       ylim=NULL,
                       yaxis.same=TRUE,
                       yaxis.left=TRUE,
@@ -172,7 +175,10 @@ plot2_xts <- function(x,
                      main=main,  
                      clev=clev,
                      cex=cex, 
+                     cex.axis=cex.axis,
                      mar=mar, 
+                     srt=srt,
+                     xaxis.las=xaxis.las,
                      ylim=ylim,
                      yaxis.same=yaxis.same,
                      yaxis.left=yaxis.left,
@@ -270,6 +276,9 @@ plot2_xts <- function(x,
   cs$Env$theme$grid <- grid.col
   cs$Env$theme$grid2 <- grid2
   cs$Env$theme$labels <- labels.col
+  cs$Env$theme$srt <- srt
+  cs$Env$theme$xaxis.las <- xaxis.las
+  cs$Env$theme$cex.axis <- cex.axis
   #cs$Env$theme$label.bg <- label.bg
   cs$Env$theme$coarse.time <- coarse.time
   cs$Env$format.labels <- format.labels
@@ -370,7 +379,7 @@ plot2_xts <- function(x,
                     axt <- axis_ticks(xdata,xsubset),
                     text(as.numeric(axt),
                          par('usr')[3]-0.2*min(strheight(axt)),
-                         names(axt),xpd=TRUE,cex=0.9,pos=3)),
+                         names(axt),xpd=TRUE,cex=theme$cex.axis,pos=3)),
          clip=FALSE,expr=TRUE)
   
   # Add frame for the chart "header" to display the name and start/end dates
@@ -385,7 +394,8 @@ plot2_xts <- function(x,
   cs$add(expression(axt <- axTicksByTime(xdata[xsubset],format.labels=format.labels),
                     axis(1,at=axt, #axTicksByTime(xdata[xsubset]),
                          labels=names(axt), #axTicksByTime(xdata[xsubset],format.labels=format.labels)),
-                         las=1,lwd.ticks=1,mgp=c(3,1.5,0),tcl=-0.4,cex.axis=.9)),
+                         las=theme$xaxis.las, lwd.ticks=1, mgp=c(3,1.5,0), 
+                         tcl=-0.4, cex.axis=theme$cex.axis)),
          expr=TRUE)
   
   # add main and start/end dates
@@ -422,14 +432,16 @@ plot2_xts <- function(x,
              expression(text(1-1/3-max(strwidth(y_grid_lines(constant_ylim))), 
                              y_grid_lines(constant_ylim),
                              noquote(format(y_grid_lines(constant_ylim), justify="right")),
-                             col=theme$labels, offset=0, pos=4, cex=0.9, xpd=TRUE)))
+                             col=theme$labels, srt=theme$srt, offset=0, pos=4, 
+                             cex=theme$cex.axis, xpd=TRUE)))
   }
   if(yaxis.right){
     exp <- c(exp, 
              # right y-axis labels
              expression(text(NROW(R[xsubset])+1/3, y_grid_lines(constant_ylim),
                              noquote(format(y_grid_lines(constant_ylim), justify="right")),
-                             col=theme$labels, offset=0, pos=4, cex=0.9, xpd=TRUE)))
+                             col=theme$labels, srt=theme$srt, offset=0, pos=4, 
+                             cex=theme$cex.axis, xpd=TRUE)))
   }
   cs$add(exp, env=cs$Env, expr=TRUE)
   
@@ -516,13 +528,15 @@ plot2_xts <- function(x,
                    # y-axis labels/boxes
                    expression(text(1-1/3-max(strwidth(y_grid_lines(ylim))), y_grid_lines(ylim),
                                    noquote(format(y_grid_lines(ylim),justify="right")),
-                                   col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
+                                   col=theme$labels, srt=theme$srt, offset=0, 
+                                   pos=4, cex=theme$cex.axis, xpd=TRUE)))
         }
         if(yaxis.right){
           exp <- c(exp, 
                    expression(text(NROW(xdata[xsubset])+1/3, y_grid_lines(ylim),
                                    noquote(format(y_grid_lines(ylim),justify="right")),
-                                   col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
+                                   col=theme$labels, srt=theme$srt, offset=0,
+                                   pos=4, cex=theme$cex.axis, xpd=TRUE)))
         }
         cs$add(exp,env=c(lenv, cs$Env),expr=TRUE,no.update=TRUE)
       }
