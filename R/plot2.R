@@ -33,6 +33,18 @@ chart.lines <- function(x,
   }
 }
 
+# function from Peter Carl to add labels to the plot window
+add_label <- function(xfrac, yfrac, label, pos=4, ylog, ...) { 
+  u <- par("usr")
+  x <- u[1] + xfrac * (u[2] - u[1]) 
+  y <- u[4] - yfrac * (u[4] - u[3]) 
+  if(ylog){
+    text(x, 10^y, label, pos = pos, ...)
+  } else {
+    text(x, y, label, pos = pos, ...) 
+  }
+}
+
 # chart_Series {{{
 #  Updated: 2010-01-15
 #
@@ -306,6 +318,7 @@ plot2_xts <- function(x,
   cs$Env$xsubset <- subset
   cs$Env$column_names <- colnames(x)
   cs$Env$nobs <- NROW(cs$Env$xdata)
+  cs$Env$main <- main
   
   # Compute transformation if specified by panel argument
   # rough prototype for calling a function for the main "panel"
@@ -374,7 +387,7 @@ plot2_xts <- function(x,
          clip=FALSE,expr=TRUE)
   
   # Add frame for the chart "header" to display the name and start/end dates
-  cs$add_frame(0,ylim=c(0,1),asp=0.2)
+  cs$add_frame(0,ylim=c(0,1),asp=0.5)
   cs$set_frame(1)
   
   # add observation level ticks on x-axis if < 400 obs.
@@ -390,8 +403,8 @@ plot2_xts <- function(x,
          expr=TRUE)
   
   # add main and start/end dates
-  if((isTRUE(multi.panel)) | (multi.panel == 1) | (NCOL(x) == 1))
-    cs$Env$main <- cs$Env$column_names[1] else cs$Env$main <- main
+  #if((isTRUE(multi.panel)) | (multi.panel == 1) | (NCOL(x) == 1))
+  #  cs$Env$main <- cs$Env$column_names[1] else cs$Env$main <- main
   
   text.exp <- c(expression(text(1-1/3,0.5,main,font=2,col='#444444',offset=0,cex=1.1,pos=4)),
                 expression(text(NROW(xdata[xsubset]),0.5,
@@ -414,23 +427,23 @@ plot2_xts <- function(x,
   }
   
   # add y-axis grid lines and labels
-  exp <- expression(segments(1, y_grid_lines(constant_ylim), 
-                             NROW(xdata[xsubset]), y_grid_lines(constant_ylim), 
+  exp <- expression(segments(1, y_grid_lines(get_ylim()[[2]]), 
+                             NROW(xdata[xsubset]), y_grid_lines(get_ylim()[[2]]), 
                              col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty))
   if(yaxis.left){
     exp <- c(exp, 
              # left y-axis labels
-             expression(text(1-1/3-max(strwidth(y_grid_lines(constant_ylim))), 
-                             y_grid_lines(constant_ylim),
-                             noquote(format(y_grid_lines(constant_ylim), justify="right")),
+             expression(text(1-1/3-max(strwidth(y_grid_lines(get_ylim()[[2]]))), 
+                             y_grid_lines(get_ylim()[[2]]),
+                             noquote(format(y_grid_lines(get_ylim()[[2]]), justify="right")),
                              col=theme$labels, srt=theme$srt, offset=0, pos=4, 
                              cex=theme$cex.axis, xpd=TRUE)))
   }
   if(yaxis.right){
     exp <- c(exp, 
              # right y-axis labels
-             expression(text(NROW(R[xsubset])+1/3, y_grid_lines(constant_ylim),
-                             noquote(format(y_grid_lines(constant_ylim), justify="right")),
+             expression(text(NROW(R[xsubset])+1/3, y_grid_lines(get_ylim()[[2]]),
+                             noquote(format(y_grid_lines(get_ylim()[[2]]), justify="right")),
                              col=theme$labels, srt=theme$srt, offset=0, pos=4, 
                              cex=theme$cex.axis, xpd=TRUE)))
   }
@@ -443,9 +456,13 @@ plot2_xts <- function(x,
     # set up based on the code above
     lenv <- new.env()
     lenv$xdata <- cs$Env$R[,1][subset]
-    lenv$main <- cs$Env$colum_names[1]
-    #lenv$ymax <- range(cs$Env$R[subset])[2]
+    lenv$label <- colnames(cs$Env$R[,1])
     lenv$type <- cs$Env$type
+    if(yaxis.same){
+      lenv$ylim <- cs$Env$constant_ylim
+    } else {
+      lenv$ylim <- range(na.omit(cs$Env$R[,1][subset]))
+    }
     exp <- expression(chart.lines(xdata, 
                                   type=type, 
                                   lty=lty,
@@ -454,16 +471,20 @@ plot2_xts <- function(x,
                                   colorset=theme$colorset, 
                                   up.col=theme$up.col, 
                                   dn.col=theme$dn.col))
-    #exp <- c(exp, expression(text(1, ymax, adj=c(0,0), pos=4, cex=0.9, offset=0, labels=main)))
     # Add expression for the main plot
     cs$add(exp, env=c(lenv,cs$Env), expr=TRUE)
+    text.exp <- expression(text(x=2,
+                                y=ylim[2]*0.9,
+                                labels=label,
+                                adj=c(0,0),cex=1,offset=0,pos=4))
+    cs$add(text.exp,env=c(lenv, cs$Env),expr=TRUE)
     
     if(NCOL(cs$Env$xdata) > 1){
       for(i in 2:NCOL(cs$Env$xdata)){
         # create a local environment
         lenv <- new.env()
         lenv$xdata <- cs$Env$R[,i][subset]
-        lenv$main <- cs$Env$column_names[i]
+        lenv$label <- cs$Env$column_names[i]
         if(yaxis.same){
           lenv$ylim <- cs$Env$constant_ylim
         } else {
@@ -471,12 +492,12 @@ plot2_xts <- function(x,
         }
         lenv$type <- cs$Env$type
         
-        # Add a small frame for the time series info
-        cs$add_frame(ylim=c(0,1),asp=0.2)
+        # Add a small frame
+        cs$add_frame(ylim=c(0,1),asp=0.25)
         cs$next_frame()
         text.exp <- expression(text(x=1,
                                     y=0.5,
-                                    labels=main,
+                                    labels="",
                                     adj=c(0,0),cex=0.9,offset=0,pos=4))
         cs$add(text.exp, env=c(lenv,cs$Env), expr=TRUE)
         
@@ -530,6 +551,11 @@ plot2_xts <- function(x,
                                    pos=4, cex=theme$cex.axis, xpd=TRUE)))
         }
         cs$add(exp,env=c(lenv, cs$Env),expr=TRUE,no.update=TRUE)
+        text.exp <- expression(text(x=2,
+                                    y=ylim[2]*0.9,
+                                    labels=label,
+                                    adj=c(0,0),cex=1,offset=0,pos=4))
+        cs$add(text.exp,env=c(lenv, cs$Env),expr=TRUE)
       }
   }
   } else {
