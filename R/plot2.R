@@ -111,7 +111,6 @@ plot2_xts <- function(x,
                       grid.col="darkgray",
                       labels.col="#333333",
                       format.labels=TRUE,
-                      coarse.time=TRUE,
                       shading=1,
                       bg.col="#FFFFFF",
                       grid2="#F5F5F5"){
@@ -189,7 +188,6 @@ plot2_xts <- function(x,
                      grid.col=grid.col,
                      labels.col=labels.col,
                      format.labels=format.labels,
-                     coarse.time=coarse.time,
                      shading=shading,
                      bg.col=bg.col,
                      grid2=grid2)
@@ -280,7 +278,7 @@ plot2_xts <- function(x,
   cs$Env$theme$xaxis.las <- xaxis.las
   cs$Env$theme$cex.axis <- cex.axis
   #cs$Env$theme$label.bg <- label.bg
-  cs$Env$theme$coarse.time <- coarse.time
+  #cs$Env$theme$coarse.time <- coarse.time
   cs$Env$format.labels <- format.labels
   cs$Env$grid.ticks.on <- grid.ticks.on
   cs$Env$grid.ticks.lwd <- grid.ticks.lwd
@@ -357,29 +355,22 @@ plot2_xts <- function(x,
   
   cs$set_frame(1,FALSE)
   # axis_ticks function to label lower frequency ranges/grid lines
-  cs$Env$axis_ticks <- function(xdata,xsubset) {
-    ticks <- diff(axTicksByTime2(xdata[xsubset],labels=FALSE))/2 + 
-      last(axTicksByTime2(xdata[xsubset],labels=TRUE),-1)
-    if(!coarse.time || length(ticks) == 1)
-      return(unname(ticks))
-    if(min(diff(ticks)) < max(strwidth(names(ticks)))) {
-      ticks <- unname(ticks)
-    }
-    ticks
-  }
+  #cs$Env$axis_ticks <- function(xdata,xsubset) {
+  #  ticks <- diff(axTicksByTime2(xdata[xsubset],labels=FALSE))/2 + 
+  #    last(axTicksByTime2(xdata[xsubset],labels=TRUE),-1)
+  #  if(min(diff(ticks)) < max(strwidth(names(ticks)))) {
+  #    ticks <- unname(ticks)
+  #  }
+  #  ticks
+  #}
   
   # compute the x-axis ticks
-  # need to add if(upper.x.label) to allow for finer control
-  cs$add(expression(atbt <- axTicksByTime2(xdata[xsubset]),
+  cs$add(expression(atbt <- axTicksByTime(xdata[xsubset]),
                     segments(atbt, #axTicksByTime2(xdata[xsubset]),
                              get_ylim()[[2]][1],
                              atbt, #axTicksByTime2(xdata[xsubset]),
                              get_ylim()[[2]][2], 
-                             col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty),
-                    axt <- axis_ticks(xdata,xsubset),
-                    text(as.numeric(axt),
-                         par('usr')[3]-0.2*min(strheight(axt)),
-                         names(axt),xpd=TRUE,cex=theme$cex.axis,pos=3)),
+                             col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)),
          clip=FALSE,expr=TRUE)
   
   # Add frame for the chart "header" to display the name and start/end dates
@@ -517,7 +508,7 @@ plot2_xts <- function(x,
                                      NROW(xdata[xsubset]), y_grid_lines(ylim), 
                                      col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)),
                  # x-axis grid lines
-                 expression(atbt <- axTicksByTime2(xdata[xsubset]),
+                 expression(atbt <- axTicksByTime(xdata[xsubset]),
                             segments(atbt, #axTicksByTime2(xdata[xsubset]),
                                      ylim[1],
                                      atbt, #axTicksByTime2(xdata[xsubset]),
@@ -689,7 +680,8 @@ addLines <- function(x, main="", order=NULL, on=NA, legend="auto",
   plot_object$Env$call_list[[ncalls+1]] <- match.call()
   xdata <- plot_object$Env$xdata
   xsubset <- plot_object$Env$xsubset
-  if(is.logical(x)) no.update <- TRUE else no.update <- FALSE
+  # if(is.logical(x)) no.update <- TRUE else no.update <- FALSE
+  no.update <- TRUE
   #  this merge isn't going to work if x isn't in xdata range. Something like:
   #    na.approx(merge(n=.xts(1:NROW(xdata),.index(xdata)),ta)[,1])
   #  should allow for any time not in the original to be merged in.
