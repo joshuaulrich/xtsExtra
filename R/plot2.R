@@ -18,18 +18,34 @@ chart.lines <- function(x,
                         lend=1,
                         colorset=1:10, 
                         up.col=NULL, 
-                        dn.col=NULL){
+                        dn.col=NULL,
+                        legend.loc=NULL){
   if(is.null(up.col)) up.col <- "green"
   if(is.null(dn.col)) dn.col <- "red"
   if(type == "h"){
     colors <- ifelse(x[,1] < 0, dn.col, up.col)
     lines(1:NROW(x),x[,1],lwd=2,col=colors,lend=lend,lty=1,type="h")
-  } else {
+  } else if(type == "l") {
     if(length(lty) == 1) lty <- rep(lty, NCOL(x))
     if(length(lwd) == 1) lwd <- rep(lwd, NCOL(x))
     for(i in NCOL(x):1){
       lines(1:NROW(x), x[,i], type="l", lend=lend, col=colorset[i], lty=lty[i], lwd=lwd[i])
     }
+  } else if(type == "bar"){
+    # This does not work correctly
+    # The geometry of the x-axis and y-axis is way off with stacked bar plot and
+    # the x-axis is off for unstacked bar plot
+    # We may need a separate function to do this correctly because of the
+    # different geometry/dimensions with stacked and unstacked barplots
+    positives = negatives = x
+    for(column in 1:NCOL(x)){
+      for(row in 1:NROW(x)){ 
+        positives[row,column] = max(0, x[row,column])
+        negatives[row,column] = min(0, x[row,column])
+      }
+    }
+    barplot.default(t(positives), add=TRUE, col=colorset, axisnames=FALSE, axes=FALSE)
+    barplot.default(t(negatives), add=TRUE, col=colorset, axisnames=FALSE, axes=FALSE)
   }
 }
 
@@ -203,9 +219,6 @@ plot2_xts <- function(x,
                      shading=shading,
                      bg.col=bg.col,
                      grid2=grid2)
-      #p <- plot2_xts(x=x[,tmp], FUN=FUN, panels=panels, 
-      #               multi.panel=multi.panel, type=type, main=main, subset=subset, 
-      #               clev=clev, pars=pars, theme=theme, ylim=ylim, ...=...)
       if(i < length(chunks))
         print(p)
     }
@@ -289,6 +302,7 @@ plot2_xts <- function(x,
   cs$Env$theme$srt <- srt
   cs$Env$theme$xaxis.las <- xaxis.las
   cs$Env$theme$cex.axis <- cex.axis
+  #cs$Env$theme$legend.loc <- legend.loc
   #cs$Env$theme$label.bg <- label.bg
   #cs$Env$theme$coarse.time <- coarse.time
   cs$Env$format.labels <- format.labels
