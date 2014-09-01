@@ -392,7 +392,7 @@ plot2_xts <- function(x,
   #}
   
   # compute the x-axis ticks
-  cs$add(expression(atbt <- axTicksByTime(xdata[xsubset]),
+  cs$add(expression(atbt <- axTicksByTime2(xdata[xsubset]),
                     segments(atbt, #axTicksByTime2(xdata[xsubset]),
                              get_ylim()[[2]][1],
                              atbt, #axTicksByTime2(xdata[xsubset]),
@@ -543,7 +543,7 @@ plot2_xts <- function(x,
                                      NROW(xdata[xsubset]), y_grid_lines(ylim), 
                                      col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)),
                  # x-axis grid lines
-                 expression(atbt <- axTicksByTime(xdata[xsubset]),
+                 expression(atbt <- axTicksByTime2(xdata[xsubset]),
                             segments(atbt, #axTicksByTime2(xdata[xsubset]),
                                      ylim[1],
                                      atbt, #axTicksByTime2(xdata[xsubset]),
