@@ -16,7 +16,7 @@ x
 
 # small multiples, line plot of each column
 plot2_xts(R, multi.panel=TRUE)
-plot2_xts(R, multi.panel=TRUE, y.axis.same=FALSE)
+plot2_xts(R, multi.panel=TRUE, yaxis.same=FALSE)
 
 layout(matrix(1:2))
 plot2_xts(R, multi.panel=2, type="h")
@@ -88,6 +88,26 @@ plot2_xts(R, FUN="CumReturns", lwd=c(3, 2, 2, 2), colorset=c(1, rep("gray", 3)))
 
 plot2_xts(R, yaxis.left=TRUE, yaxis.right=FALSE)
 plot2_xts(R, grid.ticks.lwd=1, grid.ticks.lty="solid", grid.col="black")
+
+# examples with legend functionality
+R <- edhec[,1:10]
+foo <- function(x){
+  CumReturns(R = x)
+}
+plot2_xts(R, FUN=foo)
+addLegend(ncol = 4)
+
+plot2_xts(R, FUN=foo, legend.loc="topleft")
+plot2_xts(R, FUN=foo, legend.loc="left")
+plot2_xts(R, FUN=foo, legend.loc="bottomleft")
+
+plot2_xts(R, FUN=foo, legend.loc="top")
+plot2_xts(R, FUN=foo, legend.loc="center")
+plot2_xts(R, FUN=foo, legend.loc="bottom")
+
+plot2_xts(R, FUN=foo, legend.loc="topright")
+plot2_xts(R, FUN=foo, legend.loc="right")
+plot2_xts(R, FUN=foo, legend.loc="bottomright")
 
 ##### scratch area #####
 # Should we have a theme object, as in quantmod, that sets all of the basic 

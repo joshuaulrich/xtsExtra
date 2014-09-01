@@ -20,6 +20,7 @@ export("addDrawdowns")
 export("addLines")
 export("addReturns")
 export("addRollingPerformance")
+export("addLegend")
 S3method(print, replot_xts)
 S3method(plot, replot_xts)
 

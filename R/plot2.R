@@ -47,6 +47,68 @@ chart.lines <- function(x,
     barplot.default(t(positives), add=TRUE, col=colorset, axisnames=FALSE, axes=FALSE)
     barplot.default(t(negatives), add=TRUE, col=colorset, axisnames=FALSE, axes=FALSE)
   }
+  if(!is.null(legend.loc)){
+    yrange <- range(na.omit(x))
+    nobs <- NROW(x)
+    switch(legend.loc,
+           topleft = {
+             xjust <- 0
+             yjust <- 1
+             lx <- 1
+             ly <- yrange[2]
+             },
+           left = {
+             xjust <- 0
+             yjust <- 0.5
+             lx <- 1
+             ly <- sum(yrange) / 2
+             },
+           bottomleft = {
+             xjust <- 0
+             yjust <- 0
+             lx <- 1
+             ly <- yrange[1]
+             },
+           top = {
+             xjust <- 0.5
+             yjust <- 1
+             lx <- nobs / 2
+             ly <- yrange[2]
+             },
+           center = {
+             xjust <- 0.5
+             yjust <- 0.5
+             lx <- nobs / 2
+             ly <- sum(yrange) / 2
+             },
+           bottom = {
+             xjust <- 0.5
+             yjust <- 0
+             lx <- nobs / 2
+             ly <- yrange[1]
+             },
+           topright = {
+             xjust <- 1
+             yjust <- 1
+             lx <- nobs
+             ly <- yrange[2]
+             },
+           right = {
+             xjust <- 1
+             yjust <- 0.5
+             lx <- nobs
+             ly <- sum(yrange) / 2
+             },
+           bottomright = {
+             xjust <- 1
+             yjust <- 0
+             lx <- nobs
+             ly <- yrange[1]
+           }
+           )
+    legend(x=lx, y=ly, legend=colnames(x), xjust=xjust, yjust=yjust, 
+           fill=colorset[1:NCOL(x)], bty="n")
+  }
 }
 
 # function from Peter Carl to add labels to the plot window
@@ -141,7 +203,8 @@ plot2_xts <- function(x,
                       format.labels=TRUE,
                       shading=1,
                       bg.col="#FFFFFF",
-                      grid2="#F5F5F5"){
+                      grid2="#F5F5F5",
+                      legend.loc=NULL){
   
   # Small multiples with multiple pages behavior occurs when multi.panel is
   # an integer. (i.e. multi.panel=2 means to iterate over the data in a step
@@ -218,7 +281,8 @@ plot2_xts <- function(x,
                      format.labels=format.labels,
                      shading=shading,
                      bg.col=bg.col,
-                     grid2=grid2)
+                     grid2=grid2,
+                     legend.loc=legend.loc)
       if(i < length(chunks))
         print(p)
     }
@@ -302,7 +366,6 @@ plot2_xts <- function(x,
   cs$Env$theme$srt <- srt
   cs$Env$theme$xaxis.las <- xaxis.las
   cs$Env$theme$cex.axis <- cex.axis
-  #cs$Env$theme$legend.loc <- legend.loc
   #cs$Env$theme$label.bg <- label.bg
   #cs$Env$theme$coarse.time <- coarse.time
   cs$Env$format.labels <- format.labels
@@ -313,6 +376,7 @@ plot2_xts <- function(x,
   cs$Env$lty <- lty
   cs$Env$lwd <- lwd
   cs$Env$lend <- lend
+  cs$Env$legend.loc <- legend.loc
   cs$Env$call_list <- list()
   cs$Env$call_list[[1]] <- match.call()
   
@@ -484,7 +548,8 @@ plot2_xts <- function(x,
                                   lend=lend,
                                   colorset=theme$colorset, 
                                   up.col=theme$up.col, 
-                                  dn.col=theme$dn.col))
+                                  dn.col=theme$dn.col,
+                                  legend.loc=legend.loc))
     # Add expression for the main plot
     cs$add(exp, env=c(lenv,cs$Env), expr=TRUE)
     text.exp <- expression(text(x=2,
@@ -527,7 +592,8 @@ plot2_xts <- function(x,
                                       lend=lend,
                                       colorset=theme$colorset, 
                                       up.col=theme$up.col, 
-                                      dn.col=theme$dn.col))
+                                      dn.col=theme$dn.col,
+                                      legend.loc=legend.loc))
         
         # define function to plot the y-axis grid lines
         lenv$y_grid_lines <- function(ylim) { 
@@ -580,7 +646,8 @@ plot2_xts <- function(x,
                                   lend=lend,
                                   colorset=theme$colorset,
                                   up.col=theme$up.col, 
-                                  dn.col=theme$dn.col)),expr=TRUE)
+                                  dn.col=theme$dn.col,
+                                  legend.loc=legend.loc)),expr=TRUE)
     assign(".xts_chob", cs, .plotxtsEnv)
   }
   
@@ -923,6 +990,101 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
            expression(text(NROW(xdata[xsubset])+1/3,grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
+  plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
+  plot_object
+}
+
+addLegend <- function(legend.loc="center", ncol=1, ...){
+  lenv <- new.env()
+  lenv$main <- ""
+  
+  plot_object <- current.xts_chob()
+  ncalls <- length(plot_object$Env$call_list)
+  plot_object$Env$call_list[[ncalls+1]] <- match.call()
+  
+  # add the frame for drawdowns info
+  plot_object$add_frame(ylim=c(0,1),asp=0.25)
+  plot_object$next_frame()
+  text.exp <- expression(text(x=1, y=0.3, labels=main,
+                              col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
+  plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+  
+  # add frame for the legend panel
+  plot_object$add_frame(ylim=c(0,1),asp=0.8,fixed=TRUE)
+  plot_object$next_frame()
+  
+  if(!is.null(legend.loc)){
+    yrange <- c(0,1)
+    nobs <- plot_object$Env$nobs
+    switch(legend.loc,
+           topleft = {
+             xjust <- 0
+             yjust <- 1
+             lx <- 1
+             ly <- yrange[2]
+           },
+           left = {
+             xjust <- 0
+             yjust <- 0.5
+             lx <- 1
+             ly <- sum(yrange) / 2
+           },
+           bottomleft = {
+             xjust <- 0
+             yjust <- 0
+             lx <- 1
+             ly <- yrange[1]
+           },
+           top = {
+             xjust <- 0.5
+             yjust <- 1
+             lx <- nobs / 2
+             ly <- yrange[2]
+           },
+           center = {
+             xjust <- 0.5
+             yjust <- 0.5
+             lx <- nobs / 2
+             ly <- sum(yrange) / 2
+           },
+           bottom = {
+             xjust <- 0.5
+             yjust <- 0
+             lx <- nobs / 2
+             ly <- yrange[1]
+           },
+           topright = {
+             xjust <- 1
+             yjust <- 1
+             lx <- nobs
+             ly <- yrange[2]
+           },
+           right = {
+             xjust <- 1
+             yjust <- 0.5
+             lx <- nobs
+             ly <- sum(yrange) / 2
+           },
+           bottomright = {
+             xjust <- 1
+             yjust <- 0
+             lx <- nobs
+             ly <- yrange[1]
+           }
+    )
+  }
+  nc <- NCOL(plot_object$Env$xdata)
+  lenv$lx <- lx
+  lenv$ly <- ly
+  lenv$xjust <- xjust
+  lenv$yjust <- yjust
+  lenv$colorset <- plot_object$Env$theme$colorset[1:nc]
+  lenv$names <- plot_object$Env$column_names
+  lenv$nc <- ncol
+  # add expression for legend
+  exp <- expression(legend(x=lx, y=ly, legend=names, xjust=xjust, yjust=yjust, 
+                           fill=colorset, ncol=nc, bty="n"))
+  
   plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
   plot_object
 }
