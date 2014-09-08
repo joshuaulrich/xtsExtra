@@ -109,6 +109,32 @@ plot2_xts(R, FUN=foo, legend.loc="topright")
 plot2_xts(R, FUN=foo, legend.loc="right")
 plot2_xts(R, FUN=foo, legend.loc="bottomright")
 
+
+plot2_xts(R, FUN=foo)
+xtsExtra:::addLines2(R[,1])
+
+plot2_xts(R, FUN="CumReturns")
+addLines2(R[,1], type="h")
+
+plot2_xts(R, FUN="CumReturns")
+tmp1 <- tmp2 <- R[,1]
+tmp1[,1] <- 1.5
+
+tmp2[,1] <- 1
+
+tmp <- CumReturns(R[,1])
+tmp3 <- tmp[seq(from=1, to=NROW(R), by=10),]
+
+addLines2(tmp1, on=1)
+addLines2(tmp2, on=1, type="p", pch=5)
+addLines2(tmp3, on=1, type="p", pch=2)
+
+
+# png("~/Documents/foo.png")
+# plot2_xts(R, FUN="CumReturns")
+# addDrawdowns()
+# dev.off()
+
 ##### scratch area #####
 # Should we have a theme object, as in quantmod, that sets all of the basic 
 # parameters such as lty, lwd, las, cex, colorset, element.color, etc?
