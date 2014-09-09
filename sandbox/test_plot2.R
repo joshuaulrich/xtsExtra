@@ -11,8 +11,10 @@ plot2_xts(R)
 
 # assign to a variable and then print it results in a plot
 x <- plot2_xts(R)
-class(x)
+y <- addReturns()
 x
+class(x)
+y
 
 # small multiples, line plot of each column
 plot2_xts(R, multi.panel=TRUE)
@@ -35,7 +37,7 @@ plot2_xts(R, type="h")
 plot2_xts(R, multi.panel=TRUE, type="h")
 
 # Replicate charts.PerformanceSummary
-plot2_xts(R, FUN="CumReturns")
+plot2_xts(R, FUN=CumReturns)
 addReturns(type="h")
 addDrawdowns()
 
@@ -43,8 +45,9 @@ addDrawdowns()
 plot2_xts(R, FUN="CumReturns",
           panels=c("addReturns(type='h')", "addDrawdowns()"))
 
+R <- edhec[,1:8]
 layout(matrix(1:4, 2, 2))
-plot2_xts(R, multi.panel=1, FUN="CumReturns",
+plot2_xts(R, multi.panel=2, FUN="CumReturns",
           panels=c("addReturns(type='h')", "addDrawdowns()"))
 layout(matrix(1))
 
@@ -81,6 +84,7 @@ x <- xtsExtra:::current.xts_chob()
 x$Env$call_list
 x$Env$call_list[[1]]
 
+R <- edhec[,1:4]
 plot2_xts(R, FUN="CumReturns")
 plot2_xts(R, FUN="CumReturns", lty=1:4)
 plot2_xts(R, FUN="CumReturns", lty=1:4, lwd=c(3, 1, 1, 1))
@@ -130,10 +134,10 @@ addLines2(tmp2, on=1, type="p", pch=5)
 addLines2(tmp3, on=1, type="p", pch=2)
 
 
-# png("~/Documents/foo.png")
-# plot2_xts(R, FUN="CumReturns")
-# addDrawdowns()
-# dev.off()
+png("~/Documents/foo.png")
+plot2_xts(R, FUN="CumReturns")
+addDrawdowns()
+dev.off()
 
 ##### scratch area #####
 # Should we have a theme object, as in quantmod, that sets all of the basic 
