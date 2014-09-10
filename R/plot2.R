@@ -785,7 +785,7 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
   plot_object
 }
 
-addLines2 <- function(x, main="", on=NA, type="l", pch=0, ...){
+addLines <- function(x, main="", on=NA, type="l", pch=0, ...){
   lenv <- new.env()
   lenv$main <- main
   lenv$plot_lines <- function(x, ta, on, type, ...){
