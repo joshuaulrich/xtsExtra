@@ -219,7 +219,7 @@ xtsExtraTheme <- function(){
 #' center. Default NULL does not draw a legend. 
 #' 
 #' 
-plot2_xts <- function(x, 
+plot.xts <- function(x, 
                       y=NULL,
                       ...,
                       subset="",
@@ -297,7 +297,7 @@ plot2_xts <- function(x,
     
     for(i in 1:length(chunks)){
       tmp <- chunks[[i]]
-      p <- plot2_xts(x=x[,tmp], 
+      p <- plot.xts(x=x[,tmp], 
                      y=y,
                      ...=...,
                      subset=subset,

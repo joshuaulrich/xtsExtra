@@ -8,12 +8,12 @@ import(zoo)
 ## Graphics
 
 export("plot.xts")
-export("barplot.xts")
-export("default.panel")
+#export("barplot.xts")
+#export("default.panel")
 S3method(plot, xts)
-S3method(barplot, xts)
+#S3method(barplot, xts)
 
-export("plot2_xts")
+#export("plot2_xts")
 export("addSeries")
 export("addPoints")
 export("addLines")
