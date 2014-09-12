@@ -113,16 +113,16 @@ chart.lines <- function(x,
 }
 
 # function from Peter Carl to add labels to the plot window
-add_label <- function(xfrac, yfrac, label, pos=4, ylog, ...) { 
-  u <- par("usr")
-  x <- u[1] + xfrac * (u[2] - u[1]) 
-  y <- u[4] - yfrac * (u[4] - u[3]) 
-  if(ylog){
-    text(x, 10^y, label, pos = pos, ...)
-  } else {
-    text(x, y, label, pos = pos, ...) 
-  }
-}
+# add_label <- function(xfrac, yfrac, label, pos=4, ylog, ...) { 
+#   u <- par("usr")
+#   x <- u[1] + xfrac * (u[2] - u[1]) 
+#   y <- u[4] - yfrac * (u[4] - u[3]) 
+#   if(ylog){
+#     text(x, 10^y, label, pos = pos, ...)
+#   } else {
+#     text(x, y, label, pos = pos, ...) 
+#   }
+# }
 
 # chart_Series {{{
 #  Updated: 2010-01-15
@@ -787,10 +787,11 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
   plot_object
 }
 
-addLines <- function(x, main="", on=NA, type="l", pch=0, ...){
+
+addSeries <- function(x, main="", on=NA, type="l", lty=1, lwd=1, pch=0, ...){
   lenv <- new.env()
   lenv$main <- main
-  lenv$plot_lines <- function(x, ta, on, type, ...){
+  lenv$plot_lines <- function(x, ta, on, type, lty, lwd, pch, ...){
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
     colorset <- x$Env$theme$colorset
@@ -811,17 +812,19 @@ addLines <- function(x, main="", on=NA, type="l", pch=0, ...){
                            tzone=indexTZ(xdata)),ta)[subset.range]
     ta.x <- as.numeric(na.approx(ta.adj[,1], rule=2) )
     ta.y <- ta.adj[,-1]
-    chart.lines(ta.y, type=type, colorset=colorset, pch=pch)
+    chart.lines(ta.y, type=type, colorset=colorset, lty=lty, lwd=lwd, pch=pch)
   }
   # map all passed args (if any) to 'lenv' environment
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
-         names(list(x=x,on=on,type=type,pch=pch,...)),
-         list(x=x,on=on,type=type,pch=pch,...))
+         names(list(x=x,on=on,type=type,lty=lty,lwd=lwd,pch=pch,...)),
+         list(x=x,on=on,type=type,lty=lty,lwd=lwd,pch=pch,...))
   exp <- parse(text=gsub("list","plot_lines",
                          as.expression(substitute(list(x=current.xts_chob(),
                                                        ta=get("x"),
                                                        on=on,
                                                        type=type,
+                                                       lty=lty,
+                                                       lwd=lwd,
                                                        pch=pch,
                                                        ...)))),
                srcfile=NULL)
@@ -845,7 +848,7 @@ addLines <- function(x, main="", on=NA, type="l", pch=0, ...){
                                 col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
     plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
     
-    # add frame for the actual drawdowns data
+    # add frame for the data
     plot_object$add_frame(ylim=ylim,asp=1,fixed=TRUE)
     plot_object$next_frame()
     
@@ -886,6 +889,162 @@ addLines <- function(x, main="", on=NA, type="l", pch=0, ...){
   }
   plot_object
 }
+
+addPoints <- function(x, main="", on=NA, pch=0, ...){
+  addSeries(x, main=main, on=on, type="p", pch=pch, ...)
+}
+
+
+addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", main="", on=NA, lty=1, lwd=1, col=1, ...){
+  # add checks for event.dates and event.labels
+  if(!is.null(event.labels))
+    if(length(event.dates) != length(event.labels)) stop("length of event.dates must match length of event.labels")
+  
+  lenv <- new.env()
+  lenv$main <- main
+  lenv$plot_event_lines <- function(x, event.dates, event.labels, date.format, on, lty, lwd, col, ...){
+    xdata <- x$Env$xdata
+    xsubset <- x$Env$xsubset
+    colorset <- x$Env$theme$colorset
+    if(all(is.na(on))){
+      # Add x-axis grid lines
+      segments(axTicksByTime2(xdata[xsubset]),
+               par("usr")[3],
+               axTicksByTime2(xdata[xsubset]),
+               par("usr")[4],
+               col=x$Env$theme$grid)
+    }
+    ypos <- x$Env$ylim[[2*on]][2]
+    # create a new xts object out of event.dates
+    event.dates.xts <- xts(rep(999, length(event.dates)), order.by=as.Date(event.dates, format=date.format))
+    # we can add points that are not necessarily at the points on the main series
+    subset.range <- paste(start(xdata[xsubset]),
+                          end(xdata[xsubset]),sep="/")
+    ta.adj <- merge(n=.xts(1:NROW(xdata[xsubset]),
+                           .index(xdata[xsubset]), 
+                           tzone=indexTZ(xdata)),event.dates.xts)[subset.range]
+    ta.x <- as.numeric(na.approx(ta.adj[,1], rule=2) )
+    ta.y <- ta.adj[,-1]
+    event.ind <- which(ta.y == 999)
+    abline(v=event.ind, col=col, lty=lty, lwd=lwd)
+    text(x=event.ind, y=ypos, labels=event.labels, offset=.2, pos=2, , srt=90, col=1)
+  }
+  
+  plot_object <- current.xts_chob()
+  ncalls <- length(plot_object$Env$call_list)
+  plot_object$Env$call_list[[ncalls+1]] <- match.call()
+  
+  if(is.na(on[1])){
+    # map all passed args (if any) to 'lenv' environment
+    mapply(function(name,value) { assign(name,value,envir=lenv) }, 
+           names(list(event.dates=event.dates,event.labels=event.labels,date.format=date.format,on=on,lty=lty,lwd=lwd,col=col,...)),
+           list(event.dates=event.dates,event.labels=event.labels,date.format=date.format,on=on,lty=lty,lwd=lwd,col=col,...))
+    exp <- parse(text=gsub("list","plot_event_lines",
+                           as.expression(substitute(list(x=current.xts_chob(),
+                                                         event.dates=event.dates,
+                                                         event.labels=event.labels,
+                                                         date.format=date.format,
+                                                         on=on,
+                                                         lty=lty,
+                                                         lwd=lwd,
+                                                         col=col,
+                                                         ...)))),
+                 srcfile=NULL)
+    
+    xdata <- plot_object$Env$xdata
+    xsubset <- plot_object$Env$xsubset
+    no.update <- FALSE
+    lenv$xdata <- xdata
+    ylim <- range(na.omit(xdata))
+    lenv$ylim <- ylim
+  
+    # add the frame for drawdowns info
+    plot_object$add_frame(ylim=c(0,1),asp=0.25)
+    plot_object$next_frame()
+    text.exp <- expression(text(x=1, y=0.3, labels=main,
+                                col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
+    plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+    
+    # add frame for the data
+    plot_object$add_frame(ylim=ylim,asp=1,fixed=TRUE)
+    plot_object$next_frame()
+    
+    # define function to plot the y-axis grid lines
+    lenv$y_grid_lines <- function(ylim) { 
+      #pretty(range(xdata[xsubset]))
+      p <- pretty(ylim,5)
+      p[p > ylim[1] & p < ylim[2]]
+    }
+    
+    # NOTE 'exp' was defined earlier as chart.lines
+    exp <- c(exp, 
+             # y-axis grid lines
+             expression(segments(1,y_grid_lines(ylim),
+                                 NROW(xdata[xsubset]), y_grid_lines(ylim), 
+                                 col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)))
+    if(plot_object$Env$theme$lylab){
+      exp <- c(exp, 
+               # y-axis labels/boxes
+               expression(text(1-1/3-max(strwidth(y_grid_lines(ylim))), y_grid_lines(ylim),
+                               noquote(format(y_grid_lines(ylim),justify="right")),
+                               col=theme$labels, srt=theme$srt, offset=0, 
+                               pos=4, cex=theme$cex.axis, xpd=TRUE)))
+    }
+    if(plot_object$Env$theme$rylab){
+      exp <- c(exp, 
+               expression(text(NROW(xdata[xsubset])+1/3, y_grid_lines(ylim),
+                               noquote(format(y_grid_lines(ylim),justify="right")),
+                               col=theme$labels, srt=theme$srt, offset=0,
+                               pos=4, cex=theme$cex.axis, xpd=TRUE)))
+    }
+    plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
+  } else {
+    for(i in 1:length(on)) {
+      ind <- on[i]
+      no.update <- FALSE
+      # map all passed args (if any) to 'lenv' environment
+      mapply(function(name,value) { assign(name,value,envir=lenv) }, 
+             names(list(event.dates=event.dates,event.labels=event.labels,date.format=date.format,on=ind,lty=lty,lwd=lwd,col=col,...)),
+             list(event.dates=event.dates,event.labels=event.labels,date.format=date.format,on=ind,lty=lty,lwd=lwd,col=col,...))
+      exp <- parse(text=gsub("list","plot_event_lines",
+                             as.expression(substitute(list(x=current.xts_chob(),
+                                                           event.dates=event.dates,
+                                                           event.labels=event.labels,
+                                                           date.format=date.format,
+                                                           on=ind,
+                                                           lty=lty,
+                                                           lwd=lwd,
+                                                           col=col,
+                                                           ...)))),
+                   srcfile=NULL)
+  
+      plot_object$set_frame(2*on[i]) # this is defaulting to using headers, should it be optionable?
+      plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=no.update)
+    }
+  }
+  plot_object
+}
+
+
+# # Needed for finding aligned dates for event lines and period areas
+# rownames = as.Date(time(y))
+# rownames = format(strptime(rownames,format = date.format.in), date.format)
+# # Add event.lines before drawing the data
+# # This only labels the dates it finds
+# if(!is.null(event.lines)) {
+#   event.ind = NULL
+#   for(event in 1:length(event.lines)){
+#     event.ind = c(event.ind, grep(event.lines[event], rownames))
+#   }
+#   number.event.labels = ((length(event.labels)-length(event.ind) + 1):length(event.labels))
+#   
+#   abline(v = event.ind, col = event.color, lty = 2)
+#   if(!is.null(event.labels)) {
+#     text(x=event.ind,y=ylim[2], label = event.labels[number.event.labels], offset = .2, pos = 2, cex = cex.labels, srt=90, col = event.color)
+#   }
+# }
+
+
 
 # based on quantmod::add_TA
 # addLines <- function(x, main="", order=NULL, on=NA, legend="auto",

@@ -40,6 +40,8 @@ plot2_xts(R, multi.panel=TRUE, type="h")
 plot2_xts(R, FUN=CumReturns)
 addReturns(type="h")
 addDrawdowns()
+addLines(c("1999-01-01", "2000-01-01", "2005-01-01"), c("foo", "bar", "pizza"), on=1:3)
+addLines(c("1999-01-01", "2000-01-01", "2005-01-01"))
 
 
 plot2_xts(R, FUN="CumReturns",
@@ -134,10 +136,19 @@ addLines2(tmp2, on=1, type="p", pch=5)
 addLines2(tmp3, on=1, type="p", pch=2)
 
 
-png("~/Documents/foo.png")
-plot2_xts(R, FUN="CumReturns")
-addDrawdowns()
-dev.off()
+stock.str='AAPL'
+initDate="2011-01-01" 
+endDate="2012-12-31"   
+getSymbols(stock.str,from=initDate,to=endDate, src="yahoo")
+plot2_xts(Ad(AAPL))
+addLines(c("2011-11-04", "2012-11-10", "2012-05-28"), on=1)
+addLines(c("2011-03-04", "2012-01-10", "2012-07-28"), on=1)
+addLines(c("2011-11-04", "2012-11-10", "2012-05-28"), on=1)
+
+# png("~/Documents/foo.png")
+# plot2_xts(R, FUN="CumReturns")
+# addDrawdowns()
+# dev.off()
 
 ##### scratch area #####
 # Should we have a theme object, as in quantmod, that sets all of the basic 

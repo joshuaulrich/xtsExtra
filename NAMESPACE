@@ -14,13 +14,17 @@ S3method(plot, xts)
 S3method(barplot, xts)
 
 export("plot2_xts")
+export("addSeries")
+export("addPoints")
+export("addLines")
+export("addLegend")
+
 export("chart_pars")
 export("xtsExtraTheme")
 export("addDrawdowns")
-export("addLines")
 export("addReturns")
 export("addRollingPerformance")
-export("addLegend")
+
 S3method(print, replot_xts)
 S3method(plot, replot_xts)
 
