@@ -688,6 +688,8 @@ plot2_xts <- function(x,
       }
   }
   } else {
+    if(type == "h" & NCOL(x) > 1) 
+      warning("only the univariate series will be plotted")
     cs$add(expression(chart.lines(R[xsubset], 
                                   type=type, 
                                   lty=lty,
@@ -1029,6 +1031,9 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
   # get the raw returns data
   xdata <- plot_object$Env$xdata
   xsubset <- plot_object$Env$xsubset
+  
+  if(type == "h" & NCOL(xdata) > 1) 
+      warning("only the univariate series will be plotted")
   
   # add data to the local environment
   lenv$xdata <- xdata
