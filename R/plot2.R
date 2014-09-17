@@ -49,7 +49,7 @@ chart.lines <- function(x,
     barplot.default(t(negatives), add=TRUE, col=colorset, axisnames=FALSE, axes=FALSE)
   }
   if(!is.null(legend.loc)){
-    yrange <- range(na.omit(x))
+    yrange <- range(x, na.rm=TRUE)
     nobs <- NROW(x)
     switch(legend.loc,
            topleft = {
@@ -284,13 +284,13 @@ plot.xts <- function(x,
           R <- try(do.call(fun, .formals), silent=TRUE)
           if(inherits(R, "try-error")) { 
             message(paste("FUN function failed with message", R))
-            ylim <- range(na.omit(x[subset]))
+            ylim <- range(x[subset], na.rm=TRUE)
           } else {
-            ylim <- range(na.omit(R[subset]))
+            ylim <- range(R[subset], na.rm=TRUE)
           }
         } else {
            # set the ylim based on the data passed into the x argument
-          ylim <- range(na.omit(x[subset]))
+          ylim <- range(x[subset], na.rm=TRUE)
         }
       }
     }
@@ -378,8 +378,8 @@ plot.xts <- function(x,
              if(frame %% 2 == 0 && !fixed) {
                lenv <- attr(x,"env")
                if(is.list(lenv)) lenv <- lenv[[1]]
-               min.tmp <- min(ylim[[frame]][1],range(na.omit(lenv$xdata[Env$xsubset]))[1],na.rm=TRUE)
-               max.tmp <- max(ylim[[frame]][2],range(na.omit(lenv$xdata[Env$xsubset]))[2],na.rm=TRUE)
+               min.tmp <- min(ylim[[frame]][1],range(lenv$xdata[Env$xsubset], na.rm=TRUE)[1],na.rm=TRUE)
+               max.tmp <- max(ylim[[frame]][2],range(lenv$xdata[Env$xsubset], na.rm=TRUE)[2],na.rm=TRUE)
                ylim[[frame]] <<- structure(c(min.tmp,max.tmp),fixed=fixed)
              }
            })
@@ -477,16 +477,16 @@ plot.xts <- function(x,
     if(isTRUE(multi.panel)){
       if(yaxis.same){
         # set the ylim for the first panel based on all the data
-        cs$set_ylim(list(structure(range(na.omit(cs$Env$R[subset])),fixed=TRUE)))
+        cs$set_ylim(list(structure(range(cs$Env$R[subset], na.rm=TRUE),fixed=TRUE)))
       } else {
         # set the ylim for the first panel based on the first column
-        cs$set_ylim(list(structure(range(na.omit(cs$Env$R[,1][subset])),fixed=TRUE))) 
+        cs$set_ylim(list(structure(range(cs$Env$R[,1][subset], na.rm=TRUE),fixed=TRUE))) 
       }
     } else {
       # set the ylim based on all the data if this is not a multi.panel plot
-      cs$set_ylim(list(structure(range(na.omit(cs$Env$R[subset])),fixed=TRUE)))
+      cs$set_ylim(list(structure(range(cs$Env$R[subset], na.rm=TRUE),fixed=TRUE)))
     }
-    cs$Env$constant_ylim <- range(na.omit(cs$Env$R[subset]))
+    cs$Env$constant_ylim <- range(cs$Env$R[subset], na.rm=TRUE)
   } else {
     # use the ylim arg passed in
     cs$set_ylim(list(structure(ylim, fixed=TRUE)))
@@ -588,7 +588,7 @@ plot.xts <- function(x,
     if(yaxis.same){
       lenv$ylim <- cs$Env$constant_ylim
     } else {
-      lenv$ylim <- range(na.omit(cs$Env$R[,1][subset]))
+      lenv$ylim <- range(cs$Env$R[,1][subset], na.rm=TRUE)
     }
     exp <- expression(chart.lines(xdata, 
                                   type=type, 
@@ -616,7 +616,7 @@ plot.xts <- function(x,
         if(yaxis.same){
           lenv$ylim <- cs$Env$constant_ylim
         } else {
-          lenv$ylim <- range(na.omit(cs$Env$R[,i][subset]))
+          lenv$ylim <- range(cs$Env$R[,i][subset], na.rm=TRUE)
         }
         lenv$type <- cs$Env$type
         
@@ -761,7 +761,7 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
   
   # add frame for the actual drawdowns data
   if(is.null(ylim)) {
-    ylim <- range(na.omit(lenv$xdata[xsubset]))
+    ylim <- range(lenv$xdata[xsubset], na.rm=TRUE)
     lenv$ylim <- ylim
   }
   plot_object$add_frame(ylim=ylim,asp=1,fixed=TRUE)
@@ -788,13 +788,17 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
 }
 
 
-addSeries <- function(x, main="", on=NA, type="l", lty=1, lwd=1, pch=0, ...){
+addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0, ...){
   lenv <- new.env()
   lenv$main <- main
-  lenv$plot_lines <- function(x, ta, on, type, lty, lwd, pch, ...){
+  lenv$plot_lines <- function(x, ta, on, type, col, lty, lwd, pch, ...){
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
-    colorset <- x$Env$theme$colorset
+    if(is.null(col)){
+      colorset <- x$Env$theme$colorset
+    } else {
+      colorset <- col
+    }
     if(all(is.na(on))){
       # Add x-axis grid lines
       segments(axTicksByTime2(xdata[xsubset]),
@@ -816,13 +820,14 @@ addSeries <- function(x, main="", on=NA, type="l", lty=1, lwd=1, pch=0, ...){
   }
   # map all passed args (if any) to 'lenv' environment
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
-         names(list(x=x,on=on,type=type,lty=lty,lwd=lwd,pch=pch,...)),
-         list(x=x,on=on,type=type,lty=lty,lwd=lwd,pch=pch,...))
+         names(list(x=x,on=on,type=type,col=col,lty=lty,lwd=lwd,pch=pch,...)),
+         list(x=x,on=on,type=type,col=col,lty=lty,lwd=lwd,pch=pch,...))
   exp <- parse(text=gsub("list","plot_lines",
                          as.expression(substitute(list(x=current.xts_chob(),
                                                        ta=get("x"),
                                                        on=on,
                                                        type=type,
+                                                       col=col,
                                                        lty=lty,
                                                        lwd=lwd,
                                                        pch=pch,
@@ -837,7 +842,7 @@ addSeries <- function(x, main="", on=NA, type="l", lty=1, lwd=1, pch=0, ...){
   xsubset <- plot_object$Env$xsubset
   no.update <- FALSE
   lenv$xdata <- merge(x,xdata,retside=c(TRUE,FALSE))
-  ylim <- range(na.omit(lenv$xdata[xsubset]))
+  ylim <- range(lenv$xdata[xsubset], na.rm=TRUE)
   lenv$ylim <- ylim
   
   if(is.na(on)){
@@ -955,7 +960,7 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
     xsubset <- plot_object$Env$xsubset
     no.update <- FALSE
     lenv$xdata <- xdata
-    ylim <- range(na.omit(xdata))
+    ylim <- range(xdata[xsubset], na.rm=TRUE)
     lenv$ylim <- ylim
   
     # add the frame for drawdowns info
@@ -1209,7 +1214,7 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
   
   # add frame for the actual data
   if(is.null(ylim)) {
-    ylim <- range(na.omit(lenv$xdata[xsubset]))
+    ylim <- range(lenv$xdata[xsubset], na.rm=TRUE)
     lenv$ylim <- ylim
   }
   plot_object$add_frame(ylim=ylim,asp=1,fixed=TRUE)
@@ -1281,7 +1286,7 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
   
   # add frame for the actual drawdowns data
   if(is.null(ylim)) {
-    ylim <- range(na.omit(lenv$xdata[xsubset]))
+    ylim <- range(lenv$xdata[xsubset], na.rm=TRUE)
     lenv$ylim <- ylim
   }
   plot_object$add_frame(ylim=ylim,asp=1,fixed=TRUE)
