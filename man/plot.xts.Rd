@@ -3,8 +3,8 @@
 \alias{plot.xts}
 \title{Time series Plotting}
 \usage{
-\method{plot}{xts}(x, y = NULL, ..., subset = "", FUN = NULL, panels = NULL,
-  multi.panel = FALSE, colorset = 1:12, up.col = "green",
+\method{plot}{xts}(x, y = NULL, ..., subset = "", FUN = NULL,
+  panels = NULL, multi.panel = FALSE, colorset = 1:12, up.col = "green",
   dn.col = "red", type = "l", lty = 1, lwd = 2, lend = 1,
   main = deparse(substitute(x)), clev = 0, cex = 0.6, cex.axis = 0.9,
   mar = c(3, 2, 0, 2), srt = 0, xaxis.las = 0, ylim = NULL,
@@ -93,5 +93,8 @@ center. Default NULL does not draw a legend.}
 \description{
 Plotting for xts objects.
 TODO: description, details, and examples
+}
+\author{
+Ross Bennett
 }
 

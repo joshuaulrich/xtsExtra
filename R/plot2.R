@@ -217,8 +217,7 @@ xtsExtraTheme <- function(){
 #' @param legend.loc places a legend into one of nine locations on the chart: 
 #' bottomright, bottom, bottomleft, left, topleft, top, topright, right, or 
 #' center. Default NULL does not draw a legend. 
-#' 
-#' 
+#' @author Ross Bennett
 plot.xts <- function(x, 
                       y=NULL,
                       ...,
@@ -787,7 +786,18 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
   plot_object
 }
 
-
+#' Add a time series to an existing xts plot
+#' 
+#' @param x an xts object to plot.
+#' @param main main title for a new panel if drawn.
+#' @param on panel number to draw on. A new panel will be drawn if \code{on=NA}.
+#' @param type the type of plot to be drawn, same as in \code{\link{plot}}.
+#' @param col color palette to use, set by default to rational choices.
+#' @param lty set the line type, same as in \code{\link{plot}}.
+#' @param lwd set the line width, same as in \code{\link{plot}}.
+#' @param pch the type of plot to be drawn, same as in \code{\link{plot}}.
+#' @param \dots any other passthrough parameters. Not currently used.
+#' @author Ross Bennett
 addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0, ...){
   lenv <- new.env()
   lenv$main <- main
@@ -895,11 +905,37 @@ addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0
   plot_object
 }
 
-addPoints <- function(x, main="", on=NA, pch=0, ...){
-  addSeries(x, main=main, on=on, type="p", pch=pch, ...)
+#' Add time series of points to an existing xts plot
+#' 
+#' @param x an xts object to plot.
+#' @param main main title for a new panel if drawn.
+#' @param on panel number to draw on. A new panel will be drawn if \code{on=NA}.
+#' @param col color palette to use, set by default to rational choices.
+#' @param pch the type of plot to be drawn, same as in \code{\link{plot}}.
+#' @param \dots any other passthrough parameters. Not currently used.
+#' @author Ross Bennett
+addPoints <- function(x, main="", on=NA, col=NULL, pch=0, ...){
+  addSeries(x, main=main, on=on, type="p", col=col, pch=pch, ...)
 }
 
-
+#' Add vertical lines to an existing xts plot
+#' 
+#' @param event.lines character vector of dates. Vertical lines will be drawn 
+#' to indicate that an event happened during that time period.  \code{event.lines} should
+#' be a vector of dates (e.g., \code{c("09/03","05/06"))} formatted the same as
+#' \code{date.format}. This function matches the re-formatted row names (dates) with
+#' the events.list, so to get a match the formatting needs to be correct.
+#' @param event.labels character vector of event labels corresponding to 
+#' \code{event.lines}. This will apply text labels (e.g., 
+#' \code{c("This Event", "That Event")} to the vertical lines drawn.
+#' @param date.format format for the dates in \code{event.lines}.
+#' @param main main title for a new panel if drawn.
+#' @param on panel number to draw on. A new panel will be drawn if \code{on=NA}.
+#' @param lty set the line type, same as in \code{\link{plot}}.
+#' @param lwd set the line width, same as in \code{\link{plot}}.
+#' @param col color palette to use, set by default to rational choices.
+#' @param \dots any other passthrough parameters. Not currently used.
+#' @author Ross Bennett
 addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", main="", on=NA, lty=1, lwd=1, col=1, ...){
   # add checks for event.dates and event.labels
   if(!is.null(event.labels))
@@ -1312,6 +1348,14 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
   plot_object
 }
 
+#' Add Legend
+#' 
+#' @param legend.loc legend.loc places a legend into one of nine locations on 
+#' the chart: bottomright, bottom, bottomleft, left, topleft, top, topright, 
+#' right, or center.
+#' @param ncol number of columns for the legend
+#' @param \dots any other passthrough parameters. Not currently used.
+#' @author Ross Bennett
 addLegend <- function(legend.loc="center", ncol=1, ...){
   lenv <- new.env()
   lenv$main <- ""
