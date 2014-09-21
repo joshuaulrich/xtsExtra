@@ -102,6 +102,7 @@ foo <- function(x){
 }
 plot(R, FUN=foo)
 addLegend(ncol = 4)
+addLegend(legend.names = c("foo", "bar"), colorset = c(1,2), ncol=2)
 
 plot(R, FUN=foo, legend.loc="topleft")
 plot(R, FUN=foo, legend.loc="left")

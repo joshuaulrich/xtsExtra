@@ -1403,10 +1403,14 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
 #' @param legend.loc legend.loc places a legend into one of nine locations on 
 #' the chart: bottomright, bottom, bottomleft, left, topleft, top, topright, 
 #' right, or center.
+#' @param legend.names character vector of names for the legend. If \code{NULL},
+#' the column names of the current plot object are used.
+#' @param colorset fill colorset for the legend. If \code{NULL},
+#' the colorset of the current plot object data is used.
 #' @param ncol number of columns for the legend
 #' @param \dots any other passthrough parameters. Not currently used.
 #' @author Ross Bennett
-addLegend <- function(legend.loc="center", ncol=1, ...){
+addLegend <- function(legend.loc="center", legend.names=NULL, colorset=NULL, ncol=1, ...){
   lenv <- new.env()
   lenv$main <- ""
   
@@ -1491,8 +1495,16 @@ addLegend <- function(legend.loc="center", ncol=1, ...){
   lenv$ly <- ly
   lenv$xjust <- xjust
   lenv$yjust <- yjust
-  lenv$colorset <- plot_object$Env$theme$colorset[1:nc]
-  lenv$names <- plot_object$Env$column_names
+  if(!is.null(colorset)){
+    lenv$colorset <- colorset[1:nc]
+  } else {
+    lenv$colorset <- plot_object$Env$theme$colorset[1:nc]
+  }
+  if(!is.null(legend.names)){
+    lenv$names <- legend.names
+  } else {
+    lenv$names <- plot_object$Env$column_names
+  }
   lenv$nc <- ncol
   # add expression for legend
   exp <- expression(legend(x=lx, y=ly, legend=names, xjust=xjust, yjust=yjust, 
