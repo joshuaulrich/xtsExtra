@@ -23,14 +23,19 @@ chart.lines <- function(x,
                         pch=1){
   if(is.null(up.col)) up.col <- "green"
   if(is.null(dn.col)) dn.col <- "red"
+  xx <- current.xts_chob()
   if(type == "h"){
     colors <- ifelse(x[,1] < 0, dn.col, up.col)
-    lines(1:NROW(x),x[,1],lwd=2,col=colors,lend=lend,lty=1,type="h")
+    # lines(1:NROW(x),x[,1],lwd=2,col=colors,lend=lend,lty=1,type="h")
+    # non-equally spaced x-axis
+    lines(xx$Env$xycoords$x,x[,1],lwd=2,col=colors,lend=lend,lty=1,type="h")
   } else if(type == "l" || type == "p") {
     if(length(lty) == 1) lty <- rep(lty, NCOL(x))
     if(length(lwd) == 1) lwd <- rep(lwd, NCOL(x))
     for(i in NCOL(x):1){
-      lines(1:NROW(x), x[,i], type=type, lend=lend, col=colorset[i], lty=lty[i], lwd=lwd[i], pch=pch)
+      # lines(1:NROW(x), x[,i], type=type, lend=lend, col=colorset[i], lty=lty[i], lwd=lwd[i], pch=pch)
+      # non-equally spaced x-axis
+      lines(xx$Env$xycoords$x, x[,i], type=type, lend=lend, col=colorset[i], lty=lty[i], lwd=lwd[i], pch=pch)
     }
   } else if(type == "bar"){
     # This does not work correctly
@@ -50,60 +55,61 @@ chart.lines <- function(x,
   }
   if(!is.null(legend.loc)){
     yrange <- range(x, na.rm=TRUE)
-    nobs <- NROW(x)
+    # nobs <- NROW(x)
+    chob.xlim <- xx$Env$xlim
     switch(legend.loc,
            topleft = {
              xjust <- 0
              yjust <- 1
-             lx <- 1
+             lx <- chob.xlim[1]
              ly <- yrange[2]
              },
            left = {
              xjust <- 0
              yjust <- 0.5
-             lx <- 1
+             lx <- chob.xlim[1]
              ly <- sum(yrange) / 2
              },
            bottomleft = {
              xjust <- 0
              yjust <- 0
-             lx <- 1
+             lx <- chob.xlim[1]
              ly <- yrange[1]
              },
            top = {
              xjust <- 0.5
              yjust <- 1
-             lx <- nobs / 2
+             lx <- (chob.xlim[1] + chob.xlim[2]) / 2
              ly <- yrange[2]
              },
            center = {
              xjust <- 0.5
              yjust <- 0.5
-             lx <- nobs / 2
+             lx <- (chob.xlim[1] + chob.xlim[2]) / 2
              ly <- sum(yrange) / 2
              },
            bottom = {
              xjust <- 0.5
              yjust <- 0
-             lx <- nobs / 2
+             lx <- (chob.xlim[1] + chob.xlim[2]) / 2
              ly <- yrange[1]
              },
            topright = {
              xjust <- 1
              yjust <- 1
-             lx <- nobs
+             lx <- chob.xlim[2]
              ly <- yrange[2]
              },
            right = {
              xjust <- 1
              yjust <- 0.5
-             lx <- nobs
+             lx <- chob.xlim[2]
              ly <- sum(yrange) / 2
              },
            bottomright = {
              xjust <- 1
              yjust <- 0
-             lx <- nobs
+             lx <- chob.xlim[2]
              ly <- yrange[1]
            }
            )
@@ -363,7 +369,9 @@ plot.xts <- function(x,
       x <- "" #1:NROW(Env$xdata)
     }
     Env$xsubset <<- x
-    set_xlim(c(1,NROW(Env$xdata[Env$xsubset])))
+    # set_xlim(c(1,NROW(Env$xdata[Env$xsubset])))
+    # non equally spaced x-axis
+    set_xlim(range(Env$xycoords$x, na.rm=TRUE))
     ylim <- get_ylim()
     for(y in seq(2,length(ylim),by=2)) {
       if(!attr(ylim[[y]],'fixed'))
@@ -446,6 +454,12 @@ plot.xts <- function(x,
   cs$Env$nobs <- NROW(cs$Env$xdata)
   cs$Env$main <- main
   
+  # non equally spaced x-axis
+  xycoords <- xy.coords(.index(cs$Env$xdata[cs$Env$xsubset]), 
+                        cs$Env$xdata[cs$Env$xsubset][,1])
+  cs$Env$xycoords <- xycoords
+  cs$Env$xlim <- range(xycoords$x, na.rm=TRUE)
+  
   # Compute transformation if specified by panel argument
   # rough prototype for calling a function for the main "panel"
   if(!is.null(FUN)){
@@ -467,7 +481,10 @@ plot.xts <- function(x,
   }
   
   # Set xlim based on the raw returns data passed into function
-  cs$set_xlim(c(1,NROW(cs$Env$xdata[subset])))
+  # cs$set_xlim(c(1,NROW(cs$Env$xdata[subset])))
+  # non equally spaced x-axis
+  cs$set_xlim(cs$Env$xlim)
+  
   
   # Set ylim based on the transformed data
   # chart_Series uses fixed=FALSE and add_* uses fixed=TRUE, not sure why or
@@ -505,9 +522,9 @@ plot.xts <- function(x,
   
   # compute the x-axis ticks
   cs$add(expression(atbt <- axTicksByTime2(xdata[xsubset]),
-                    segments(atbt, #axTicksByTime2(xdata[xsubset]),
+                    segments(xycoords$x[atbt], #axTicksByTime2(xdata[xsubset]),
                              get_ylim()[[2]][1],
-                             atbt, #axTicksByTime2(xdata[xsubset]),
+                             xycoords$x[atbt], #axTicksByTime2(xdata[xsubset]),
                              get_ylim()[[2]][2], 
                              col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)),
          clip=FALSE,expr=TRUE)
@@ -518,11 +535,12 @@ plot.xts <- function(x,
   
   # add observation level ticks on x-axis if < 400 obs.
   cs$add(expression(if(NROW(xdata[xsubset])<400) 
-  {axis(1,at=1:NROW(xdata[xsubset]),labels=FALSE,col=theme$grid2,tcl=0.3)}),expr=TRUE)
+  {axis(1,at=xycoords$x,labels=FALSE,col=theme$grid2,tcl=0.3)}),expr=TRUE)
   
   # add "month" or "month.abb"
   cs$add(expression(axt <- axTicksByTime(xdata[xsubset],format.labels=format.labels),
-                    axis(1,at=axt, #axTicksByTime(xdata[xsubset]),
+                    axis(1,
+                         at=xycoords$x[axt], #axTicksByTime(xdata[xsubset]),
                          labels=names(axt), #axTicksByTime(xdata[xsubset],format.labels=format.labels)),
                          las=theme$xaxis.las, lwd.ticks=1, mgp=c(3,1.5,0), 
                          tcl=-0.4, cex.axis=theme$cex.axis)),
@@ -532,8 +550,8 @@ plot.xts <- function(x,
   #if((isTRUE(multi.panel)) | (multi.panel == 1) | (NCOL(x) == 1))
   #  cs$Env$main <- cs$Env$column_names[1] else cs$Env$main <- main
   
-  text.exp <- c(expression(text(1-1/3,0.5,main,font=2,col='#444444',offset=0,cex=1.1,pos=4)),
-                expression(text(NROW(xdata[xsubset]),0.5,
+  text.exp <- c(expression(text(xlim[1],0.5,main,font=2,col='#444444',offset=0,cex=1.1,pos=4)),
+                expression(text(xlim[2],0.5,
                                 paste(start(xdata[xsubset]),end(xdata[xsubset]),sep=" / "),
                                 col=1,adj=c(0,0),pos=2)))
   cs$add(text.exp, env=cs$Env, expr=TRUE)
@@ -553,13 +571,15 @@ plot.xts <- function(x,
   }
   
   # add y-axis grid lines and labels
-  exp <- expression(segments(1, y_grid_lines(get_ylim()[[2]]), 
-                             NROW(xdata[xsubset]), y_grid_lines(get_ylim()[[2]]), 
+  exp <- expression(segments(xlim[1], 
+                             y_grid_lines(get_ylim()[[2]]), 
+                             xlim[2], 
+                             y_grid_lines(get_ylim()[[2]]), 
                              col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty))
   if(yaxis.left){
     exp <- c(exp, 
              # left y-axis labels
-             expression(text(1-1/3-max(strwidth(y_grid_lines(get_ylim()[[2]]))), 
+             expression(text(xlim[1]-0.5-max(strwidth(y_grid_lines(get_ylim()[[2]]))), 
                              y_grid_lines(get_ylim()[[2]]),
                              noquote(format(y_grid_lines(get_ylim()[[2]]), justify="right")),
                              col=theme$labels, srt=theme$srt, offset=0, pos=4, 
@@ -568,7 +588,8 @@ plot.xts <- function(x,
   if(yaxis.right){
     exp <- c(exp, 
              # right y-axis labels
-             expression(text(NROW(R[xsubset])+1/3, y_grid_lines(get_ylim()[[2]]),
+             expression(text(xlim[2]+0.5,
+                             y_grid_lines(get_ylim()[[2]]),
                              noquote(format(y_grid_lines(get_ylim()[[2]]), justify="right")),
                              col=theme$labels, srt=theme$srt, offset=0, pos=4, 
                              cex=theme$cex.axis, xpd=TRUE)))
@@ -600,7 +621,7 @@ plot.xts <- function(x,
                                   legend.loc=legend.loc))
     # Add expression for the main plot
     cs$add(exp, env=c(lenv,cs$Env), expr=TRUE)
-    text.exp <- expression(text(x=2,
+    text.exp <- expression(text(x=xycoords$x[2],
                                 y=ylim[2]*0.9,
                                 labels=label,
                                 adj=c(0,0),cex=1,offset=0,pos=4))
@@ -622,7 +643,7 @@ plot.xts <- function(x,
         # Add a small frame
         cs$add_frame(ylim=c(0,1),asp=0.25)
         cs$next_frame()
-        text.exp <- expression(text(x=1,
+        text.exp <- expression(text(x=xlim[1],
                                     y=0.5,
                                     labels="",
                                     adj=c(0,0),cex=0.9,offset=0,pos=4))
@@ -653,33 +674,36 @@ plot.xts <- function(x,
         # NOTE 'exp' was defined earlier as chart.lines
         exp <- c(exp, 
                  # y-axis grid lines
-                 expression(segments(1,y_grid_lines(ylim),
-                                     NROW(xdata[xsubset]), y_grid_lines(ylim), 
+                 expression(segments(xlim[1],
+                                     y_grid_lines(ylim),
+                                     xlim[2], 
+                                     y_grid_lines(ylim), 
                                      col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)),
                  # x-axis grid lines
                  expression(atbt <- axTicksByTime2(xdata[xsubset]),
-                            segments(atbt, #axTicksByTime2(xdata[xsubset]),
+                            segments(xycoords$x[atbt], #axTicksByTime2(xdata[xsubset]),
                                      ylim[1],
-                                     atbt, #axTicksByTime2(xdata[xsubset]),
+                                     xycoords$x[atbt], #axTicksByTime2(xdata[xsubset]),
                                      ylim[2], 
                                      col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)))
         if(yaxis.left){
           exp <- c(exp, 
                    # y-axis labels/boxes
-                   expression(text(1-1/3-max(strwidth(y_grid_lines(ylim))), y_grid_lines(ylim),
+                   expression(text(xlim[1]-0.5-max(strwidth(y_grid_lines(ylim))), 
+                                   y_grid_lines(ylim),
                                    noquote(format(y_grid_lines(ylim),justify="right")),
                                    col=theme$labels, srt=theme$srt, offset=0, 
                                    pos=4, cex=theme$cex.axis, xpd=TRUE)))
         }
         if(yaxis.right){
           exp <- c(exp, 
-                   expression(text(NROW(xdata[xsubset])+1/3, y_grid_lines(ylim),
+                   expression(text(xlim[2]+0.5, y_grid_lines(ylim),
                                    noquote(format(y_grid_lines(ylim),justify="right")),
                                    col=theme$labels, srt=theme$srt, offset=0,
                                    pos=4, cex=theme$cex.axis, xpd=TRUE)))
         }
         cs$add(exp,env=c(lenv, cs$Env),expr=TRUE,no.update=TRUE)
-        text.exp <- expression(text(x=2,
+        text.exp <- expression(text(x=xycoords$x[2],
                                     y=ylim[2]*0.9,
                                     labels=label,
                                     adj=c(0,0),cex=1,offset=0,pos=4))
@@ -725,9 +749,10 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
     xsubset <- x$Env$xsubset
     colorset <- x$Env$theme$colorset
     # Add x-axis grid lines
-    segments(axTicksByTime2(xdata[xsubset]),
+    atbt <- axTicksByTime2(xdata[xsubset])
+    segments(x$Env$xycoords$x[atbt],
              par("usr")[3],
-             axTicksByTime2(xdata[xsubset]),
+             x$Env$xycoords$x[atbt],
              par("usr")[4],
              col=x$Env$theme$grid)
     drawdowns <- PerformanceAnalytics:::Drawdowns(xdata, geometric)[xsubset]
@@ -754,7 +779,7 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
   # add the frame for drawdowns info
   plot_object$add_frame(ylim=c(0,1),asp=0.25)
   plot_object$next_frame()
-  text.exp <- expression(text(x=1, y=0.3, labels=main,
+  text.exp <- expression(text(x=xlim[1], y=0.3, labels=main,
                               col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
   plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
   
@@ -772,14 +797,19 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
     p[p > ylim[1] & p < ylim[2]]
   }
   # add y-axis gridlines and labels
-  exp <- c(expression(segments(1,grid_lines(ylim),NROW(xdata[xsubset]),grid_lines(ylim),
+  exp <- c(expression(segments(xlim[1],
+                               grid_lines(ylim),
+                               xlim[2],
+                               grid_lines(ylim),
                                col=theme$grid)), 
            exp,  # NOTE 'exp' was defined earlier
            # add axis labels/boxes
-           expression(text(1-1/3-max(strwidth(grid_lines(ylim))),grid_lines(ylim),
+           expression(text(xlim[1]-0.5-max(strwidth(grid_lines(ylim))),
+                           grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
-           expression(text(NROW(xdata[xsubset])+1/3,grid_lines(ylim),
+           expression(text(xlim[2]+0.5,
+                           grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
   plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
@@ -811,9 +841,10 @@ addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0
     }
     if(all(is.na(on))){
       # Add x-axis grid lines
-      segments(axTicksByTime2(xdata[xsubset]),
+      atbt <- axTicksByTime2(xdata[xsubset])
+      segments(x$Env$xycoords$x[atbt],
                par("usr")[3],
-               axTicksByTime2(xdata[xsubset]),
+               x$Env$xycoords$x[atbt],
                par("usr")[4],
                col=x$Env$theme$grid)
     }
@@ -859,7 +890,7 @@ addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0
     # add the frame for drawdowns info
     plot_object$add_frame(ylim=c(0,1),asp=0.25)
     plot_object$next_frame()
-    text.exp <- expression(text(x=1, y=0.3, labels=main,
+    text.exp <- expression(text(x=xlim[1], y=0.3, labels=main,
                                 col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
     plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
     
@@ -877,20 +908,24 @@ addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0
     # NOTE 'exp' was defined earlier as chart.lines
     exp <- c(exp, 
              # y-axis grid lines
-             expression(segments(1,y_grid_lines(ylim),
-                                 NROW(xdata[xsubset]), y_grid_lines(ylim), 
+             expression(segments(xlim[1],
+                                 y_grid_lines(ylim),
+                                 xlim[2], 
+                                 y_grid_lines(ylim), 
                                  col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)))
     if(plot_object$Env$theme$lylab){
       exp <- c(exp, 
                # y-axis labels/boxes
-               expression(text(1-1/3-max(strwidth(y_grid_lines(ylim))), y_grid_lines(ylim),
+               expression(text(xlim[1]-0.5-max(strwidth(y_grid_lines(ylim))), 
+                               y_grid_lines(ylim),
                                noquote(format(y_grid_lines(ylim),justify="right")),
                                col=theme$labels, srt=theme$srt, offset=0, 
                                pos=4, cex=theme$cex.axis, xpd=TRUE)))
     }
     if(plot_object$Env$theme$rylab){
       exp <- c(exp, 
-               expression(text(NROW(xdata[xsubset])+1/3, y_grid_lines(ylim),
+               expression(text(xlim[2]+0.5, 
+                               y_grid_lines(ylim),
                                noquote(format(y_grid_lines(ylim),justify="right")),
                                col=theme$labels, srt=theme$srt, offset=0,
                                pos=4, cex=theme$cex.axis, xpd=TRUE)))
@@ -949,9 +984,10 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
     colorset <- x$Env$theme$colorset
     if(all(is.na(on))){
       # Add x-axis grid lines
-      segments(axTicksByTime2(xdata[xsubset]),
+      atbt <- axTicksByTime2(xdata[xsubset])
+      segments(x$Env$xycoords$x[atbt],
                par("usr")[3],
-               axTicksByTime2(xdata[xsubset]),
+               x$Env$xycoords$x[atbt],
                par("usr")[4],
                col=x$Env$theme$grid)
     }
@@ -967,8 +1003,8 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
     ta.x <- as.numeric(na.approx(ta.adj[,1], rule=2) )
     ta.y <- ta.adj[,-1]
     event.ind <- which(ta.y == 999)
-    abline(v=event.ind, col=col, lty=lty, lwd=lwd)
-    text(x=event.ind, y=ypos, labels=event.labels, offset=.2, pos=2, , srt=90, col=1)
+    abline(v=x$Env$xycoords$x[event.ind], col=col, lty=lty, lwd=lwd)
+    text(x=x$Env$xycoords$x[event.ind], y=ypos, labels=event.labels, offset=.2, pos=2, , srt=90, col=1)
   }
   
   plot_object <- current.xts_chob()
@@ -1002,7 +1038,7 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
     # add the frame for drawdowns info
     plot_object$add_frame(ylim=c(0,1),asp=0.25)
     plot_object$next_frame()
-    text.exp <- expression(text(x=1, y=0.3, labels=main,
+    text.exp <- expression(text(x=xlim[1], y=0.3, labels=main,
                                 col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
     plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
     
@@ -1020,20 +1056,24 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
     # NOTE 'exp' was defined earlier as chart.lines
     exp <- c(exp, 
              # y-axis grid lines
-             expression(segments(1,y_grid_lines(ylim),
-                                 NROW(xdata[xsubset]), y_grid_lines(ylim), 
+             expression(segments(xlim[1],
+                                 y_grid_lines(ylim),
+                                 xlim[2], 
+                                 y_grid_lines(ylim), 
                                  col=theme$grid, lwd=grid.ticks.lwd, lty=grid.ticks.lty)))
     if(plot_object$Env$theme$lylab){
       exp <- c(exp, 
                # y-axis labels/boxes
-               expression(text(1-1/3-max(strwidth(y_grid_lines(ylim))), y_grid_lines(ylim),
+               expression(text(xlim[1]-0.5-max(strwidth(y_grid_lines(ylim))), 
+                               y_grid_lines(ylim),
                                noquote(format(y_grid_lines(ylim),justify="right")),
                                col=theme$labels, srt=theme$srt, offset=0, 
                                pos=4, cex=theme$cex.axis, xpd=TRUE)))
     }
     if(plot_object$Env$theme$rylab){
       exp <- c(exp, 
-               expression(text(NROW(xdata[xsubset])+1/3, y_grid_lines(ylim),
+               expression(text(xlim[2]+0.5, 
+                               y_grid_lines(ylim),
                                noquote(format(y_grid_lines(ylim),justify="right")),
                                col=theme$labels, srt=theme$srt, offset=0,
                                pos=4, cex=theme$cex.axis, xpd=TRUE)))
@@ -1209,9 +1249,10 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
     up.col <- x$Env$theme$up.col
     dn.col <- x$Env$theme$dn.col
     # Add x-axis grid lines
-    segments(axTicksByTime2(xdata[xsubset]),
+    atbt <- axTicksByTime2(xdata[xsubset])
+    segments(x$Env$xycoords$x[atbt],
              par("usr")[3],
-             axTicksByTime2(xdata[xsubset]),
+             x$Env$xycoords$x[atbt],
              par("usr")[4],
              col=x$Env$theme$grid)
     chart.lines(xdata[xsubset], type=type, colorset=colorset, up.col=up.col, dn.col=dn.col)
@@ -1244,7 +1285,7 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
   # add the frame for time series info
   plot_object$add_frame(ylim=c(0,1),asp=0.25)
   plot_object$next_frame()
-  text.exp <- expression(text(x=1, y=0.3, labels=main,
+  text.exp <- expression(text(x=xlim[1], y=0.3, labels=main,
                               col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
   plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
   
@@ -1262,14 +1303,18 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
     p[p > ylim[1] & p < ylim[2]]
   }
   # add y-axis gridlines and labels
-  exp <- c(expression(segments(1,grid_lines(ylim),NROW(xdata[xsubset]),
+  exp <- c(expression(segments(xlim[1],
+                               grid_lines(ylim),
+                               xlim[2],
                                grid_lines(ylim),col=theme$grid)), 
            exp,  # NOTE 'exp' was defined earlier
            # add axis labels/boxes
-           expression(text(1-1/3-max(strwidth(grid_lines(ylim))),grid_lines(ylim),
+           expression(text(xlim[1]-0.5-max(strwidth(grid_lines(ylim))),
+                           grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
-           expression(text(NROW(xdata[xsubset])+1/3,grid_lines(ylim),
+           expression(text(xlim[2]+0.5,
+                           grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
   plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
@@ -1316,7 +1361,7 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
   # add the frame for drawdowns info
   plot_object$add_frame(ylim=c(0,1),asp=0.25)
   plot_object$next_frame()
-  text.exp <- expression(text(x=1, y=0.3, labels=main,
+  text.exp <- expression(text(x=xlim[1], y=0.3, labels=main,
                               adj=c(0,0),cex=0.9,offset=0,pos=4))
   plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
   
@@ -1334,14 +1379,18 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
     p[p > ylim[1] & p < ylim[2]]
   }
   # add y-axis gridlines and labels
-  exp <- c(expression(segments(1,grid_lines(ylim),NROW(xdata[xsubset]),
+  exp <- c(expression(segments(xlim[1],
+                               grid_lines(ylim),
+                               xlim[2],
                                grid_lines(ylim),col=theme$grid)), 
            exp,  # NOTE 'exp' was defined earlier
            # add axis labels/boxes
-           expression(text(1-1/3-max(strwidth(grid_lines(ylim))),grid_lines(ylim),
+           expression(text(xlim[1]-0.5-max(strwidth(grid_lines(ylim))),
+                           grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
-           expression(text(NROW(xdata[xsubset])+1/3,grid_lines(ylim),
+           expression(text(xlim[2]+1/3,
+                           grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
   plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
@@ -1367,7 +1416,7 @@ addLegend <- function(legend.loc="center", ncol=1, ...){
   # add the frame for drawdowns info
   plot_object$add_frame(ylim=c(0,1),asp=0.25)
   plot_object$next_frame()
-  text.exp <- expression(text(x=1, y=0.3, labels=main,
+  text.exp <- expression(text(x=xlim[1], y=0.3, labels=main,
                               col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
   plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
   
@@ -1378,59 +1427,60 @@ addLegend <- function(legend.loc="center", ncol=1, ...){
   if(!is.null(legend.loc)){
     yrange <- c(0,1)
     nobs <- plot_object$Env$nobs
+    chob.xlim <- plot_object$Env$xlim
     switch(legend.loc,
            topleft = {
              xjust <- 0
              yjust <- 1
-             lx <- 1
+             lx <- chob.xlim[1]
              ly <- yrange[2]
            },
            left = {
              xjust <- 0
              yjust <- 0.5
-             lx <- 1
+             lx <- chob.xlim[1]
              ly <- sum(yrange) / 2
            },
            bottomleft = {
              xjust <- 0
              yjust <- 0
-             lx <- 1
+             lx <- chob.xlim[1]
              ly <- yrange[1]
            },
            top = {
              xjust <- 0.5
              yjust <- 1
-             lx <- nobs / 2
+             lx <- (chob.xlim[1] + chob.xlim[2]) / 2
              ly <- yrange[2]
            },
            center = {
              xjust <- 0.5
              yjust <- 0.5
-             lx <- nobs / 2
+             lx <- (chob.xlim[1] + chob.xlim[2]) / 2
              ly <- sum(yrange) / 2
            },
            bottom = {
              xjust <- 0.5
              yjust <- 0
-             lx <- nobs / 2
+             lx <- (chob.xlim[1] + chob.xlim[2]) / 2
              ly <- yrange[1]
            },
            topright = {
              xjust <- 1
              yjust <- 1
-             lx <- nobs
+             lx <- chob.xlim[2]
              ly <- yrange[2]
            },
            right = {
              xjust <- 1
              yjust <- 0.5
-             lx <- nobs
+             lx <- chob.xlim[2]
              ly <- sum(yrange) / 2
            },
            bottomright = {
              xjust <- 1
              yjust <- 0
-             lx <- nobs
+             lx <- chob.xlim[2]
              ly <- yrange[1]
            }
     )
