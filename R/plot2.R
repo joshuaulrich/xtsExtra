@@ -459,6 +459,7 @@ plot.xts <- function(x,
                         cs$Env$xdata[cs$Env$xsubset][,1])
   cs$Env$xycoords <- xycoords
   cs$Env$xlim <- range(xycoords$x, na.rm=TRUE)
+  cs$Env$xstep <- diff(xycoords$x[1:2])
   
   # Compute transformation if specified by panel argument
   # rough prototype for calling a function for the main "panel"
@@ -579,7 +580,7 @@ plot.xts <- function(x,
   if(yaxis.left){
     exp <- c(exp, 
              # left y-axis labels
-             expression(text(xlim[1]-0.5-max(strwidth(y_grid_lines(get_ylim()[[2]]))), 
+             expression(text(xlim[1]-xstep*2/3-max(strwidth(y_grid_lines(get_ylim()[[2]]))), 
                              y_grid_lines(get_ylim()[[2]]),
                              noquote(format(y_grid_lines(get_ylim()[[2]]), justify="right")),
                              col=theme$labels, srt=theme$srt, offset=0, pos=4, 
@@ -588,7 +589,7 @@ plot.xts <- function(x,
   if(yaxis.right){
     exp <- c(exp, 
              # right y-axis labels
-             expression(text(xlim[2]+0.5,
+             expression(text(xlim[2]+xstep*2/3,
                              y_grid_lines(get_ylim()[[2]]),
                              noquote(format(y_grid_lines(get_ylim()[[2]]), justify="right")),
                              col=theme$labels, srt=theme$srt, offset=0, pos=4, 
@@ -689,7 +690,7 @@ plot.xts <- function(x,
         if(yaxis.left){
           exp <- c(exp, 
                    # y-axis labels/boxes
-                   expression(text(xlim[1]-0.5-max(strwidth(y_grid_lines(ylim))), 
+                   expression(text(xlim[1]-xstep*2/3-max(strwidth(y_grid_lines(ylim))), 
                                    y_grid_lines(ylim),
                                    noquote(format(y_grid_lines(ylim),justify="right")),
                                    col=theme$labels, srt=theme$srt, offset=0, 
@@ -697,7 +698,7 @@ plot.xts <- function(x,
         }
         if(yaxis.right){
           exp <- c(exp, 
-                   expression(text(xlim[2]+0.5, y_grid_lines(ylim),
+                   expression(text(xlim[2]+xstep*2/3, y_grid_lines(ylim),
                                    noquote(format(y_grid_lines(ylim),justify="right")),
                                    col=theme$labels, srt=theme$srt, offset=0,
                                    pos=4, cex=theme$cex.axis, xpd=TRUE)))
@@ -804,11 +805,11 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
                                col=theme$grid)), 
            exp,  # NOTE 'exp' was defined earlier
            # add axis labels/boxes
-           expression(text(xlim[1]-0.5-max(strwidth(grid_lines(ylim))),
+           expression(text(xlim[1]-xstep*2/3-max(strwidth(grid_lines(ylim))),
                            grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
-           expression(text(xlim[2]+0.5,
+           expression(text(xlim[2]+xstep*2/3,
                            grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
@@ -916,7 +917,7 @@ addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0
     if(plot_object$Env$theme$lylab){
       exp <- c(exp, 
                # y-axis labels/boxes
-               expression(text(xlim[1]-0.5-max(strwidth(y_grid_lines(ylim))), 
+               expression(text(xlim[1]-xstep*2/3-max(strwidth(y_grid_lines(ylim))), 
                                y_grid_lines(ylim),
                                noquote(format(y_grid_lines(ylim),justify="right")),
                                col=theme$labels, srt=theme$srt, offset=0, 
@@ -924,7 +925,7 @@ addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0
     }
     if(plot_object$Env$theme$rylab){
       exp <- c(exp, 
-               expression(text(xlim[2]+0.5, 
+               expression(text(xlim[2]+xstep*2/3, 
                                y_grid_lines(ylim),
                                noquote(format(y_grid_lines(ylim),justify="right")),
                                col=theme$labels, srt=theme$srt, offset=0,
@@ -1064,7 +1065,7 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
     if(plot_object$Env$theme$lylab){
       exp <- c(exp, 
                # y-axis labels/boxes
-               expression(text(xlim[1]-0.5-max(strwidth(y_grid_lines(ylim))), 
+               expression(text(xlim[1]-xstep*2/3-max(strwidth(y_grid_lines(ylim))), 
                                y_grid_lines(ylim),
                                noquote(format(y_grid_lines(ylim),justify="right")),
                                col=theme$labels, srt=theme$srt, offset=0, 
@@ -1072,7 +1073,7 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
     }
     if(plot_object$Env$theme$rylab){
       exp <- c(exp, 
-               expression(text(xlim[2]+0.5, 
+               expression(text(xlim[2]+xstep*2/3, 
                                y_grid_lines(ylim),
                                noquote(format(y_grid_lines(ylim),justify="right")),
                                col=theme$labels, srt=theme$srt, offset=0,
@@ -1309,11 +1310,11 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
                                grid_lines(ylim),col=theme$grid)), 
            exp,  # NOTE 'exp' was defined earlier
            # add axis labels/boxes
-           expression(text(xlim[1]-0.5-max(strwidth(grid_lines(ylim))),
+           expression(text(xlim[1]-xstep*2/3-max(strwidth(grid_lines(ylim))),
                            grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
-           expression(text(xlim[2]+0.5,
+           expression(text(xlim[2]+xstep*2/3,
                            grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
@@ -1385,11 +1386,11 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
                                grid_lines(ylim),col=theme$grid)), 
            exp,  # NOTE 'exp' was defined earlier
            # add axis labels/boxes
-           expression(text(xlim[1]-0.5-max(strwidth(grid_lines(ylim))),
+           expression(text(xlim[1]-xstep*2/3-max(strwidth(grid_lines(ylim))),
                            grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
-           expression(text(xlim[2]+1/3,
+           expression(text(xlim[2]+xstep*2/3,
                            grid_lines(ylim),
                            noquote(format(grid_lines(ylim),justify="right")),
                            col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))

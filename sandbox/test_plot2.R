@@ -40,8 +40,8 @@ plot(R, multi.panel=TRUE, type="h")
 plot(R, FUN=CumReturns)
 addReturns(type="h")
 addDrawdowns()
-addLines(c("1999-01-01", "2000-01-01", "2005-01-01"), c("foo", "bar", "pizza"), on=1:3)
-addLines(c("1999-01-01", "2000-01-01", "2005-01-01"))
+xtsExtra::addLines(c("1999-01-01", "2000-01-01", "2005-01-01"), c("foo", "bar", "pizza"), on=1:3)
+xtsExtra::addLines(c("1999-01-01", "2000-01-01", "2005-01-01"))
 
 
 plot(R, FUN="CumReturns",
