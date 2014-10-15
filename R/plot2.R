@@ -994,7 +994,8 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
     }
     ypos <- x$Env$ylim[[2*on]][2]
     # create a new xts object out of event.dates
-    event.dates.xts <- xts(rep(999, length(event.dates)), order.by=as.Date(event.dates, format=date.format))
+    event.dates.xts <- xts(rep(999, length(event.dates)), 
+                           order.by=as.POSIXct(event.dates, tz=indexTZ(xdata), format=date.format))
     # we can add points that are not necessarily at the points on the main series
     subset.range <- paste(start(xdata[xsubset]),
                           end(xdata[xsubset]),sep="/")
