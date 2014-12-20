@@ -1,3 +1,240 @@
+# prototypes for functions that will likely make their way into PerformanceAnalytics
+addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
+  lenv <- new.env()
+  lenv$main <- "Drawdowns"
+  lenv$plot_drawdowns <- function(x, geometric, ...) {
+    xdata <- x$Env$xdata
+    xsubset <- x$Env$xsubset
+    colorset <- x$Env$theme$colorset
+    # Add x-axis grid lines
+    atbt <- axTicksByTime2(xdata[xsubset])
+    segments(x$Env$xycoords$x[atbt],
+             par("usr")[3],
+             x$Env$xycoords$x[atbt],
+             par("usr")[4],
+             col=x$Env$theme$grid)
+    drawdowns <- PerformanceAnalytics:::Drawdowns(xdata, geometric)[xsubset]
+    chart.lines(drawdowns, type="l", colorset=colorset) 
+  }
+  mapply(function(name,value) { assign(name,value,envir=lenv) }, 
+         names(list(geometric=geometric,...)),
+         list(geometric=geometric,...))
+  exp <- parse(text=gsub("list","plot_drawdowns",
+                         as.expression(substitute(list(x=current.xts_chob(),
+                                                       geometric=geometric,...)))),
+               srcfile=NULL)
+  
+  plot_object <- current.xts_chob()
+  ncalls <- length(plot_object$Env$call_list)
+  plot_object$Env$call_list[[ncalls+1]] <- match.call()
+  
+  xdata <- plot_object$Env$xdata
+  xsubset <- plot_object$Env$xsubset
+  
+  drawdowns <- PerformanceAnalytics:::Drawdowns(plot_object$Env$xdata, geometric=geometric)
+  lenv$xdata <- drawdowns
+  
+  # add the frame for drawdowns info
+  plot_object$add_frame(ylim=c(0,1),asp=0.25)
+  plot_object$next_frame()
+  text.exp <- expression(text(x=xlim[1], y=0.3, labels=main,
+                              col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
+  plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+  
+  # add frame for the actual drawdowns data
+  if(is.null(ylim)) {
+    ylim <- range(lenv$xdata[xsubset], na.rm=TRUE)
+    lenv$ylim <- ylim
+  }
+  plot_object$add_frame(ylim=ylim,asp=1,fixed=TRUE)
+  plot_object$next_frame()
+  
+  lenv$grid_lines <- function(ylim) {
+    #ylim <- range(xdata[xsubset])
+    p <- pretty(ylim, 5)
+    p[p > ylim[1] & p < ylim[2]]
+  }
+  # add y-axis gridlines and labels
+  exp <- c(expression(segments(xlim[1],
+                               grid_lines(ylim),
+                               xlim[2],
+                               grid_lines(ylim),
+                               col=theme$grid)), 
+           exp,  # NOTE 'exp' was defined earlier
+           # add axis labels/boxes
+           expression(text(xlim[1]-xstep*2/3-max(strwidth(grid_lines(ylim))),
+                           grid_lines(ylim),
+                           noquote(format(grid_lines(ylim),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
+           expression(text(xlim[2]+xstep*2/3,
+                           grid_lines(ylim),
+                           noquote(format(grid_lines(ylim),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
+  plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
+  plot_object
+}
+
+addReturns <- function(type="h", main=NULL, ylim=NULL){
+  # This just plots the raw returns data
+  lenv <- new.env()
+  if(is.null(main)) lenv$main <- "Returns" else lenv$main <- main
+  lenv$plot_returns <- function(x, type) {
+    xdata <- x$Env$xdata
+    xsubset <- x$Env$xsubset
+    colorset <- x$Env$theme$colorset
+    up.col <- x$Env$theme$up.col
+    dn.col <- x$Env$theme$dn.col
+    # Add x-axis grid lines
+    atbt <- axTicksByTime2(xdata[xsubset])
+    segments(x$Env$xycoords$x[atbt],
+             par("usr")[3],
+             x$Env$xycoords$x[atbt],
+             par("usr")[4],
+             col=x$Env$theme$grid)
+    chart.lines(xdata[xsubset], type=type, colorset=colorset, up.col=up.col, dn.col=dn.col)
+  }
+  mapply(function(name,value) { assign(name,value,envir=lenv) }, 
+         names(list(type=type)),
+         list(type=type))
+  exp <- parse(text=gsub("list","plot_returns",
+                         as.expression(substitute(list(x=current.xts_chob(), 
+                                                       type=type)))),
+               srcfile=NULL)
+  
+  plot_object <- current.xts_chob()
+  ncalls <- length(plot_object$Env$call_list)
+  plot_object$Env$call_list[[ncalls+1]] <- match.call()
+  
+  # get the raw returns data
+  xdata <- plot_object$Env$xdata
+  xsubset <- plot_object$Env$xsubset
+  
+  if(type == "h" & NCOL(xdata) > 1) 
+    warning("only the univariate series will be plotted")
+  
+  # add data to the local environment
+  lenv$xdata <- xdata
+  lenv$xsubset <- xsubset
+  lenv$col <- col
+  lenv$type <- type
+  
+  # add the frame for time series info
+  plot_object$add_frame(ylim=c(0,1),asp=0.25)
+  plot_object$next_frame()
+  text.exp <- expression(text(x=xlim[1], y=0.3, labels=main,
+                              col=1,adj=c(0,0),cex=0.9,offset=0,pos=4))
+  plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+  
+  # add frame for the actual data
+  if(is.null(ylim)) {
+    ylim <- range(lenv$xdata[xsubset], na.rm=TRUE)
+    lenv$ylim <- ylim
+  }
+  plot_object$add_frame(ylim=ylim,asp=1,fixed=TRUE)
+  plot_object$next_frame()
+  
+  lenv$grid_lines <- function(ylim) {
+    #ylim <- range(xdata[xsubset])
+    p <- pretty(ylim, 5)
+    p[p > ylim[1] & p < ylim[2]]
+  }
+  # add y-axis gridlines and labels
+  exp <- c(expression(segments(xlim[1],
+                               grid_lines(ylim),
+                               xlim[2],
+                               grid_lines(ylim),col=theme$grid)), 
+           exp,  # NOTE 'exp' was defined earlier
+           # add axis labels/boxes
+           expression(text(xlim[1]-xstep*2/3-max(strwidth(grid_lines(ylim))),
+                           grid_lines(ylim),
+                           noquote(format(grid_lines(ylim),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
+           expression(text(xlim[2]+xstep*2/3,
+                           grid_lines(ylim),
+                           noquote(format(grid_lines(ylim),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
+  plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
+  plot_object
+}
+
+addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, ylim=NULL, ...){
+  lenv <- new.env()
+  lenv$main <- paste("Rolling", FUN)
+  lenv$plot_performance <- function(x, width, FUN, fill, ...) {
+    xdata <- x$Env$xdata
+    xsubset <- x$Env$xsubset
+    colorset <- x$Env$theme$colorset
+    up.col <- x$Env$theme$up.col
+    dn.col <- x$Env$theme$dn.col
+    # Add x-axis grid lines
+    segments(axTicksByTime2(xdata[xsubset]),
+             par("usr")[3],
+             axTicksByTime2(xdata[xsubset]),
+             par("usr")[4],
+             col=x$Env$theme$grid)
+    rolling_performance <- RollingPerformance(R=xdata, width=width, FUN=FUN, fill=fill, ...=...)
+    chart.lines(rolling_performance, type="l", colorset=colorset, up.col=up.col, dn.col=dn.col) 
+  }
+  mapply(function(name,value) { assign(name,value,envir=lenv) }, 
+         names(list(width=width, FUN=FUN, fill=fill, ...)),
+         list(width=width, FUN=FUN, fill=fill, ...))
+  exp <- parse(text=gsub("list","plot_performance",
+                         as.expression(substitute(list(x=current.xts_chob(),
+                                                       width=width, FUN=FUN, fill=fill, ...)))),
+               srcfile=NULL)
+  
+  plot_object <- current.xts_chob()
+  ncalls <- length(plot_object$Env$call_list)
+  plot_object$Env$call_list[[ncalls+1]] <- match.call()
+  
+  xdata <- plot_object$Env$xdata
+  xsubset <- plot_object$Env$xsubset
+  
+  rolling_performance <- RollingPerformance(R=plot_object$Env$xdata, width=width, FUN=FUN, ...=..., fill=fill)
+  lenv$xdata <- rolling_performance
+  lenv$col <- col
+  
+  # add the frame for drawdowns info
+  plot_object$add_frame(ylim=c(0,1),asp=0.25)
+  plot_object$next_frame()
+  text.exp <- expression(text(x=xlim[1], y=0.3, labels=main,
+                              adj=c(0,0),cex=0.9,offset=0,pos=4))
+  plot_object$add(text.exp, env=c(lenv,plot_object$Env), expr=TRUE)
+  
+  # add frame for the actual drawdowns data
+  if(is.null(ylim)) {
+    ylim <- range(lenv$xdata[xsubset], na.rm=TRUE)
+    lenv$ylim <- ylim
+  }
+  plot_object$add_frame(ylim=ylim,asp=1,fixed=TRUE)
+  plot_object$next_frame()
+  
+  lenv$grid_lines <- function(ylim) {
+    #ylim <- range(na.omit(xdata[xsubset]))
+    p <- pretty(ylim, 5)
+    p[p > ylim[1] & p < ylim[2]]
+  }
+  # add y-axis gridlines and labels
+  exp <- c(expression(segments(xlim[1],
+                               grid_lines(ylim),
+                               xlim[2],
+                               grid_lines(ylim),col=theme$grid)), 
+           exp,  # NOTE 'exp' was defined earlier
+           # add axis labels/boxes
+           expression(text(xlim[1]-xstep*2/3-max(strwidth(grid_lines(ylim))),
+                           grid_lines(ylim),
+                           noquote(format(grid_lines(ylim),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)),
+           expression(text(xlim[2]+xstep*2/3,
+                           grid_lines(ylim),
+                           noquote(format(grid_lines(ylim),justify="right")),
+                           col=theme$labels,offset=0,pos=4,cex=0.9, xpd=TRUE)))
+  plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
+  plot_object
+}
+
+
+
 CumReturns <-
   function (R, wealth.index = FALSE, geometric = TRUE, begin = c("first","axis"))
   { # @author Peter Carl

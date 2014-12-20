@@ -2,7 +2,6 @@
 # R/replot.R in quantmod with only minor edits to change class name to
 # replot_xts and use the .plotxtsEnv instead of the .plotEnv in quantmod
 
-# replot {{{
 new.replot_xts <- function(frame=1,asp=1,xlim=c(1,10),ylim=list(structure(c(1,10),fixed=FALSE))) {
   # global variables
   Env <- new.env()
@@ -197,17 +196,15 @@ new.replot_xts <- function(frame=1,asp=1,xlim=c(1,10),ylim=list(structure(c(1,10
   replot_env$get_ylim <- get_ylim
   replot_env$set_pad <- set_pad
   return(replot_env)
-} # }}}
+}
 
 str.replot_xts <- function(x, ...) {
   print(str(unclass(x)))
 }
 
-# print/plot replot methods {{{
 print.replot_xts <- function(x, ...) plot(x,...)
 plot.replot_xts <- function(x, ...) {
   plot.new()
-  #assign(".chob",x,.GlobalEnv)
   assign(".xts_chob",x,.plotxtsEnv)
   cex <- par(cex=x$Env$cex)
   mar <- par(mar=x$Env$mar)
@@ -252,25 +249,24 @@ plot.replot_xts <- function(x, ...) {
   do.call("clip",as.list(usr))
   par(xpd=oxpd,cex=cex$cex,mar=mar$mar)#,usr=usr)
   invisible(x$Env$actions)
-} # }}}
+}
 
-# scale.ranges {{{
 scale.ranges <- function(frame, asp, ranges)
 {
   asp/asp[frame] * abs(diff(ranges[[frame]]))
-} # }}}
-
-`+.replot` <- function(e1, e2) {
-  e2 <- match.call()$e2
-  e2$plot_object <- (substitute(e1))
-  eval(e2)
 }
 
-`+.replot` <- function(e1, e2) {
-  assign(".xts_chob",e1,.plotxtsEnv)
-  e2 <- eval(e2)
-  e2
-}
+# `+.replot` <- function(e1, e2) {
+#   e2 <- match.call()$e2
+#   e2$plot_object <- (substitute(e1))
+#   eval(e2)
+# }
+# 
+# `+.replot` <- function(e1, e2) {
+#   assign(".xts_chob",e1,.plotxtsEnv)
+#   e2 <- eval(e2)
+#   e2
+# }
 
 
 ##### accessor functions
