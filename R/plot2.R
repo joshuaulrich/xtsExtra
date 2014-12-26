@@ -69,7 +69,7 @@ chart.lines <- function(x,
                         lty=1,
                         lwd=2,
                         lend=1,
-                        colorset=1:10, 
+                        col=1:10, 
                         up.col=NULL, 
                         dn.col=NULL,
                         legend.loc=NULL,
@@ -86,9 +86,9 @@ chart.lines <- function(x,
     if(length(lty) == 1) lty <- rep(lty, NCOL(x))
     if(length(lwd) == 1) lwd <- rep(lwd, NCOL(x))
     for(i in NCOL(x):1){
-      # lines(1:NROW(x), x[,i], type=type, lend=lend, col=colorset[i], lty=lty[i], lwd=lwd[i], pch=pch)
+      # lines(1:NROW(x), x[,i], type=type, lend=lend, col=col[i], lty=lty[i], lwd=lwd[i], pch=pch)
       # non-equally spaced x-axis
-      lines(xx$Env$xycoords$x, x[,i], type=type, lend=lend, col=colorset[i], lty=lty[i], lwd=lwd[i], pch=pch)
+      lines(xx$Env$xycoords$x, x[,i], type=type, lend=lend, col=col[i], lty=lty[i], lwd=lwd[i], pch=pch)
     }
   } else if(type == "bar"){
     # This does not work correctly
@@ -103,8 +103,8 @@ chart.lines <- function(x,
         negatives[row,column] = min(0, x[row,column])
       }
     }
-    barplot.default(t(positives), add=TRUE, col=colorset, axisnames=FALSE, axes=FALSE)
-    barplot.default(t(negatives), add=TRUE, col=colorset, axisnames=FALSE, axes=FALSE)
+    barplot.default(t(positives), add=TRUE, col=col, axisnames=FALSE, axes=FALSE)
+    barplot.default(t(negatives), add=TRUE, col=col, axisnames=FALSE, axes=FALSE)
   }
   if(!is.null(legend.loc)){
     yrange <- range(x, na.rm=TRUE)
@@ -167,7 +167,7 @@ chart.lines <- function(x,
            }
     )
     legend(x=lx, y=ly, legend=colnames(x), xjust=xjust, yjust=yjust, 
-           fill=colorset[1:NCOL(x)], bty="n")
+           fill=col[1:NCOL(x)], bty="n")
   }
 }
 
@@ -212,7 +212,7 @@ chart.lines <- function(x,
 #' separate panel. For example, if \code{multi.panel = 2}, then the data
 #' will be plotted in groups of 2 columns and each group is plotted in a 
 #' separate panel. 
-#' @param colorset color palette to use, set by default to rational choices
+#' @param col color palette to use, set by default to rational choices
 #' @param up.col color for positive bars if \code{type="h"}
 #' @param dn.col color for positive bars if \code{type="h"}
 #' @param type the type of plot to be drawn, same as in \code{\link{plot}}
@@ -250,7 +250,7 @@ plot.xts <- function(x,
                      FUN=NULL,
                      panels=NULL,
                      multi.panel=FALSE,
-                     colorset=1:12,
+                     col=1:12,
                      up.col="green",
                      dn.col="red",
                      type="l",
@@ -328,7 +328,7 @@ plot.xts <- function(x,
                     FUN=FUN,
                     panels=panels,
                     multi.panel=multi.panel,
-                    colorset=colorset,
+                    col=col,
                     up.col=up.col,
                     dn.col=dn.col,
                     type=type,
@@ -419,7 +419,11 @@ plot.xts <- function(x,
   cs$Env$theme$shading <- shading
   cs$Env$theme$up.col <- up.col
   cs$Env$theme$dn.col <- dn.col
-  cs$Env$theme$colorset <- colorset
+  if (hasArg(colorset)){
+    cs$Env$theme$col <- match.call(expand.dots=TRUE)$colorset
+  } else {
+    cs$Env$theme$col <- col
+  }
   cs$Env$theme$rylab <- yaxis.right
   cs$Env$theme$lylab <- yaxis.left
   cs$Env$theme$bg <- bg.col
@@ -616,7 +620,7 @@ plot.xts <- function(x,
                                   lty=lty,
                                   lwd=lwd,
                                   lend=lend,
-                                  colorset=theme$colorset, 
+                                  col=theme$col, 
                                   up.col=theme$up.col, 
                                   dn.col=theme$dn.col,
                                   legend.loc=legend.loc))
@@ -660,7 +664,7 @@ plot.xts <- function(x,
                                       lty=lty,
                                       lwd=lwd,
                                       lend=lend,
-                                      colorset=theme$colorset, 
+                                      col=theme$col, 
                                       up.col=theme$up.col, 
                                       dn.col=theme$dn.col,
                                       legend.loc=legend.loc))
@@ -719,7 +723,7 @@ plot.xts <- function(x,
                                   lty=lty,
                                   lwd=lwd,
                                   lend=lend,
-                                  colorset=theme$colorset,
+                                  col=theme$col,
                                   up.col=theme$up.col, 
                                   dn.col=theme$dn.col,
                                   legend.loc=legend.loc)),expr=TRUE)
@@ -759,11 +763,7 @@ addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0
   lenv$plot_lines <- function(x, ta, on, type, col, lty, lwd, pch, ...){
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
-    if(is.null(col)){
-      colorset <- x$Env$theme$colorset
-    } else {
-      colorset <- col
-    }
+    if(is.null(col)) col <- x$Env$theme$col
     if(all(is.na(on))){
       # Add x-axis grid lines
       atbt <- axTicksByTime2(xdata[xsubset])
@@ -782,7 +782,7 @@ addSeries <- function(x, main="", on=NA, type="l", col=NULL, lty=1, lwd=1, pch=0
                            tzone=indexTZ(xdata)),ta)[subset.range]
     ta.x <- as.numeric(na.approx(ta.adj[,1], rule=2) )
     ta.y <- ta.adj[,-1]
-    chart.lines(ta.y, type=type, colorset=colorset, lty=lty, lwd=lwd, pch=pch)
+    chart.lines(ta.y, type=type, col=col, lty=lty, lwd=lwd, pch=pch)
   }
   # map all passed args (if any) to 'lenv' environment
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
@@ -906,7 +906,7 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
   lenv$plot_event_lines <- function(x, event.dates, event.labels, date.format, on, lty, lwd, col, ...){
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
-    colorset <- x$Env$theme$colorset
+    col <- x$Env$theme$col
     if(all(is.na(on))){
       # Add x-axis grid lines
       atbt <- axTicksByTime2(xdata[xsubset])
@@ -1039,12 +1039,12 @@ addLines <- function(event.dates, event.labels=NULL, date.format="%Y-%m-%d", mai
 #' right, or center.
 #' @param legend.names character vector of names for the legend. If \code{NULL},
 #' the column names of the current plot object are used.
-#' @param colorset fill colorset for the legend. If \code{NULL},
+#' @param col fill colors for the legend. If \code{NULL},
 #' the colorset of the current plot object data is used.
 #' @param ncol number of columns for the legend
 #' @param \dots any other passthrough parameters. Not currently used.
 #' @author Ross Bennett
-addLegend <- function(legend.loc="center", legend.names=NULL, colorset=NULL, ncol=1, ...){
+addLegend <- function(legend.loc="center", legend.names=NULL, col=NULL, ncol=1, ...){
   lenv <- new.env()
   lenv$main <- ""
   
@@ -1129,10 +1129,10 @@ addLegend <- function(legend.loc="center", legend.names=NULL, colorset=NULL, nco
   lenv$ly <- ly
   lenv$xjust <- xjust
   lenv$yjust <- yjust
-  if(!is.null(colorset)){
-    lenv$colorset <- colorset[1:nc]
+  if(!is.null(col)){
+    lenv$col <- col[1:nc]
   } else {
-    lenv$colorset <- plot_object$Env$theme$colorset[1:nc]
+    lenv$col <- plot_object$Env$theme$col[1:nc]
   }
   if(!is.null(legend.names)){
     lenv$names <- legend.names
@@ -1142,7 +1142,7 @@ addLegend <- function(legend.loc="center", legend.names=NULL, colorset=NULL, nco
   lenv$nc <- ncol
   # add expression for legend
   exp <- expression(legend(x=lx, y=ly, legend=names, xjust=xjust, yjust=yjust, 
-                           fill=colorset, ncol=nc, bty="n"))
+                           fill=col, ncol=nc, bty="n"))
   
   plot_object$add(exp,env=c(lenv, plot_object$Env),expr=TRUE,no.update=TRUE)
   plot_object

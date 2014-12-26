@@ -4,7 +4,7 @@
 \title{Time series Plotting}
 \usage{
 \method{plot}{xts}(x, y = NULL, ..., subset = "", FUN = NULL,
-  panels = NULL, multi.panel = FALSE, colorset = 1:12, up.col = "green",
+  panels = NULL, multi.panel = FALSE, col = 1:12, up.col = "green",
   dn.col = "red", type = "l", lty = 1, lwd = 2, lend = 1,
   main = deparse(substitute(x)), clev = 0, cex = 0.6, cex.axis = 0.9,
   mar = c(3, 2, 0, 2), srt = 0, xaxis.las = 0, ylim = NULL,
@@ -32,7 +32,7 @@ separate panel. For example, if \code{multi.panel = 2}, then the data
 will be plotted in groups of 2 columns and each group is plotted in a
 separate panel.}
 
-\item{colorset}{color palette to use, set by default to rational choices}
+\item{col}{color palette to use, set by default to rational choices}
 
 \item{up.col}{color for positive bars if \code{type="h"}}
 

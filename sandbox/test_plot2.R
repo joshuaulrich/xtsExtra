@@ -90,7 +90,7 @@ R <- edhec[,1:4]
 plot(R, FUN="CumReturns")
 plot(R, FUN="CumReturns", lty=1:4)
 plot(R, FUN="CumReturns", lty=1:4, lwd=c(3, 1, 1, 1))
-plot(R, FUN="CumReturns", lwd=c(3, 2, 2, 2), colorset=c(1, rep("gray", 3)))
+plot(R, FUN="CumReturns", lwd=c(3, 2, 2, 2), col=c(1, rep("gray", 3)))
 
 plot(R, yaxis.left=TRUE, yaxis.right=FALSE)
 plot(R, grid.ticks.lwd=1, grid.ticks.lty="solid", grid.col="black")
@@ -102,7 +102,7 @@ foo <- function(x){
 }
 plot(R, FUN=foo)
 addLegend(ncol = 4)
-addLegend(legend.names = c("foo", "bar"), colorset = c(1,2), ncol=2)
+addLegend(legend.names = c("foo", "bar"), col = c(1,2), ncol=2)
 
 plot(R, FUN=foo, legend.loc="topleft")
 plot(R, FUN=foo, legend.loc="left")

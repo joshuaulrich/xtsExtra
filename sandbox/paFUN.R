@@ -5,7 +5,7 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
   lenv$plot_drawdowns <- function(x, geometric, ...) {
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
-    colorset <- x$Env$theme$colorset
+    col <- x$Env$theme$col
     # Add x-axis grid lines
     atbt <- xtsExtra:::axTicksByTime2(xdata[xsubset])
     segments(x$Env$xycoords$x[atbt],
@@ -14,7 +14,7 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
              par("usr")[4],
              col=x$Env$theme$grid)
     drawdowns <- PerformanceAnalytics:::Drawdowns(xdata, geometric)[xsubset]
-    xtsExtra:::chart.lines(drawdowns, type="l", colorset=colorset) 
+    xtsExtra:::chart.lines(drawdowns, type="l", col=col) 
   }
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
          names(list(geometric=geometric,...)),
@@ -81,7 +81,7 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
   lenv$plot_returns <- function(x, type) {
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
-    colorset <- x$Env$theme$colorset
+    col <- x$Env$theme$col
     up.col <- x$Env$theme$up.col
     dn.col <- x$Env$theme$dn.col
     # Add x-axis grid lines
@@ -91,7 +91,7 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
              x$Env$xycoords$x[atbt],
              par("usr")[4],
              col=x$Env$theme$grid)
-    xtsExtra:::chart.lines(xdata[xsubset], type=type, colorset=colorset, up.col=up.col, dn.col=dn.col)
+    xtsExtra:::chart.lines(xdata[xsubset], type=type, col=col, up.col=up.col, dn.col=dn.col)
   }
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
          names(list(type=type)),
@@ -163,7 +163,7 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
   lenv$plot_performance <- function(x, width, FUN, fill, ...) {
     xdata <- x$Env$xdata
     xsubset <- x$Env$xsubset
-    colorset <- x$Env$theme$colorset
+    col <- x$Env$theme$col
     up.col <- x$Env$theme$up.col
     dn.col <- x$Env$theme$dn.col
     # Add x-axis grid lines
@@ -173,7 +173,7 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
              par("usr")[4],
              col=x$Env$theme$grid)
     rolling_performance <- RollingPerformance(R=xdata, width=width, FUN=FUN, fill=fill, ...=...)
-    xtsExtra:::chart.lines(rolling_performance, type="l", colorset=colorset, up.col=up.col, dn.col=dn.col) 
+    xtsExtra:::chart.lines(rolling_performance, type="l", col=col, up.col=up.col, dn.col=dn.col) 
   }
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
          names(list(width=width, FUN=FUN, fill=fill, ...)),
