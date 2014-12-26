@@ -7,24 +7,24 @@ addDrawdowns <- function(geometric=TRUE, ylim=NULL, ...){
     xsubset <- x$Env$xsubset
     colorset <- x$Env$theme$colorset
     # Add x-axis grid lines
-    atbt <- axTicksByTime2(xdata[xsubset])
+    atbt <- xtsExtra:::axTicksByTime2(xdata[xsubset])
     segments(x$Env$xycoords$x[atbt],
              par("usr")[3],
              x$Env$xycoords$x[atbt],
              par("usr")[4],
              col=x$Env$theme$grid)
     drawdowns <- PerformanceAnalytics:::Drawdowns(xdata, geometric)[xsubset]
-    chart.lines(drawdowns, type="l", colorset=colorset) 
+    xtsExtra:::chart.lines(drawdowns, type="l", colorset=colorset) 
   }
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
          names(list(geometric=geometric,...)),
          list(geometric=geometric,...))
   exp <- parse(text=gsub("list","plot_drawdowns",
-                         as.expression(substitute(list(x=current.xts_chob(),
+                         as.expression(substitute(list(x=xtsExtra:::current.xts_chob(),
                                                        geometric=geometric,...)))),
                srcfile=NULL)
   
-  plot_object <- current.xts_chob()
+  plot_object <- xtsExtra:::current.xts_chob()
   ncalls <- length(plot_object$Env$call_list)
   plot_object$Env$call_list[[ncalls+1]] <- match.call()
   
@@ -85,23 +85,23 @@ addReturns <- function(type="h", main=NULL, ylim=NULL){
     up.col <- x$Env$theme$up.col
     dn.col <- x$Env$theme$dn.col
     # Add x-axis grid lines
-    atbt <- axTicksByTime2(xdata[xsubset])
+    atbt <- xtsExtra:::axTicksByTime2(xdata[xsubset])
     segments(x$Env$xycoords$x[atbt],
              par("usr")[3],
              x$Env$xycoords$x[atbt],
              par("usr")[4],
              col=x$Env$theme$grid)
-    chart.lines(xdata[xsubset], type=type, colorset=colorset, up.col=up.col, dn.col=dn.col)
+    xtsExtra:::chart.lines(xdata[xsubset], type=type, colorset=colorset, up.col=up.col, dn.col=dn.col)
   }
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
          names(list(type=type)),
          list(type=type))
   exp <- parse(text=gsub("list","plot_returns",
-                         as.expression(substitute(list(x=current.xts_chob(), 
+                         as.expression(substitute(list(x=xtsExtra:::current.xts_chob(), 
                                                        type=type)))),
                srcfile=NULL)
   
-  plot_object <- current.xts_chob()
+  plot_object <- xtsExtra:::current.xts_chob()
   ncalls <- length(plot_object$Env$call_list)
   plot_object$Env$call_list[[ncalls+1]] <- match.call()
   
@@ -167,23 +167,23 @@ addRollingPerformance <- function(width=12, FUN="Return.annualized", fill=NA, yl
     up.col <- x$Env$theme$up.col
     dn.col <- x$Env$theme$dn.col
     # Add x-axis grid lines
-    segments(axTicksByTime2(xdata[xsubset]),
+    segments(xtsExtra:::axTicksByTime2(xdata[xsubset]),
              par("usr")[3],
-             axTicksByTime2(xdata[xsubset]),
+             xtsExtra:::axTicksByTime2(xdata[xsubset]),
              par("usr")[4],
              col=x$Env$theme$grid)
     rolling_performance <- RollingPerformance(R=xdata, width=width, FUN=FUN, fill=fill, ...=...)
-    chart.lines(rolling_performance, type="l", colorset=colorset, up.col=up.col, dn.col=dn.col) 
+    xtsExtra:::chart.lines(rolling_performance, type="l", colorset=colorset, up.col=up.col, dn.col=dn.col) 
   }
   mapply(function(name,value) { assign(name,value,envir=lenv) }, 
          names(list(width=width, FUN=FUN, fill=fill, ...)),
          list(width=width, FUN=FUN, fill=fill, ...))
   exp <- parse(text=gsub("list","plot_performance",
-                         as.expression(substitute(list(x=current.xts_chob(),
+                         as.expression(substitute(list(x=xtsExtra:::current.xts_chob(),
                                                        width=width, FUN=FUN, fill=fill, ...)))),
                srcfile=NULL)
   
-  plot_object <- current.xts_chob()
+  plot_object <- xtsExtra:::current.xts_chob()
   ncalls <- length(plot_object$Env$call_list)
   plot_object$Env$call_list[[ncalls+1]] <- match.call()
   

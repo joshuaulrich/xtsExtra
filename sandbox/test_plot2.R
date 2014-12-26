@@ -1,6 +1,6 @@
 library(xtsExtra)
 library(PerformanceAnalytics)
-library(quantmod)
+# library(quantmod)
 source("sandbox/paFUN.R")
 
 data(edhec)
@@ -137,20 +137,20 @@ addSeries(tmp2, on=1, type="p", pch=5)
 addSeries(tmp3, on=1, type="p", pch=2)
 
 
-stock.str='AAPL'
-initDate="2011-01-01" 
-endDate="2012-12-31"   
-getSymbols(stock.str,from=initDate,to=endDate, src="yahoo")
-plot(Ad(AAPL))
-addSeries(Ad(AAPL)["2012-05-28/"]-10, on=1, col = "red")
-xtsExtra::addLines(c("2011-11-04", "2012-11-10", "2012-05-28"), on=1)
-xtsExtra::addLines(c("2011-03-04", "2012-01-10", "2012-07-28"), on=1)
-xtsExtra::addLines(c("2011-11-04", "2012-11-10", "2012-05-28"))
-
-aapl <- Ad(AAPL)
-plot(aapl)
-aapl["2011-07/2012-07"] <- NA
-plot(aapl)
+# stock.str='AAPL'
+# initDate="2011-01-01" 
+# endDate="2012-12-31"   
+# quantmod::getSymbols(stock.str,from=initDate,to=endDate, src="yahoo")
+# plot(Ad(AAPL))
+# addSeries(Ad(AAPL)["2012-05-28/"]-10, on=1, col = "red")
+# xtsExtra::addLines(c("2011-11-04", "2012-11-10", "2012-05-28"), on=1)
+# xtsExtra::addLines(c("2011-03-04", "2012-01-10", "2012-07-28"), on=1)
+# xtsExtra::addLines(c("2011-11-04", "2012-11-10", "2012-05-28"))
+# 
+# aapl <- Ad(AAPL)
+# plot(aapl)
+# aapl["2011-07/2012-07"] <- NA
+# plot(aapl)
 
 # png("~/Documents/foo.png")
 # plot(R, FUN="CumReturns")
